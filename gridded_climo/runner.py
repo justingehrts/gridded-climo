@@ -44,7 +44,7 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
         label_fmt = lambda v: (ref + dt.timedelta(days=int(round(v)))).strftime("%b %-d")
         name += f" ({info['years'][0]}-{info['years'][1]})"
         note = {"precomputed": "ACIS Grid 1 (precomputed)", "live": "ACIS Grid 1, computed live",
-                "station": f"Station-based: {len(info['points']['value'])} stations interpolated (IDW, 80 km max)"}[info["source"]]
+                "station": f"Station-based: {len(info['points']['value'])} stations interpolated (IDW + 12 km smoothing, 80 km max)"}[info["source"]]
         points = info.get("points")
     elif metric.kind == "period":
         if not (start and end):

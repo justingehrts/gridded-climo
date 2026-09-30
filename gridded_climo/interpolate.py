@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import numpy as np
+from scipy.ndimage import gaussian_filter
 from scipy.spatial import cKDTree
 
 from .grid import Grid
@@ -39,3 +40,17 @@ def idw(lon, lat, values, template: Grid, k: int = 8, power: float = 2.0, max_km
     with np.errstate(invalid="ignore", divide="ignore"):
         out = np.where(tot > 0, (wgt * values[idx]).sum(axis=2) / tot, np.nan)
     return template.with_data(out)
+
+
+def smooth(grid: Grid, sigma_km: float) -> Grid:
+    """NaN-aware Gaussian smoothing (voids stay voids; valid cells only average other valid cells).
+    Removes single-station bullseyes so the map contours cleanly on air."""
+    if sigma_km <= 0:
+        return grid
+    cell_km = grid.dy * KM_PER_DEG_LAT
+    ok = np.isfinite(grid.data)
+    num = gaussian_filter(np.where(ok, grid.data, 0.0), sigma_km / cell_km, mode="nearest")
+    den = gaussian_filter(ok.astype("float32"), sigma_km / cell_km, mode="nearest")
+    with np.errstate(invalid="ignore", divide="ignore"):
+        out = np.where(ok & (den > 1e-3), num / den, np.nan)
+    return grid.with_data(out)
