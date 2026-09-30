@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime as dt
 import io
 import os
+import tempfile
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -16,7 +17,18 @@ from gridded_climo.query import MENU, NOHRSC_START, STATION_MENU, TEMP_ELEMENTS,
 from gridded_climo.ui.preview import build_map, load_counties_geojson
 from gridded_climo.ui.service import generate
 
-CACHE_DIR = Path(os.environ.get("GRIDDED_CLIMO_CACHE", Path(__file__).parent / ".cache" / "gridded_climo"))
+def _writable_cache_dir() -> Path:
+    """Preferred cache dir if we can write there, else a temp dir (hosted filesystems may be read-only)."""
+    want = Path(os.environ.get("GRIDDED_CLIMO_CACHE", Path(__file__).parent / ".cache" / "gridded_climo"))
+    try:
+        want.mkdir(parents=True, exist_ok=True)
+        (want / ".w").write_text("ok")
+        return want
+    except OSError:
+        return Path(tempfile.gettempdir()) / "gridded_climo_cache"
+
+
+CACHE_DIR = _writable_cache_dir()
 REGIONS = {
     "Columbus region (default)": DEFAULT_BBOX,
     "Central Ohio": (-84.5, 39.3, -81.5, 41.0),
