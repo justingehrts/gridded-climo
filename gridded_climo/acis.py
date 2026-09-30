@@ -44,7 +44,8 @@ class ACISClient:
     def __init__(self, base_url: str, cache: Cache | None = None, timeout: int = 300):
         self.base_url, self.cache, self.timeout = base_url.rstrip("/"), cache, timeout
         self.session = requests.Session()
-        retry = Retry(total=4, backoff_factor=2, status_forcelist=(429, 500, 502, 503, 504), allowed_methods=None)
+        retry = Retry(total=8, backoff_factor=5, backoff_max=300, status_forcelist=(429, 500, 502, 503, 504), allowed_methods=None,
+                      respect_retry_after_header=True)
         self.session.mount("https://", HTTPAdapter(max_retries=retry))
 
     def post(self, endpoint: str, params: dict) -> dict:
