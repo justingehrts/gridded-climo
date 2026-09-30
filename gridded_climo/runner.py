@@ -43,9 +43,11 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
         ref = dt.date(2001, info["ref_month"], info["ref_day"])  # non-leap reference year
         label_fmt = lambda v: (ref + dt.timedelta(days=int(round(v)))).strftime("%b %-d")
         name += f" ({info['years'][0]}-{info['years'][1]})"
-        note = {"precomputed": "ACIS Grid 1 (precomputed)", "live": "ACIS Grid 1, computed live",
-                "station": f"Station-based: {len(info['points']['value'])} stations interpolated (IDW + 12 km smoothing, 80 km max)"}[info["source"]]
         points = info.get("points")
+        if info["source"] == "station":
+            note = f"Station-based: {len(points['value'])} stations interpolated (IDW + 12 km smoothing, 80 km max)"
+        else:
+            note = "ACIS Grid 1 (precomputed)" if info["source"] == "precomputed" else "ACIS Grid 1, computed live"
     elif metric.kind == "period":
         if not (start and end):
             raise ValueError("period metrics need a start and end")

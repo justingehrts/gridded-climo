@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import datetime as dt
+import io
 import os
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import streamlit as st
+from PIL import Image
 from streamlit_folium import st_folium
 
 from gridded_climo.config import DEFAULT_BBOX, DEFAULT_NORMAL_PERIOD
@@ -168,7 +170,15 @@ if out:
     if out.note:
         st.caption(out.note)
     st.download_button("⬇️ Download KMZ", out.kmz, file_name=out.filename, mime="application/vnd.google-earth.kmz", type="primary")
-    st_folium(build_map(out.png, out.bounds, counties(), out.points), use_container_width=True, height=560, returned_objects=[])
+    tab_map, tab_img = st.tabs(["Map", "Image"])
+    with tab_map:
+        st_folium(build_map(out.png, out.bounds, counties(), out.points), use_container_width=True, height=560, returned_objects=[])
+    with tab_img:  # dependency-free preview: works even if the map CDN / tile servers are unreachable
+        overlay = Image.open(io.BytesIO(out.png)).convert("RGBA")
+        canvas = Image.new("RGBA", overlay.size, (225, 225, 225, 255))
+        canvas.alpha_composite(overlay)
+        st.image(canvas.resize((overlay.width * 3, overlay.height * 3), Image.NEAREST),
+                 caption="Rendered overlay on neutral gray (transparent areas = no data)", use_container_width=True)
     if out.legend_png:
         st.image(out.legend_png, caption="Legend (also included in the KMZ)")
 elif not reason:
