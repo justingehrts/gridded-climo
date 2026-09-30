@@ -29,6 +29,7 @@ class Style:
     vmin: float | None = None
     vmax: float | None = None
     hide_below: float | None = None  # values below this render fully transparent
+    symmetric: bool = False  # diverging data: range is +/- max(|p2|, |p98|) around 0
     units_label: str = ""
 
 
@@ -74,8 +75,8 @@ class Metric:
         if self.kind == "period":
             if self.reduce not in PERIOD_REDUCES:
                 bad(f"reduce must be one of {sorted(PERIOD_REDUCES)}")
-            if self.normal not in (None, "departure"):
-                bad("normal must be null or 'departure'")
+            if self.normal not in (None, "departure", "average"):
+                bad("normal must be null, 'departure' (specific dates minus normal) or 'average' (same month/days averaged over the normal period)")
         if self.style.mode not in ("stepped", "smooth"):
             bad("style.mode must be stepped|smooth")
         return self

@@ -71,3 +71,16 @@ class Grid:
         if c1 <= c0 or r1 <= r0:
             raise ValueError(f"bbox {bbox} does not overlap the grid")
         return Grid(self.data[r0:r1, c0:c1], self.west + c0 * self.dx, self.north - r0 * self.dy, self.dx, self.dy)
+
+    def window_of(self, other: "Grid") -> tuple[slice, slice]:
+        """Row/col slices of `self` that cover exactly `other`'s cells (same cell size, offset by whole cells)."""
+        if abs(self.dx - other.dx) > 1e-9 or abs(self.dy - other.dy) > 1e-9:
+            raise ValueError("grids have different cell sizes")
+        c0, r0 = (other.west - self.west) / self.dx, (self.north - other.north) / self.dy
+        if abs(c0 - round(c0)) > 1e-3 or abs(r0 - round(r0)) > 1e-3:
+            raise ValueError("grids are not cell-aligned")
+        c0, r0 = int(round(c0)), int(round(r0))
+        h, w = other.data.shape
+        if c0 < 0 or r0 < 0 or r0 + h > self.data.shape[0] or c0 + w > self.data.shape[1]:
+            raise ValueError("requested region extends beyond the precomputed area")
+        return slice(r0, r0 + h), slice(c0, c0 + w)

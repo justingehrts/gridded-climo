@@ -1,0 +1,38 @@
+import datetime as dt
+
+import pytest
+
+from gridded_climo.query import Query, default_season, describe, metric_from_query, unsupported_reason
+
+
+def test_season_rules():
+    assert default_season("le", "first") == {"start": [7, 1], "end": [6, 30]}
+    assert default_season("le", "last") == {"start": [1, 1], "end": [6, 30]}
+    assert default_season("ge", "first") == default_season("ge", "last") == {"start": [1, 1], "end": [12, 31]}
+
+
+def test_first_last_metric_and_style_direction():
+    m = metric_from_query(Query(when="first", element="mint", op="le", value=32))
+    assert (m.kind, m.direction, m.threshold) == ("climatology", "first", {"op": "le", "value": 32})
+    rev = lambda w, op, v: metric_from_query(Query(when=w, element="maxt", op=op, value=v)).style.reverse
+    assert [rev("first", "le", 32), rev("last", "le", 32), rev("first", "ge", 90), rev("last", "ge", 90)] == [True, False, False, True]
+
+
+def test_unsupported_states_have_reasons():
+    assert "coming soon" in unsupported_reason(Query(when="first", element="snow"))
+    assert "menu" in unsupported_reason(Query(when="first", element="maxt", op="ge", value=91))
+    assert "coming soon" in unsupported_reason(Query(when="range_normal", element="snow", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31)))
+    assert "mean and total" in unsupported_reason(Query(when="range_normal", element="maxt", reduce="max", start=dt.date(2001, 1, 1), end=dt.date(2001, 1, 9)))
+    assert "mean and total" in unsupported_reason(Query(when="range_specific", element="maxt", reduce="min", departure=True, start=dt.date(2024, 1, 1), end=dt.date(2024, 1, 9)))
+    assert "one year" in unsupported_reason(Query(when="range_specific", element="pcpn", reduce="sum", start=dt.date(2020, 1, 1), end=dt.date(2022, 1, 1)))
+    assert "2008" in unsupported_reason(Query(when="range_specific", element="snow", start=dt.datetime(2005, 1, 1), end=dt.datetime(2005, 1, 3)))
+    with pytest.raises(ValueError):
+        metric_from_query(Query(when="last", element="snow"))
+
+
+def test_range_metrics():
+    m = metric_from_query(Query(when="range_specific", element="maxt", reduce="mean", departure=True, start=dt.date(2025, 7, 1), end=dt.date(2025, 7, 31)))
+    assert (m.kind, m.normal, m.style.symmetric) == ("period", "departure", True)
+    assert metric_from_query(Query(when="range_normal", element="pcpn", reduce="sum", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31))).normal == "average"
+    assert metric_from_query(Query(when="range_specific", element="snow", start=dt.datetime(2024, 1, 5), end=dt.datetime(2024, 1, 7))).kind == "storm"
+    assert describe(Query(when="last", element="maxt", op="ge", value=90)) == "Average Date of Last High Temperature at or above 90°F"

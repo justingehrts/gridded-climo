@@ -19,7 +19,6 @@ from .grid import Grid
 
 MISSING = -999
 SCALE = 100  # int16 storage scale (temps are whole degrees; pcpn is hundredths of an inch)
-CHUNK_DAYS = 92
 GRID1_ELEMENTS = {"mint", "maxt", "pcpn"}
 
 
@@ -68,19 +67,35 @@ class ACISClient:
 
     def daily(self, element: str, bbox: Sequence[float], start: dt.date, end: dt.date, grid: int = 1):
         """Daily grids for [start, end] -> (dates[T] as datetime64[D], Grid template, data[T,H,W] float32).
-        Pulled in ~quarterly chunks; each chunk cached so re-runs and other thresholds are free."""
-        parts, d = [], start
-        while d <= end:
-            c_end = min(d + dt.timedelta(days=CHUNK_DAYS - 1), end)
-            req = build_grid_request(element, bbox, d.isoformat(), c_end.isoformat(), grid)
-            fetch = lambda d=d, c_end=c_end: self._fetch_chunk(element, bbox, d.isoformat(), c_end.isoformat(), grid)
-            parts.append(self.cache.get_or_compute("acis_daily_v1", req, fetch) if self.cache else fetch())
-            d = c_end + dt.timedelta(days=1)
+
+        Pulled in calendar-quarter chunks (Jan-Mar, Apr-Jun, ...) so that windows with different
+        start days (Jul 1 seasons, Jan 1 seasons, custom ranges) share cached chunks. Chunks that
+        are not yet complete (end within the last few days) are fetched but never cached."""
+        parts = []
+        for c_start, c_end in quarter_chunks(start, end):
+            req = build_grid_request(element, bbox, c_start.isoformat(), c_end.isoformat(), grid)
+            fetch = lambda a=c_start, b=c_end: self._fetch_chunk(element, bbox, a.isoformat(), b.isoformat(), grid)
+            complete = c_end < dt.date.today() - dt.timedelta(days=5)
+            parts.append(self.cache.get_or_compute("acis_daily_v1", req, fetch) if (self.cache and complete) else fetch())
         stored = np.concatenate([p["stored"] for p in parts])
         data = np.where(stored == np.iinfo("int16").min, np.nan, stored.astype("float32") / SCALE).astype("float32")
         dates = np.concatenate([p["dates"] for p in parts]).astype("datetime64[D]")
+        keep = (dates >= np.datetime64(start)) & (dates <= np.datetime64(end))
+        data, dates = data[keep], dates[keep]
         template = Grid.from_centers(np.zeros(data.shape[1:], "float32"), parts[0]["lat"], parts[0]["lon"])
         lat0 = parts[0]["lat"]
         if lat0.shape[0] > 1 and lat0[0, 0] < lat0[-1, 0]:
             data = data[:, ::-1]  # Grid.from_centers flips south-up input; keep the stack north-up too
         return dates, template, data
+
+
+def quarter_chunks(start: dt.date, end: dt.date):
+    """Calendar-quarter-aligned (start, end) chunks covering [start, end] (full quarters, not clipped)."""
+    y, q = start.year, (start.month - 1) // 3
+    while True:
+        c_start = dt.date(y, 3 * q + 1, 1)
+        if c_start > end:
+            return
+        nxt = dt.date(y + (q == 3), 1 if q == 3 else 3 * q + 4, 1)
+        yield c_start, nxt - dt.timedelta(days=1)
+        y, q = (y + 1, 0) if q == 3 else (y, q + 1)

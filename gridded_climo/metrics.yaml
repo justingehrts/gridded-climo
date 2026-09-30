@@ -8,7 +8,7 @@ first_freeze:
   direction: first
   season: {start: [7, 1], end: [6, 30]}
   cross_year: {stat: mean}
-  style: {ramp: RdYlBu, mode: stepped, steps: 12, units_label: date}
+  style: {ramp: RdYlBu, reverse: true, mode: stepped, steps: 12, units_label: date}
 
 last_freeze:
   kind: climatology
@@ -19,7 +19,7 @@ last_freeze:
   direction: last
   season: {start: [1, 1], end: [6, 30]}
   cross_year: {stat: mean}
-  style: {ramp: RdYlBu, reverse: true, mode: stepped, steps: 12, units_label: date}
+  style: {ramp: RdYlBu, mode: stepped, steps: 12, units_label: date}
 
 # Snow is not available on any ACIS grid (tested) -> station-based path, not yet implemented.
 last_1in_snow:

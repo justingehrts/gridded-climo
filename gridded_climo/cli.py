@@ -6,15 +6,12 @@ import datetime as dt
 import sys
 from pathlib import Path
 
-from .acis import ACISClient
 from .cache import Cache
 from .config import Settings
-from .grid import Grid
-from .nohrsc import NOHRSC
-from .products.climatology import climatology
-from .products.period import period_summary
 from .registry import load_registry
 from .render import render_kmz
+from .runner import run_metric
+from .acis import ACISClient
 
 
 def _date(s: str) -> dt.date:
@@ -41,6 +38,13 @@ def build_parser():
     p.add_argument("--bbox", type=_bbox, help="west,south,east,north (default: Columbus, OH region)")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("list", help="list registered metrics")
+    pc = sub.add_parser("precompute", help="build data/occurrence + data/normals for the Streamlit app (slow, resumable)")
+    pc.add_argument("--elements", default="mint,maxt", help="elements for first/last occurrence grids")
+    pc.add_argument("--normals", default="mint,maxt,pcpn", help="elements for daily-normal grids ('' to skip)")
+    pc.add_argument("--normal-period", type=_period, metavar="YYYY-YYYY", help="period for daily normals (default 1991-2020)")
+    pc.add_argument("--y0", type=int, default=1950)
+    pc.add_argument("--workers", type=int, default=3)
+    pc.add_argument("--data-dir", type=Path)
     r = sub.add_parser("run", help="generate a KMZ")
     r.add_argument("metric")
     r.add_argument("--normal-period", type=_period, metavar="YYYY-YYYY", help="default 1991-2020")
@@ -60,36 +64,36 @@ def main(argv=None):
             print(f"{m.name:24s} {m.kind:12s} {m.source:11s} {m.title}")
         return 0
 
+    if a.cmd == "precompute":
+        from .precompute import run_precompute
+        from .precomputed import DATA_DIR
+        st = Settings(**{k: v for k, v in {"bbox": a.bbox, "cache_dir": a.cache_dir, "normal_period": a.normal_period}.items() if v})
+        run_precompute(ACISClient(st.acis_base_url, Cache(st.cache_dir)), st.bbox,
+                       elements=tuple(x for x in a.elements.split(",") if x), normals=tuple(x for x in a.normals.split(",") if x),
+                       period=st.normal_period, y0=a.y0, data_dir=a.data_dir or DATA_DIR, workers=a.workers,
+                       log=lambda m: print(m, flush=True))
+        return 0
+
     if a.metric not in reg:
         sys.exit(f"unknown metric '{a.metric}'. Try: gridded-climo list")
     m = reg[a.metric]
     kw = {k: v for k, v in {"bbox": a.bbox, "cache_dir": a.cache_dir, "normal_period": a.normal_period}.items() if v}
     st = Settings(**kw)
+    if m.kind == "period" and m.normal != "average" or m.kind == "storm":
+        if not (a.start and a.end):
+            sys.exit(f"{m.kind} metrics need --start and --end")
+    start, end = (a.start, a.end)
+    if m.kind == "storm":
+        start, end = (_datetime(start), _datetime(end)) if start and end else (None, None)
+    elif start and end:
+        start, end = _date(start), _date(end)
+    res = run_metric(m, st, start, end, a.method)
     cache = Cache(st.cache_dir)
-    label_fmt, name, info = None, m.title or m.name, {}
-
-    if m.kind == "climatology":
-        grid, info = climatology(m, ACISClient(st.acis_base_url, cache), st.bbox, st.normal_period)
-        ref = dt.date(2001, info["ref_month"], info["ref_day"])  # non-leap reference year
-        label_fmt = lambda v: (ref + dt.timedelta(days=int(round(v)))).strftime("%b %-d")
-        name += f" ({info['years'][0]}-{info['years'][1]})"
-    elif m.kind == "period":
-        if not (a.start and a.end):
-            sys.exit("period metrics need --start YYYY-MM-DD --end YYYY-MM-DD")
-        s, e = _date(a.start), _date(a.end)
-        grid = period_summary(m, ACISClient(st.acis_base_url, cache), st.bbox, s, e, st.normal_period)
-        name += f" ({s} to {e})"
-    else:  # storm
-        if not (a.start and a.end):
-            sys.exit("storm metrics need --start YYYY-MM-DDTHH --end YYYY-MM-DDTHH (UTC)")
-        s, e = _datetime(a.start), _datetime(a.end)
-        grid, used = NOHRSC(st.nohrsc_base_url, cache).storm_total(s, e, st.bbox, a.method)
-        name += f" ({s:%b %-d %HZ} - {e:%b %-d %HZ}, NOHRSC, {used})"
 
     out = a.out or Path("out") / f"{m.name}.kmz"
-    tif = grid.to_geotiff(out.with_suffix(".tif") if a.keep_tif else cache.file("products", f"{m.name}.tif"))
-    render_kmz(tif, out, m.style, name, legend_title=name if m.style.units_label else None, label_fmt=label_fmt)
-    print(f"wrote {out}")
+    tif = res.grid.to_geotiff(out.with_suffix(".tif") if a.keep_tif else cache.file("products", f"{m.name}.tif"))
+    render_kmz(tif, out, res.style, res.name, legend_title=res.name if res.style.units_label else None, label_fmt=res.label_fmt)
+    print(f"wrote {out}" + (f"  [{res.note}]" if res.note else ""))
     return 0
 
 
