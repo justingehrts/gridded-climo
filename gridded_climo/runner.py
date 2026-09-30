@@ -33,7 +33,7 @@ def _to_date(d) -> dt.date:
 
 
 def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str = "auto", data_dir=DATA_DIR,
-               allow_live: bool = True, log=print) -> Result:
+               allow_live: bool = True, log=print, reports: bool = False) -> Result:
     cache = Cache(st.cache_dir)
     client = ACISClient(st.acis_base_url, cache) if allow_live else None  # None = shipped data only
     name, label_fmt, note, points = metric.title or metric.name, None, "", None
@@ -65,6 +65,16 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
         grid, used = NOHRSC(st.nohrsc_base_url, cache).storm_total(s, e, st.bbox, method)
         name += f" ({s:%b %-d %HZ} – {e:%b %-d %HZ}, NOHRSC)"
         note = f"NOHRSC method: {used}"
+        label_fmt = lambda v: f'{v:g}"'
+        if reports:
+            import numpy as np
+            from .iem import fetch_snow_reports
+            try:
+                pts = fetch_snow_reports(s, e, st.bbox)
+                points = {k: np.array(v) for k, v in pts.items()}
+                note += f"; {len(pts['value'])} NWS snow reports (IEM)"
+            except Exception as ex:  # overlay is optional: never fail the map over it
+                note += f"; storm reports unavailable ({type(ex).__name__})"
     else:
         raise ValueError(metric.kind)
     return Result(grid, name, metric.style, label_fmt, metric.name, note, points)
@@ -74,4 +84,5 @@ def run_query(q: Query, st: Settings | None = None, data_dir=DATA_DIR, allow_liv
     st = st or Settings()
     st = Settings(bbox=st.bbox, normal_period=q.normal_period, cache_dir=st.cache_dir,
                   acis_base_url=st.acis_base_url, nohrsc_base_url=st.nohrsc_base_url)
-    return run_metric(metric_from_query(q), st, q.start, q.end, q.extra.get("method", "auto"), data_dir, allow_live, log)
+    return run_metric(metric_from_query(q), st, q.start, q.end, q.extra.get("method", "auto"), data_dir, allow_live, log,
+                      reports=bool(q.extra.get("reports")))

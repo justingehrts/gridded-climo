@@ -106,6 +106,8 @@ with st.sidebar:
         eh = c2.selectbox("End hour", range(24), index=7, format_func=lambda h: f"{h:02d}:00")
         to_utc = lambda d, h: dt.datetime.combine(d, dt.time(h), tzinfo=zone).astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
         q_kwargs["start"], q_kwargs["end"] = to_utc(sd, sh), to_utc(ed, eh)
+        q_kwargs["extra"] = {"reports": st.checkbox("Overlay NWS snow reports (IEM)", value=True,
+                                                    help="Observed snowfall from NWS local storm reports, shown as dots on the map.")}
         st.caption(f"UTC window: **{q_kwargs['start']:%b %-d %HZ} → {q_kwargs['end']:%b %-d %HZ}**. NOHRSC analyses are 00Z/12Z "
                    "(season totals) or 6-hourly; times snap to the nearest available.")
     else:  # averaged over normal period: month/day window
