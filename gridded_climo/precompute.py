@@ -118,3 +118,13 @@ def run_precompute(client, bbox, elements=("mint", "maxt"), normals=("mint", "ma
                 build_occurrence(client, bbox, el, op, direction, thresholds, y0, data_dir, log)
     for el in normals:
         build_normals(client, bbox, el, period, data_dir, log)
+
+
+def run_precompute_stations(client, bbox, elements=("mint", "maxt", "snow"), y0=FIRST_YEAR, data_dir=DATA_DIR, log=print):
+    from .query import STATION_MENU
+    from .stations import build_station_occurrence
+    for (el, op), thresholds in STATION_MENU.items():
+        if el in elements:
+            for direction in ("first", "last"):
+                build_station_occurrence(client, bbox, el, op, direction, thresholds, default_season(op, direction, el),
+                                         y0, data_dir, log)

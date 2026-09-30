@@ -17,4 +17,20 @@ pull (~50 MB JSON per season), later runs and other thresholds reuse it.
 
 Metrics live in `gridded_climo/metrics.yaml` (see `registry.py` for the schema). Data-source findings: `docs/acis_findings.md`.
 
-**Not yet implemented:** snow climatology (`last_1in_snow`, needs the station path), full style controls / Streamlit UI.
+### Streamlit app
+```
+streamlit run streamlit_app.py      # needs data/ (see below) and the GDAL CLI
+```
+Pick **When** (average first / last date, or custom range), **What** (temperature at/below or at/above X, snowfall, precip…),
+then **Generate map** for a preview and KMZ download. First/last dates for temperature can use either the **grid** (ACIS Grid 1,
+scanned cell by cell) or **stations** (each station's own average date, interpolated; snowfall is stations-only).
+
+The app reads precomputed data shipped in `data/` (Streamlit Community Cloud can't afford multi-decade pulls):
+```
+gridded-climo precompute --elements mint,maxt --normals mint,maxt,pcpn     # grid per-year crossings + daily normals
+gridded-climo precompute --stations mint,maxt,snow --elements "" --normals "" --y0 1961   # per-station crossings
+```
+Both are resumable (raw ACIS pulls are cached). Set `GRIDDED_CLIMO_ALLOW_LIVE=1` locally to allow off-menu thresholds (computed live; slow).
+Deploying to Streamlit Community Cloud: `requirements.txt` + `packages.txt` (installs `gdal-bin`) are included.
+
+**Not yet implemented:** full style controls (ramp picker, custom legends, `.wctrp` import).

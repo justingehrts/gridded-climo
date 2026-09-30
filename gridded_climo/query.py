@@ -16,6 +16,7 @@ MENU: dict[tuple[str, str], tuple[int, ...]] = {
     ("maxt", "ge"): (70, 80, 85, 90, 95, 100),
     ("mint", "ge"): (60, 65, 70, 75),
 }
+STATION_MENU: dict[tuple[str, str], tuple[float, ...]] = {**MENU, ("snow", "ge"): (0.1, 1.0, 3.0, 6.0)}
 NOHRSC_START = dt.datetime(2008, 10, 1)
 
 
@@ -23,9 +24,11 @@ def allow_live() -> bool:
     return os.environ.get("GRIDDED_CLIMO_ALLOW_LIVE") == "1"
 
 
-def default_season(op: str, direction: str) -> dict[str, list[int]]:
-    """Cold-side thresholds (<=) run on a Jul-Jun cool season (first = fall, last = spring);
+def default_season(op: str, direction: str, element: str | None = None) -> dict[str, list[int]]:
+    """Cold-side thresholds (<=) run on a Jul-Jun cool season (first = fall, last = spring); snow always does;
     warm-side thresholds (>=) use the calendar year."""
+    if element == "snow":
+        return {"start": [7, 1], "end": [6, 30]}
     if op in ("le", "lt"):
         return {"start": [7, 1], "end": [6, 30]} if direction == "first" else {"start": [1, 1], "end": [6, 30]}
     return {"start": [1, 1], "end": [12, 31]}
@@ -45,6 +48,7 @@ class Query:
     percentile: float = 50.0
     normal_period: tuple[int, int] = (1991, 2020)
     season: dict[str, list[int]] | None = None   # override default_season
+    method: str = "grid"           # first/last only: grid (ACIS Grid 1) | station (MultiStnData, interpolated)
     extra: dict = field(default_factory=dict)
 
 
@@ -53,14 +57,18 @@ def unsupported_reason(q: Query) -> str | None:
     if q.when not in WHENS:
         return f"unknown 'when': {q.when}"
     if q.when in ("first", "last"):
-        if q.element == "snow":
-            return "Average first/last snowfall dates need the station-interpolation path (coming soon)."
-        if q.element not in TEMP_ELEMENTS:
-            return "First/last dates are available for temperature thresholds only."
+        method = "station" if q.element == "snow" else q.method
+        if method not in ("grid", "station"):
+            return f"unknown method '{q.method}'"
+        if q.element == "snow" and q.op != "ge":
+            return "Snowfall first/last dates use 'at or above' an amount."
+        if q.element not in TEMP_ELEMENTS and q.element != "snow":
+            return "First/last dates are available for temperature and snowfall thresholds."
         if q.op not in ("le", "ge") or q.value is None:
             return "Choose 'at or below' / 'at or above' and a threshold."
-        if q.season is None and not allow_live() and q.value not in MENU.get((q.element, q.op), ()):
-            return f"{q.value:g}°F isn't in the precomputed menu for this variable (available: {list(MENU.get((q.element, q.op), ()))})."
+        menu = (STATION_MENU if method == "station" else MENU).get((q.element, q.op), ())
+        if q.season is None and not allow_live() and q.value not in menu:
+            return f"{q.value:g} isn't in the precomputed menu for this variable (available: {list(menu)})."
         return None
     if q.element == "snow":
         if q.when == "range_normal":
@@ -107,6 +115,8 @@ def describe(q: Query) -> str:
     el = {"mint": "Low", "maxt": "High", "pcpn": "Precipitation", "snow": "Snowfall"}[q.element]
     if q.when in ("first", "last"):
         rel = "at or below" if q.op == "le" else "at or above"
+        if q.element == "snow":
+            return f"Average Date of {q.when.title()} Snowfall of {q.value:g}\" or More"
         return f"Average Date of {q.when.title()} {el} Temperature {rel} {q.value:g}°F"
     kind = {"mean": "Average", "sum": "Total", "max": "Maximum", "min": "Minimum"}[q.reduce]
     if q.element == "snow":
@@ -122,9 +132,10 @@ def metric_from_query(q: Query) -> Metric:
     style, title = _style(q), describe(q)
     if q.when in ("first", "last"):
         return Metric(
-            name=f"{q.when}_{q.element}_{q.op}{q.value:g}", kind="climatology", source="acis_grid1", element=q.element,
+            name=f"{q.when}_{q.element}_{q.op}{q.value:g}", kind="climatology", element=q.element,
+            source="acis_stn" if (q.element == "snow" or q.method == "station") else "acis_grid1",
             title=title, threshold={"op": q.op, "value": q.value}, direction=q.when,
-            season=q.season or default_season(q.op, q.when),
+            season=q.season or default_season(q.op, q.when, q.element),
             cross_year={"stat": q.stat, **({"p": q.percentile} if q.stat == "percentile" else {})}, style=style,
         ).validate()
     if q.element == "snow":

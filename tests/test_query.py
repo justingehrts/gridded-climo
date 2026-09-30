@@ -19,7 +19,9 @@ def test_first_last_metric_and_style_direction():
 
 
 def test_unsupported_states_have_reasons():
-    assert "coming soon" in unsupported_reason(Query(when="first", element="snow"))
+    assert unsupported_reason(Query(when="last", element="snow", op="ge", value=1.0)) is None  # station path
+    assert "menu" in unsupported_reason(Query(when="last", element="snow", op="ge", value=2.0))
+    assert "at or above" in unsupported_reason(Query(when="last", element="snow", op="le", value=1.0))
     assert "menu" in unsupported_reason(Query(when="first", element="maxt", op="ge", value=91))
     assert "coming soon" in unsupported_reason(Query(when="range_normal", element="snow", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31)))
     assert "mean and total" in unsupported_reason(Query(when="range_normal", element="maxt", reduce="max", start=dt.date(2001, 1, 1), end=dt.date(2001, 1, 9)))
@@ -27,7 +29,7 @@ def test_unsupported_states_have_reasons():
     assert "one year" in unsupported_reason(Query(when="range_specific", element="pcpn", reduce="sum", start=dt.date(2020, 1, 1), end=dt.date(2022, 1, 1)))
     assert "2008" in unsupported_reason(Query(when="range_specific", element="snow", start=dt.datetime(2005, 1, 1), end=dt.datetime(2005, 1, 3)))
     with pytest.raises(ValueError):
-        metric_from_query(Query(when="last", element="snow"))
+        metric_from_query(Query(when="last", element="pcpn", op="ge", value=1))
 
 
 def test_range_metrics():
@@ -36,3 +38,12 @@ def test_range_metrics():
     assert metric_from_query(Query(when="range_normal", element="pcpn", reduce="sum", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31))).normal == "average"
     assert metric_from_query(Query(when="range_specific", element="snow", start=dt.datetime(2024, 1, 5), end=dt.datetime(2024, 1, 7))).kind == "storm"
     assert describe(Query(when="last", element="maxt", op="ge", value=90)) == "Average Date of Last High Temperature at or above 90°F"
+
+
+def test_station_method_and_snow_routing():
+    g = metric_from_query(Query(when="first", element="mint", op="le", value=40))
+    st = metric_from_query(Query(when="first", element="mint", op="le", value=40, method="station"))
+    sn = metric_from_query(Query(when="last", element="snow", op="ge", value=1.0))
+    assert (g.source, st.source, sn.source) == ("acis_grid1", "acis_stn", "acis_stn")
+    assert sn.season == {"start": [7, 1], "end": [6, 30]} and sn.style.units_label == "date"
+    assert "Snowfall of 1" in describe(Query(when="last", element="snow", op="ge", value=1.0))

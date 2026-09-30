@@ -10,7 +10,7 @@ import streamlit as st
 from streamlit_folium import st_folium
 
 from gridded_climo.config import DEFAULT_BBOX, DEFAULT_NORMAL_PERIOD
-from gridded_climo.query import MENU, NOHRSC_START, TEMP_ELEMENTS, Query, allow_live, unsupported_reason
+from gridded_climo.query import MENU, NOHRSC_START, STATION_MENU, TEMP_ELEMENTS, Query, allow_live, unsupported_reason
 from gridded_climo.ui.preview import build_map, load_counties_geojson
 from gridded_climo.ui.service import generate
 
@@ -54,8 +54,11 @@ with st.sidebar:
     if when_label != "Custom range":
         var = st.selectbox("Variable", ["Temperature at or below", "Temperature at or above", "Snowfall"])
         if var == "Snowfall":
-            q_kwargs.update(element="snow", op="ge", value=1.0)
-            st.number_input("Snowfall amount (in)", 0.1, 50.0, 1.0, 0.1, disabled=True)
+            menu = STATION_MENU[("snow", "ge")]
+            amount = st.number_input("Daily snowfall at least (in)", 0.1, 30.0, 1.0, 0.1) if allow_live() else \
+                st.select_slider("Daily snowfall at least (in)", options=list(menu), value=1.0)
+            q_kwargs.update(element="snow", op="ge", value=float(amount), method="station")
+            st.caption("Snowfall has no ACIS grid, so this uses station observations interpolated to a map.")
         else:
             op = "le" if var.endswith("below") else "ge"
             el_label = st.radio("Which temperature?", list(TEMP_ELEMENTS.values()), index=0 if op == "le" else 1, horizontal=True)
@@ -65,7 +68,12 @@ with st.sidebar:
                 value = st.number_input("Threshold (°F)", -40.0, 130.0, float(menu[0]), 1.0)
             else:
                 value = st.select_slider("Threshold (°F)", options=list(menu), value=menu[0])
-            q_kwargs.update(element=el, op=op, value=float(value))
+            method_label = st.radio(
+                "Method", ["Grid (ACIS Grid 1)", "Stations (interpolated)"],
+                help="Grid: NRCC's 5 km daily temperature grid, scanned cell by cell — smooth, every cell has a value. "
+                     "Stations: each station's own average date (what the ACIS website shows), then interpolated — "
+                     "official station values at the dots. The two can differ by days to a couple of weeks locally.")
+            q_kwargs.update(element=el, op=op, value=float(value), method="station" if method_label.startswith("Stations") else "grid")
         q_kwargs["when"] = "first" if when_label == "Average first date" else "last"
     else:
         var = st.selectbox("Variable", ["High temperature", "Low temperature", "Precipitation", "Snowfall"])
@@ -158,7 +166,7 @@ if out:
     if out.note:
         st.caption(out.note)
     st.download_button("⬇️ Download KMZ", out.kmz, file_name=out.filename, mime="application/vnd.google-earth.kmz", type="primary")
-    st_folium(build_map(out.png, out.bounds, counties()), use_container_width=True, height=560, returned_objects=[])
+    st_folium(build_map(out.png, out.bounds, counties(), out.points), use_container_width=True, height=560, returned_objects=[])
     if out.legend_png:
         st.image(out.legend_png, caption="Legend (also included in the KMZ)")
 elif not reason:

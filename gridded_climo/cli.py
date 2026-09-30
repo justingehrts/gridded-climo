@@ -42,6 +42,7 @@ def build_parser():
     pc.add_argument("--elements", default="mint,maxt", help="elements for first/last occurrence grids")
     pc.add_argument("--normals", default="mint,maxt,pcpn", help="elements for daily-normal grids ('' to skip)")
     pc.add_argument("--normal-period", type=_period, metavar="YYYY-YYYY", help="period for daily normals (default 1991-2020)")
+    pc.add_argument("--stations", default="", help="elements for station-based files, e.g. mint,maxt,snow")
     pc.add_argument("--y0", type=int, default=1950)
     pc.add_argument("--workers", type=int, default=3)
     pc.add_argument("--data-dir", type=Path)
@@ -68,7 +69,14 @@ def main(argv=None):
         from .precompute import run_precompute
         from .precomputed import DATA_DIR
         st = Settings(**{k: v for k, v in {"bbox": a.bbox, "cache_dir": a.cache_dir, "normal_period": a.normal_period}.items() if v})
-        run_precompute(ACISClient(st.acis_base_url, Cache(st.cache_dir)), st.bbox,
+        client = ACISClient(st.acis_base_url, Cache(st.cache_dir))
+        if a.stations:
+            from .precompute import run_precompute_stations
+            run_precompute_stations(client, st.bbox, tuple(a.stations.split(",")), a.y0, a.data_dir or DATA_DIR,
+                                    log=lambda m: print(m, flush=True))
+            if not a.elements and not a.normals:
+                return 0
+        run_precompute(client, st.bbox,
                        elements=tuple(x for x in a.elements.split(",") if x), normals=tuple(x for x in a.normals.split(",") if x),
                        period=st.normal_period, y0=a.y0, data_dir=a.data_dir or DATA_DIR, workers=a.workers,
                        log=lambda m: print(m, flush=True))

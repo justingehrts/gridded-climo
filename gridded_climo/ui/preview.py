@@ -19,7 +19,7 @@ def load_counties_geojson():
         return None  # preview still works without county lines
 
 
-def build_map(png: bytes, bounds: tuple[float, float, float, float], counties=None) -> folium.Map:
+def build_map(png: bytes, bounds: tuple[float, float, float, float], counties=None, points: dict | None = None) -> folium.Map:
     south, west, north, east = bounds
     m = folium.Map(location=[(north + south) / 2, (east + west) / 2], tiles=None)
     folium.TileLayer(tiles="Esri.WorldGrayCanvas", name="Light Basemap", show=True).add_to(m)
@@ -35,6 +35,12 @@ def build_map(png: bytes, bounds: tuple[float, float, float, float], counties=No
     if counties:
         folium.GeoJson(counties, name="Counties", style_function=lambda f: {"color": "#555555", "weight": 0.75, "fillOpacity": 0},
                        pane="reference_pane").add_to(m)
+    if points:
+        fg = folium.FeatureGroup(name="Stations", show=True)
+        for lo, la, lab, nm in zip(points["lon"], points["lat"], points["label"], points["name"]):
+            folium.CircleMarker([la, lo], radius=3, color="#111", weight=1, fill=True, fill_opacity=0.9,
+                                tooltip=f"{nm}: {lab}").add_to(fg)
+        fg.add_to(m)
     folium.LayerControl(collapsed=True).add_to(m)
     m.fit_bounds([[south, west], [north, east]])
     return m

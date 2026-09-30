@@ -21,6 +21,8 @@ class Output:
     name: str
     note: str
     filename: str
+    points: dict | None = None
+    label_fmt: object = None
 
 
 def generate(q: Query, bbox: tuple[float, float, float, float], cache_dir: str | Path, data_dir=DATA_DIR,
@@ -34,4 +36,9 @@ def generate(q: Query, bbox: tuple[float, float, float, float], cache_dir: str |
         kmz_path = overlay_to_kmz(ov, Path(td) / "out.kmz")
         kmz = kmz_path.read_bytes()
     safe = "".join(c if c.isalnum() else "_" for c in describe(q)).strip("_").lower()
-    return Output(ov.png, ov.legend_png, (ov.south, ov.west, ov.north, ov.east), kmz, res.name, res.note, f"{safe}.kmz")
+    points = None
+    if res.points is not None:
+        vals = [res.label_fmt(v) if res.label_fmt else f"{v:g}" for v in res.points["value"]]
+        points = {"lon": res.points["lon"].tolist(), "lat": res.points["lat"].tolist(), "label": vals,
+                  "name": [str(n) for n in res.points["name"]]}
+    return Output(ov.png, ov.legend_png, (ov.south, ov.west, ov.north, ov.east), kmz, res.name, res.note, f"{safe}.kmz", points)

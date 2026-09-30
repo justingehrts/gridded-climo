@@ -25,6 +25,7 @@ class Result:
     label_fmt: Callable[[float], str] | None
     slug: str
     note: str = ""
+    points: dict | None = None  # station markers for the preview (station method)
 
 
 def _to_date(d) -> dt.date:
@@ -34,15 +35,17 @@ def _to_date(d) -> dt.date:
 def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str = "auto", data_dir=DATA_DIR,
                allow_live: bool = True, log=print) -> Result:
     cache = Cache(st.cache_dir)
-    client = ACISClient(st.acis_base_url, cache) if allow_live else None
-    name, label_fmt, note = metric.title or metric.name, None, ""
+    client = ACISClient(st.acis_base_url, cache) if allow_live else None  # None = shipped data only
+    name, label_fmt, note, points = metric.title or metric.name, None, "", None
 
     if metric.kind == "climatology":
         grid, info = climatology(metric, client, st.bbox, st.normal_period, data_dir, log)
         ref = dt.date(2001, info["ref_month"], info["ref_day"])  # non-leap reference year
         label_fmt = lambda v: (ref + dt.timedelta(days=int(round(v)))).strftime("%b %-d")
         name += f" ({info['years'][0]}-{info['years'][1]})"
-        note = "precomputed" if info["source"] == "precomputed" else "computed live from ACIS daily grids"
+        note = {"precomputed": "ACIS Grid 1 (precomputed)", "live": "ACIS Grid 1, computed live",
+                "station": f"Station-based: {len(info['points']['value'])} stations interpolated (IDW, 80 km max)"}[info["source"]]
+        points = info.get("points")
     elif metric.kind == "period":
         if not (start and end):
             raise ValueError("period metrics need a start and end")
@@ -64,7 +67,7 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
         note = f"NOHRSC method: {used}"
     else:
         raise ValueError(metric.kind)
-    return Result(grid, name, metric.style, label_fmt, metric.name, note)
+    return Result(grid, name, metric.style, label_fmt, metric.name, note, points)
 
 
 def run_query(q: Query, st: Settings | None = None, data_dir=DATA_DIR, allow_live: bool = True, log=print) -> Result:
