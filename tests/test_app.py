@@ -79,3 +79,39 @@ def test_specific_dates_snowfall_live():
     at.date_input[0].set_value(dt.date(2024, 1, 5)).run()
     at.date_input[1].set_value(dt.date(2024, 1, 8)).run()
     assert "Snowfall Total" in gen(at)[0]
+
+
+def _set_years(at, lo, hi):
+    next(n for n in at.number_input if n.label.startswith(("Years included", "Normal period"))).set_value(lo)
+    next(n for n in at.number_input if n.label == "to").set_value(hi)
+
+
+def test_earliest_snow_on_record_1950_2025():
+    at = fresh()
+    at.radio[0].set_value("Average first date").run()
+    at.selectbox[0].select("Snowfall").run()
+    next(s for s in at.selectbox if s.label == "Statistic across years").select("Earliest on record").run()
+    _set_years(at, 1950, 2025)
+    at.run()
+    assert gen(at)[0] == 'Earliest First Snowfall of 1" or More on Record (1950-2025)'
+
+
+@live
+def test_off_menu_threshold_and_pre_shipped_years_fetch_live():
+    at = fresh()
+    at.radio[0].set_value("Average last date").run()
+    next(n for n in at.number_input if n.label == "Threshold (°F)").set_value(37.0).run()   # not pre-saved
+    _set_years(at, 1930, 1960)                                                              # before pre-saved data? (1950+ saved; 1930 is live)
+    at.run()
+    title = gen(at)[0]
+    assert "37°F" in title and "(1930-1960)" in title
+    assert any("fetched live" in c.value for c in at.caption)
+
+
+def test_departure_requires_shipped_normals():
+    at = fresh()
+    at.radio[0].set_value("Custom range").run()
+    at.checkbox[0].set_value(True).run()
+    _set_years(at, 1981, 2010)
+    at.run()
+    assert any("1991-2020" in i.value for i in at.info) and at.button[0].disabled

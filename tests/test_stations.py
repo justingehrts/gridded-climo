@@ -206,3 +206,13 @@ def test_build_station_occurrence_server_writes_files(tmp_path, monkeypatch):
                                     log=lambda *_: None)
     z = load_station_occurrence(tmp_path, "mint", "le", 32, "first")
     assert z["offsets"].shape[1] == 2 and z["years"][0] == 2015
+
+
+def test_extreme_years_ignores_dropped_all_nan_stations():
+    """Regression: a station that never crossed (all NaN, dropped by station_stat) must not crash the record-year lookup."""
+    from gridded_climo.stations import extreme_years
+    z = {"years": np.array([2000, 2001, 2002], "int16"), "lon": np.array([-83.0, -82.0], "float32"),
+         "lat": np.array([40.0, 40.0], "float32"), "sids": np.array(["a", "never"]), "name": np.array(["A", "N"]),
+         "offsets": np.array([[50, NO_CROSS], [40, NO_CROSS], [60, NO_CROSS]], "int16")}
+    station_stat(z, (2000, 2002), "min")
+    assert extreme_years(z, (2000, 2002), "min", station_stat.last_mask).tolist() == [2001]

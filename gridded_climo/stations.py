@@ -157,18 +157,14 @@ def station_stat(z: dict, normal_period: tuple[int, int], stat: str, p: float | 
 
 
 def extreme_years(z: dict, normal_period: tuple[int, int], stat: str, keep: np.ndarray) -> np.ndarray:
-    """For stat min/max: the (first) year each kept station set its record. `keep` is the boolean mask station_stat used."""
+    """For stat min/max: the (first) year each kept station set its record. `keep` is the boolean mask station_stat used.
+    Only kept stations are examined: dropped ones can be all-NaN (never crossed), which argmin/argmax reject."""
     years = z["years"].astype(int)
     sel = np.isin(years, np.arange(normal_period[0], normal_period[1] + 1))
-    off = z["offsets"][sel].astype("float32")
+    off = z["offsets"][sel][:, keep].astype("float32")
     off = np.where((off != INVALID) & (off != NO_CROSS), off, np.nan)
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        idx = np.nanargmin(off, axis=0) if stat == "min" else np.nanargmax(off, axis=0)
-    return years[sel][idx][keep]
-
-
+    idx = np.nanargmin(off, axis=0) if stat == "min" else np.nanargmax(off, axis=0)
+    return years[sel][idx]
 # ---------------------------------------------------------------------------------------------------------------
 # Server-side threshold search (the request shape xmACIS uses). Verified 2026-10: matches the local daily scan above
 # on 12,855 station-years with 0 differences, and returns every station for every season in ONE request (~12-25 s).
