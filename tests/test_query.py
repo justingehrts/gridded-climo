@@ -48,3 +48,29 @@ def test_station_method_and_snow_routing():
     assert (g.source, st.source, sn.source) == ("acis_grid1", "acis_stn", "acis_stn")
     assert sn.season == {"start": [7, 1], "end": [6, 30]} and sn.style.units_label == "date"
     assert "Snowfall of 1" in describe(Query(when="last", element="snow", op="ge", value=1.0))
+
+
+def test_last_complete_year_rolls_over_with_the_calendar():
+    from gridded_climo.query import last_complete_year
+    cool, cal = {"start": [7, 1], "end": [6, 30]}, {"start": [1, 1], "end": [12, 31]}
+    d = dt.date
+    assert (last_complete_year(cool, d(2026, 10, 1)), last_complete_year(cal, d(2026, 10, 1))) == (2025, 2025)
+    assert last_complete_year(cool, d(2026, 6, 29)) == 2024        # 2025-26 season hasn't ended
+    assert last_complete_year(cool, d(2026, 7, 10)) == 2025        # ...and has by mid-July
+    assert last_complete_year(cool, d(2027, 10, 1)) == 2026        # a year from now: no code change needed
+    assert last_complete_year(cal, d(2027, 1, 3)) == 2025          # within 5 days of year end: still settling
+
+
+def test_station_year_limits_and_shipped_normals(monkeypatch):
+    import gridded_climo.query as qm
+    base = dict(when="first", element="mint", op="le", value=32, method="station")
+    last = qm.last_complete_year(qm.default_season("le", "first", "mint"))
+    assert unsupported_reason(Query(**base, normal_period=(1870, last))) is None
+    assert "1870" in unsupported_reason(Query(**base, normal_period=(1850, 2000)))
+    assert "latest completed season" in unsupported_reason(Query(**base, normal_period=(1991, last + 1)))
+    monkeypatch.setattr(qm, "allow_live", lambda: False)
+    r = dict(when="range_normal", element="maxt", reduce="mean", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31))
+    assert unsupported_reason(Query(**r)) is None
+    assert "1991-2020" in unsupported_reason(Query(**r, normal_period=(1981, 2010)))
+    assert "1991-2020" in unsupported_reason(Query(when="range_specific", element="maxt", reduce="mean", departure=True,
+                                                   start=dt.date(2024, 7, 1), end=dt.date(2024, 7, 31), normal_period=(1981, 2010)))

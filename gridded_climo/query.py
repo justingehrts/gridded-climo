@@ -21,6 +21,21 @@ STATION_MENU: dict[tuple[str, str], tuple[float, ...]] = {**MENU, ("snow", "ge")
 NOHRSC_START = dt.datetime(2008, 10, 1)
 
 
+def last_complete_year(season: dict, today: dt.date | None = None) -> int:
+    """Latest season-start year whose season has finished (>5 days ago), so shipped/live data never reaches a season in progress."""
+    today = today or dt.date.today()
+    (sm, sd), (em, ed) = season["start"], season["end"]
+    y = today.year
+    while dt.date(y + (1 if (em, ed) < (sm, sd) else 0), em, ed) >= today - dt.timedelta(days=5):
+        y -= 1
+    return y
+
+
+STATION_FIRST_YEAR = 1870   # ACIS has a handful of stations from the 1870s; the region is dense only from ~1895
+SPARSE_BEFORE = 1895
+NORMALS_PERIOD = (1991, 2020)  # daily-normal files are shipped for this period only
+
+
 def allow_live() -> bool:
     return os.environ.get("GRIDDED_CLIMO_ALLOW_LIVE") == "1"
 
@@ -71,8 +86,11 @@ def unsupported_reason(q: Query) -> str | None:
             lo, hi = (-60, 140) if q.element != "snow" else (0.1, 60)
             if not lo <= q.value <= hi:
                 return f"Threshold should be between {lo} and {hi}."
-            if q.normal_period[0] < 1900:
-                return "Station data is used from 1900 onward."
+            last = last_complete_year(q.season or default_season(q.op, q.when, q.element))
+            if q.normal_period[0] < STATION_FIRST_YEAR:
+                return f"Station data is used from {STATION_FIRST_YEAR} onward."
+            if q.normal_period[1] > last:
+                return f"The latest completed season is {last}; choose an end year of {last} or earlier."
             return None
         cover = shipped_years(DATA_DIR).get("grid")  # grid first/last dates come only from shipped data (GridData has no server-side first/last)
         if cover and q.season is None and not allow_live():
@@ -93,6 +111,8 @@ def unsupported_reason(q: Query) -> str | None:
         return None
     if q.element not in ("mint", "maxt", "pcpn"):
         return f"unsupported element '{q.element}'"
+    if (q.when == "range_normal" or q.departure) and tuple(q.normal_period) != NORMALS_PERIOD and not allow_live():
+        return f"Daily normals are shipped for {NORMALS_PERIOD[0]}-{NORMALS_PERIOD[1]} only; use that normal period."
     if q.when == "range_normal" and q.reduce not in ("mean", "sum"):
         return "Averaging over the normal period supports mean and total only (not max/min)."
     if q.departure and q.reduce not in ("mean", "sum"):

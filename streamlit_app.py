@@ -13,7 +13,7 @@ from PIL import Image
 from streamlit_folium import st_folium
 
 from gridded_climo.config import DEFAULT_BBOX, DEFAULT_NORMAL_PERIOD
-from gridded_climo.query import MENU, NOHRSC_START, STATION_MENU, TEMP_ELEMENTS, Query, allow_live, unsupported_reason
+from gridded_climo.query import MENU, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
 from gridded_climo.ui.preview import build_map, load_counties_geojson
 from gridded_climo.ui.service import generate
 
@@ -141,9 +141,16 @@ with st.sidebar:
     with st.expander("Options"):
         n0, n1 = st.columns(2)
         label_y = "Years included: from" if when_label != "Custom range" else "Normal period: from"
-        normal = (n0.number_input(label_y, 1900, 2024, DEFAULT_NORMAL_PERIOD[0]), n1.number_input("to", 1951, 2025, DEFAULT_NORMAL_PERIOD[1]))
         if when_label != "Custom range":
-            st.caption("For a record (earliest/latest), set the range to all the years you want, e.g. 1950–2025. The Stations method works back to 1900; the Grid method only has 1991 onward.")
+            ymax = last_complete_year(default_season(q_kwargs.get("op", "ge"), q_kwargs["when"], q_kwargs["element"]))
+        else:
+            ymax = last_complete_year({"start": [1, 1], "end": [12, 31]})
+        normal = (n0.number_input(label_y, STATION_FIRST_YEAR, ymax - 1, DEFAULT_NORMAL_PERIOD[0]),
+                  n1.number_input("to", STATION_FIRST_YEAR + 1, ymax, DEFAULT_NORMAL_PERIOD[1]))
+        if when_label != "Custom range":
+            st.caption("For a record (earliest/latest), set the range to all the years you want, e.g. 1950–2025. The Stations method works back to 1870 (most reliable from ~1895); the Grid method only has 1991 onward.")
+            if int(normal[0]) < SPARSE_BEFORE:
+                st.warning(f"Before ~{SPARSE_BEFORE} only a handful of stations report in this region, so these maps can be mostly blank or rest on very few stations.")
         q_kwargs["normal_period"] = (int(normal[0]), int(normal[1]))
         if when_label != "Custom range":
             stat_label = st.selectbox("Statistic across years", ["Average date", "Median date", "Earliest on record", "Latest on record", "Percentile"])

@@ -126,7 +126,7 @@ def test_year_coverage_and_threshold_rules(monkeypatch):
     assert "Stations" in unsupported_reason(Query(**base, method="grid", normal_period=(1960, 2020)))
     assert unsupported_reason(Query(**base, method="station", normal_period=(1950, 2025))) is None
     assert unsupported_reason(Query(**{**base, "value": 37}, method="station", normal_period=(1930, 2025))) is None  # off-menu, live
-    assert "1900" in unsupported_reason(Query(**base, method="station", normal_period=(1850, 2020)))
+    assert "1870" in unsupported_reason(Query(**base, method="station", normal_period=(1850, 2020)))
     assert "menu" in unsupported_reason(Query(**{**base, "value": 37}, method="grid", normal_period=(1991, 2020)))
     assert unsupported_reason(Query(**base, method="grid", normal_period=(1991, 2020))) is None
 
