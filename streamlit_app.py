@@ -26,7 +26,8 @@ from gridded_climo.registry import Style
 from gridded_climo.render import PaletteError, RAMPS, parse_legend_csv, parse_wctrp, style_from_json, style_to_json
 from gridded_climo.render.palettes import sample_colors
 from gridded_climo.ui.service import compute, render_computed
-from gridded_climo.ui.style_build import build_style
+from gridded_climo.presets import list_presets, preset_slug
+from gridded_climo.ui.style_build import build_style, pending_from_json
 
 def _writable_cache_dir() -> Path:
     """Preferred cache dir if we can write there, else a temp dir (hosted filesystems may be read-only)."""
@@ -241,6 +242,14 @@ is_date_map = bool(computed and computed.ref)
 
 # ---- style panel (sidebar)
 with st.sidebar.expander("🎨 Style"):
+    presets = list_presets()
+    chosen = st.selectbox("Preset", ["(none)"] + list(presets), key="style_preset")
+    if st.button("Apply preset", disabled=chosen == "(none)", width="stretch",
+                 help="Load this saved look. Only the settings the preset contains are changed."):
+        st.session_state["_pending"] = pending_from_json(presets[chosen].read_bytes(), RAMPS)
+        st.rerun()
+    if not presets:
+        st.caption("No presets yet. Save one below and add the file to the repo's `presets/` folder.")
     up = st.file_uploader("Import palette / settings", type=["wctrp", "csv", "json"], key="style_upload",
                           help=".wctrp (MAX palette) or CSV (Value,R,G,B,Alpha) set the colors; JSON restores a full settings export.")
     if up is not None and st.session_state.get("_imported") != (up.name, up.size):
@@ -248,13 +257,8 @@ with st.sidebar.expander("🎨 Style"):
         try:
             data = up.getvalue()
             if up.name.lower().endswith(".json"):
-                imp = style_from_json(data)
-                # widgets already exist this run, so hand the values to the top of the next run (see _pending below)
-                st.session_state["_pending"] = dict(
-                    style_ramp=imp.ramp if imp.ramp in RAMPS else "Map default", style_flip=imp.reverse,
-                    style_mode=imp.mode.title(), style_steps=imp.steps, style_date_mode=imp.date_mode,
-                    style_custom_starts=imp.custom_starts or "Oct 1, Oct 8, Oct 15, Oct 22, Nov 1",
-                    palette=imp.palette, bin_colors=imp.bin_colors, legend_rows=imp.legend_rows)
+                # widgets already exist this run, so hand the values to the top of the next run (see _pending above)
+                st.session_state["_pending"] = pending_from_json(data, RAMPS)
             else:
                 rows = parse_wctrp(data)[0] if up.name.lower().endswith(".wctrp") else parse_legend_csv(data)
                 if is_date_map:   # dates aren't palette values, so only the colors carry over (by position across the bins)
@@ -262,7 +266,7 @@ with st.sidebar.expander("🎨 Style"):
                 else:
                     st.session_state["legend_rows"] = rows
             st.rerun()
-        except PaletteError as e:
+        except (PaletteError, ValueError) as e:
             st.error(str(e))
     ramp_choice = st.selectbox("Color ramp", ["Map default"] + sorted(RAMPS), key="style_ramp")
     flip = st.checkbox("Reverse colors", key="style_flip")
@@ -305,7 +309,16 @@ if out:
         st.caption(out.note)
     dl1, dl2 = st.columns([1, 1])
     dl1.download_button("⬇️ Download KMZ", out.kmz, file_name=out.filename, mime="application/vnd.google-earth.kmz", type="primary")
-    dl2.download_button("Export style settings (JSON)", style_to_json(style), file_name="gridded_climo_style.json", mime="application/json")
+    with dl2.popover("Save this look as a preset"):
+        pname = st.text_input("Preset name", placeholder="e.g. On-air look", key="preset_name")
+        try:
+            slug = preset_slug(pname) if pname else None
+        except ValueError:
+            slug = None
+        st.download_button("Download preset file", style_to_json(style, pname or None), file_name=f"{slug or 'preset'}.json",
+                           mime="application/json", disabled=not slug, key="preset_dl")
+        st.caption(f"To make it appear in everyone's Preset list, save the file as `presets/{slug or 'name'}.json` in the repo and commit it. "
+                   "Presets store the look only (ramp, grouping, colors), never the data or the threshold.")
     tab_map, tab_img = st.tabs(["Map", "Image"])
     with tab_map:
         st_folium(build_map(out.png, out.bounds, counties(), out.points), use_container_width=True, height=560, returned_objects=[])

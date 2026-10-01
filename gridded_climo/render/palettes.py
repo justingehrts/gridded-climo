@@ -72,8 +72,9 @@ def sample_colors(rows: list[Row], n: int) -> list[list[int]]:
     return [list(rows[min(m - 1, int(i * m / n + (m / n) / 2))][1:]) for i in range(n)]
 
 
-def style_to_json(style: Style) -> str:
-    return json.dumps(asdict(style), indent=2)
+def style_to_json(style: Style, name: str | None = None) -> str:
+    """Settings as JSON. `name` (optional) is stored as a top-level label; loading ignores it."""
+    return json.dumps({**({"name": name} if name else {}), **asdict(style)}, indent=2)
 
 
 def style_from_json(text: str | bytes) -> Style:

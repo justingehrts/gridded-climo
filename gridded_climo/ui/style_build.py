@@ -25,3 +25,31 @@ def build_style(base: Style, *, ramp: str | None = None, flip: bool = False, mod
         date_mode=date_mode, custom_starts=custom_starts,
         palette=palette or None, bin_colors=bin_colors or None, legend_rows=legend_rows or None,
     )
+
+
+def pending_from_json(raw: str | bytes, known_ramps) -> dict:
+    """Settings/preset JSON -> {session_state key: value}, containing ONLY the fields present in the file (so a preset that
+    omits e.g. `steps` leaves the map's own default alone)."""
+    import json
+    d = json.loads(raw)
+    if not isinstance(d, dict):
+        raise ValueError("settings JSON must be an object")
+    out: dict = {}
+    if d.get("ramp") in known_ramps:
+        out["style_ramp"] = d["ramp"]
+        out["style_flip"] = bool(d.get("reverse", False))       # with an explicit ramp, 'reverse' is absolute
+    if d.get("mode") in ("stepped", "smooth"):
+        out["style_mode"] = d["mode"].title()
+    if isinstance(d.get("steps"), int):
+        out["style_steps"] = max(3, min(20, d["steps"]))
+    for k in ("vmin", "vmax"):
+        if isinstance(d.get(k), (int, float)):
+            out[f"style_{k}"] = float(d[k])
+    if d.get("date_mode") in MODES:
+        out["style_date_mode"] = d["date_mode"]
+    if d.get("custom_starts"):
+        out["style_custom_starts"] = d["custom_starts"]
+    for k in ("palette", "bin_colors", "legend_rows"):
+        if d.get(k):
+            out[k] = d[k]
+    return out

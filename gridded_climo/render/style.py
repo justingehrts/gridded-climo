@@ -87,8 +87,8 @@ def resolve(style: Style, tif: str | Path, ref: tuple[int, int] | None = None) -
         bins = date_bins(style, rng, ref)
         colors = bin_colors_for(style, bins.labels)
         return Resolved(band_table(bins.edges, colors), bins.edges[0], bins.edges[-1], False, bins.edges, bins.labels, colors)
-    # 2) numeric custom legend (value = lower bound of its band)
-    if style.legend_rows:
+    # 2) numeric custom legend (value = lower bound of its band). Not for date maps: numeric thresholds mean nothing there.
+    if style.legend_rows and ref is None:
         rows = sorted((list(r) for r in style.legend_rows), key=lambda r: r[0])
         if len(rows) < 2:
             raise ValueError("a custom legend needs at least two rows")

@@ -173,3 +173,17 @@ def test_ramp_mode_range_controls_apply_to_a_numeric_map():
     at.session_state["legend_rows"] = [[0, 255, 255, 255, 0], [1, 0, 0, 255, 255], [3, 255, 0, 0, 255]]
     at.radio(key="style_mode").set_value("Stepped").run()
     assert not at.exception and not at.error
+
+
+def test_apply_example_preset_sets_only_what_it_contains():
+    at = fresh()
+    _stations_first_freeze(at)
+    steps_before = at.slider(key="style_steps").value
+    at.selectbox(key="style_preset").select("Example: weekly bins, Spectral").run()
+    next(b for b in at.button if b.label == "Apply preset").click().run()
+    assert not at.exception and not at.error
+    assert at.radio(key="style_date_mode").value == "weekly" and at.selectbox(key="style_ramp").value == "Spectral"
+    assert at.checkbox(key="style_flip").value is True
+    assert at.slider(key="style_steps").value == steps_before           # the preset didn't mention steps
+    labels = [b.label for b in at.get("download_button")]
+    assert "⬇️ Download KMZ" in labels and "Download preset file" in labels
