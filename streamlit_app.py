@@ -198,6 +198,11 @@ with st.sidebar:
                 q_kwargs["percentile"] = st.slider("Percentile", 1, 99, 10)
             if stat in ("min", "max"):
                 st.caption("Each station's single earliest/latest date in the chosen years; its record year shows in the map tooltip.")
+        if when_label != "Custom range" and (q_kwargs.get("method") == "station" or q_kwargs.get("element") == "snow"):
+            q_kwargs["smooth_km"] = float(st.slider(
+                "Map smoothing (km)", 0, 15, 3,
+                help="Stations are interpolated, then lightly blurred. 0 = the map matches each station's own value exactly (but looks "
+                     "spottier); higher = smoother contours that drift from individual stations (12 km can be ~5 days off at a single airport)."))
         region_name = st.selectbox("Region", list(REGIONS))
         bbox = REGIONS[region_name]
         if bbox is None:

@@ -34,20 +34,20 @@ def _to_date(d) -> dt.date:
 
 
 def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str = "auto", data_dir=DATA_DIR,
-               allow_live: bool = True, log=print, reports: bool = False) -> Result:
+               allow_live: bool = True, log=print, reports: bool = False, smooth_km: float = 3.0) -> Result:
     cache = Cache(st.cache_dir)
     client = ACISClient(st.acis_base_url, cache) if allow_live else None  # None = shipped data only
     name, label_fmt, note, points, ref_md = metric.title or metric.name, None, "", None, None
 
     if metric.kind == "climatology":
-        grid, info = climatology(metric, client, st.bbox, st.normal_period, data_dir, log)
+        grid, info = climatology(metric, client, st.bbox, st.normal_period, data_dir, log, smooth_km)
         ref = dt.date(2001, info["ref_month"], info["ref_day"])  # non-leap reference year
         label_fmt = lambda v: (ref + dt.timedelta(days=int(round(v)))).strftime("%b %-d")
         ref_md = (info["ref_month"], info["ref_day"])
         name += f" ({info['years'][0]}-{info['years'][1]})"
         points = info.get("points")
         if info["source"] == "station":
-            note = (f"Station-based: {len(points['value'])} stations interpolated (IDW + 12 km smoothing, 80 km max); "
+            note = (f"Station-based: {len(points['value'])} stations interpolated (IDW + {info['smooth_km']:g} km smoothing, 80 km max); "
                     + ("pre-saved data" if info["data_source"] == "shipped" else "fetched live from ACIS"))
         else:
             note = "ACIS Grid 1 (precomputed)" if info["source"] == "precomputed" else "ACIS Grid 1, computed live"
@@ -90,4 +90,4 @@ def run_query(q: Query, st: Settings | None = None, data_dir=DATA_DIR, allow_liv
     st = Settings(bbox=st.bbox, normal_period=q.normal_period, cache_dir=st.cache_dir,
                   acis_base_url=st.acis_base_url, nohrsc_base_url=st.nohrsc_base_url)
     return run_metric(metric_from_query(q), st, q.start, q.end, q.extra.get("method", "auto"), data_dir, allow_live, log,
-                      reports=bool(q.extra.get("reports")))
+                      reports=bool(q.extra.get("reports")), smooth_km=q.smooth_km)

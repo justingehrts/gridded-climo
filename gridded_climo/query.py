@@ -65,6 +65,7 @@ class Query:
     normal_period: tuple[int, int] = (1991, 2020)
     season: dict[str, list[int]] | None = None   # override default_season
     method: str = "grid"           # first/last only: grid (ACIS Grid 1) | station (MultiStnData, interpolated)
+    smooth_km: float = 3.0         # station maps: blur radius after interpolation (0 = hugs each station exactly)
     extra: dict = field(default_factory=dict)
 
 
@@ -87,6 +88,8 @@ def unsupported_reason(q: Query) -> str | None:
             if not lo <= q.value <= hi:
                 return f"Threshold should be between {lo} and {hi}."
             last = last_complete_year(q.season or default_season(q.op, q.when, q.element))
+            if not 0 <= q.smooth_km <= 30:
+                return "Smoothing should be between 0 and 30 km."
             if q.normal_period[0] < STATION_FIRST_YEAR:
                 return f"Station data is used from {STATION_FIRST_YEAR} onward."
             if q.normal_period[1] > last:

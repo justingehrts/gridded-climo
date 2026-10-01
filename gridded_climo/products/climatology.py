@@ -69,12 +69,12 @@ def climatology_precomputed(metric: Metric, bbox, normal_period: tuple[int, int]
     return template.with_data(out).clip(bbox), {"ref_month": sm, "ref_day": sd, "years": (int(want[0]), int(want[-1])), "source": "precomputed"}
 
 
-def climatology(metric: Metric, client, bbox, normal_period: tuple[int, int], data_dir=DATA_DIR, log=print):
+def climatology(metric: Metric, client, bbox, normal_period: tuple[int, int], data_dir=DATA_DIR, log=print, smooth_km: float = 3.0):
     """Precomputed data when shipped for this threshold/direction; live ACIS scan otherwise (local use)."""
     thr = metric.threshold
     if metric.source == "acis_stn":
         from .station_climo import station_climatology
-        return station_climatology(metric, bbox, normal_period, data_dir, client=client)
+        return station_climatology(metric, bbox, normal_period, data_dir, smooth_km=smooth_km, client=client)
     if metric.source == "acis_grid1" and has_occurrence(data_dir, metric.element, thr["op"], thr["value"], metric.direction) \
             and metric.season == default_season(thr["op"], metric.direction, metric.element):
         return climatology_precomputed(metric, bbox, normal_period, data_dir)

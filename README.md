@@ -42,6 +42,9 @@ Deploying to Streamlit Community Cloud: `requirements.txt` + `packages.txt` (ins
   position across the bins); for numeric maps its values become the color-band thresholds.
 - **🎨 Edit colors** (below the map): edit R/G/B/A for each date bin, or the Value/R/G/B/A rows of a custom numeric legend.
 - Styling re-renders the cached result instantly; it never re-fetches data.
+- **Map smoothing** (Options, station maps): stations are interpolated (nearest 8, distance^-3) and then blurred a little. Default 3 km keeps
+  the map within about a day of each airport's own average; 0 matches every station exactly (spottier), and higher values give smoother,
+  blurrier contours that can drift several days from a single station.
 - **Presets** are plain JSON files (the same format as a settings export) in `presets/`. Pick one under 🎨 Style → *Preset* → *Apply preset*;
   only the settings a preset contains are changed. To create one, restyle a map, open *Save this look as a preset*, name it, download the file,
   put it in `presets/`, and commit (Community Cloud's disk is temporary, so the app can't store presets itself). Presets hold the look only,

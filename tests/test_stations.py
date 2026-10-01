@@ -216,3 +216,48 @@ def test_extreme_years_ignores_dropped_all_nan_stations():
          "offsets": np.array([[50, NO_CROSS], [40, NO_CROSS], [60, NO_CROSS]], "int16")}
     station_stat(z, (2000, 2002), "min")
     assert extreme_years(z, (2000, 2002), "min", station_stat.last_mask).tolist() == [2001]
+
+
+def _at(grid, lon, lat):
+    r = np.clip(((grid.north - lat) // grid.dy).astype(int), 0, grid.data.shape[0] - 1)
+    c = np.clip(((lon - grid.west) // grid.dx).astype(int), 0, grid.data.shape[1] - 1)
+    return grid.data[r, c]
+
+
+def test_interpolated_map_honors_station_values():
+    """The map at a station should show that station's own value (this is what viewers compare to NWS station tables)."""
+    from gridded_climo.interpolate import idw, smooth
+    rng = np.random.default_rng(3)
+    lon, lat = rng.uniform(-83.8, -82.2, 70), rng.uniform(39.2, 40.8, 70)
+    val = 110 + 6 * np.sin(lon * 5) + 5 * np.cos(lat * 6) + rng.normal(0, 2.5, 70)        # smooth trend + local differences
+    tpl = grid_for_bbox((-84.0, 39.0, -82.0, 41.0), 0.02)
+
+    def err(sm, k=8, p=3.0):
+        g = idw(lon, lat, val, tpl, k=k, power=p, max_km=80)
+        return np.abs(_at(smooth(g, sm) if sm else g, lon, lat) - val)
+
+    assert err(0).mean() < 0.1 and np.percentile(err(0), 90) < 0.1   # no blur: exact (two stations sharing a 2 km cell can differ)
+    assert err(3).mean() < 1.0 and np.percentile(err(3), 90) < 2.0   # the shipped default
+    assert err(12).mean() > 2 * err(3).mean()                  # heavy blur drifts from stations: why it's a slider, not the default
+    assert err(3, k=12, p=2.0).mean() > err(3).mean()          # the old weighting is looser even at equal blur
+
+
+def test_shipped_station_map_stays_close_to_station_values():
+    from gridded_climo.config import DEFAULT_BBOX
+    from gridded_climo.products.climatology import climatology
+    from pathlib import Path
+    if not Path("data/stations/mint_le32_first.npz").exists():
+        pytest.skip("no shipped station data")
+    m = metric_from_query(Query(when="first", element="mint", op="le", value=32, method="station"))
+    grid, info = climatology(m, None, DEFAULT_BBOX, (1991, 2020))
+    p = info["points"]
+    err = np.abs(_at(grid, p["lon"], p["lat"]) - p["value"])
+    ok = np.isfinite(err)
+    assert ok.mean() > 0.9
+    assert err[ok].mean() < 0.8 and np.percentile(err[ok], 90) < 2.0     # was 2.2 / 5.3 days with the old 12 km blur
+
+
+def test_smooth_km_validation_and_passthrough():
+    from gridded_climo.query import unsupported_reason
+    base = dict(when="first", element="mint", op="le", value=32, method="station")
+    assert unsupported_reason(Query(**base, smooth_km=0)) is None and "0 and 30" in unsupported_reason(Query(**base, smooth_km=99))
