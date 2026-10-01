@@ -43,6 +43,8 @@ def build_parser():
     pc.add_argument("--normals", default="mint,maxt,pcpn", help="elements for daily-normal grids ('' to skip)")
     pc.add_argument("--normal-period", type=_period, metavar="YYYY-YYYY", help="period for daily normals (default 1991-2020)")
     pc.add_argument("--stations", default="", help="elements for station-based files, e.g. mint,maxt,snow")
+    pc.add_argument("--missing-only", action="store_true", help="stations: skip thresholds that already have a file")
+    pc.add_argument("--prune", action="store_true", help="delete pre-saved files whose threshold is no longer in the menus, then exit")
     pc.add_argument("--y0", type=int, default=1950)
     pc.add_argument("--workers", type=int, default=3)
     pc.add_argument("--data-dir", type=Path)
@@ -66,6 +68,11 @@ def main(argv=None):
         return 0
 
     if a.cmd == "precompute":
+        if a.prune:
+            from .precompute import prune_unlisted
+            from .precomputed import DATA_DIR as _D
+            prune_unlisted(a.data_dir or _D)
+            return 0
         from .precompute import run_precompute
         from .precomputed import DATA_DIR
         st = Settings(**{k: v for k, v in {"bbox": a.bbox, "cache_dir": a.cache_dir, "normal_period": a.normal_period}.items() if v})
@@ -73,7 +80,7 @@ def main(argv=None):
         if a.stations:
             from .precompute import run_precompute_stations
             run_precompute_stations(client, st.bbox, tuple(a.stations.split(",")), a.y0, a.data_dir or DATA_DIR,
-                                    log=lambda m: print(m, flush=True))
+                                    log=lambda m: print(m, flush=True), only_missing=a.missing_only)
             if not a.elements and not a.normals:
                 return 0
         run_precompute(client, st.bbox,

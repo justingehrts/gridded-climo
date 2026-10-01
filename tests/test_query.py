@@ -23,8 +23,10 @@ def test_unsupported_states_have_reasons():
     assert unsupported_reason(Query(when="last", element="snow", op="ge", value=2.0)) is None   # stations: any amount (fetched live)
     assert "between" in unsupported_reason(Query(when="last", element="snow", op="ge", value=500))
     assert "at or above" in unsupported_reason(Query(when="last", element="snow", op="le", value=1.0))
-    assert unsupported_reason(Query(when="first", element="maxt", op="ge", value=91)) is None          # any whole degree in range
-    assert "pre-saved thresholds" in unsupported_reason(Query(when="first", element="maxt", op="ge", value=120))
+    assert unsupported_reason(Query(when="first", element="maxt", op="ge", value=90)) is None
+    for v in (91, 120):                                                    # the grid only has its pre-saved set
+        assert "only has pre-saved" in unsupported_reason(Query(when="first", element="maxt", op="ge", value=v))
+    assert unsupported_reason(Query(when="first", element="maxt", op="ge", value=91, method="station")) is None   # stations: any
     assert "coming soon" in unsupported_reason(Query(when="range_normal", element="snow", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31)))
     assert "mean and total" in unsupported_reason(Query(when="range_normal", element="maxt", reduce="max", start=dt.date(2001, 1, 1), end=dt.date(2001, 1, 9)))
     assert "mean and total" in unsupported_reason(Query(when="range_specific", element="maxt", reduce="min", departure=True, start=dt.date(2024, 1, 1), end=dt.date(2024, 1, 9)))
@@ -100,8 +102,11 @@ def test_thresholds_are_whole_degrees_for_temperature_and_tenths_for_snow():
     assert all("tenths" in unsupported_reason(Query(**s, value=v)) for v in (1.25, 0.05, 2.75))
 
 
-def test_grid_menu_covers_every_whole_degree_in_range_and_defaults_are_inside_it():
-    from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, MENU
-    for key, (lo, hi) in GRID_RANGES.items():
-        assert MENU[key] == tuple(range(lo, hi + 1))
-        assert lo <= DEFAULT_THRESHOLD[key] <= hi
+def test_presaved_temperature_set_is_tens_plus_28_32_36_and_defaults_are_inside_it():
+    from gridded_climo.query import DEFAULT_THRESHOLD, MENU, STATION_MENU
+    assert MENU[("mint", "le")] == (-10, 0, 10, 20, 28, 30, 32, 36, 40, 50) == MENU[("maxt", "le")]
+    assert MENU[("maxt", "ge")] == (50, 60, 70, 80, 90, 100) and MENU[("mint", "ge")] == (40, 50, 60, 70, 80)
+    for key, vals in MENU.items():
+        assert all(v % 10 == 0 or v in (28, 32, 36) for v in vals)
+        assert DEFAULT_THRESHOLD[key] in vals and STATION_MENU[key] == vals    # stations pre-save the same temperatures
+    assert not any(v in (28, 32, 36) for key in (("maxt", "ge"), ("mint", "ge")) for v in MENU[key])   # cold extras only for <= maps

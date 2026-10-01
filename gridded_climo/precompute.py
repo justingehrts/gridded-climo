@@ -122,7 +122,8 @@ def run_precompute(client, bbox, elements=("mint", "maxt"), normals=("mint", "ma
         build_normals(client, bbox, el, period, data_dir, log)
 
 
-def run_precompute_stations(client, bbox, elements=("mint", "maxt", "snow"), y0=FIRST_YEAR, data_dir=DATA_DIR, log=print):
+def run_precompute_stations(client, bbox, elements=("mint", "maxt", "snow"), y0=FIRST_YEAR, data_dir=DATA_DIR, log=print,
+                            only_missing: bool = False):
     """Server-side threshold search: one request per (element, op, direction, threshold) covering every station and season."""
     from .query import STATION_MENU
     from .stations import build_station_occurrence_server
@@ -130,4 +131,19 @@ def run_precompute_stations(client, bbox, elements=("mint", "maxt", "snow"), y0=
         if el in elements:
             for direction in ("first", "last"):
                 build_station_occurrence_server(client, bbox, el, op, direction, thresholds, default_season(op, direction, el),
-                                                y0, data_dir, log)
+                                                y0, data_dir, log, only_missing)
+
+
+def prune_unlisted(data_dir=DATA_DIR, log=print) -> int:
+    """Delete pre-saved occurrence/station files whose threshold is no longer in MENU / STATION_MENU. Returns the count removed."""
+    import re
+    from .query import MENU, STATION_MENU
+    pat = re.compile(r"^(?P<el>[a-z]+)_(?P<op>le|ge)(?P<v>-?[\d.]+)_(?:first|last)\.npz$")
+    removed = 0
+    for sub, menu in (("occurrence", MENU), ("stations", STATION_MENU)):
+        for f in sorted((Path(data_dir) / sub).glob("*.npz")):
+            m = pat.match(f.name)
+            if not m or float(m["v"]) not in {float(x) for x in menu.get((m["el"], m["op"]), ())}:
+                f.unlink(); removed += 1
+    log(f"pruned {removed} files no longer in the threshold menus")
+    return removed

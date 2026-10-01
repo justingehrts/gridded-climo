@@ -127,8 +127,8 @@ def test_year_coverage_and_threshold_rules(monkeypatch):
     assert unsupported_reason(Query(**base, method="station", normal_period=(1950, 2025))) is None
     assert unsupported_reason(Query(**{**base, "value": 37}, method="station", normal_period=(1930, 2025))) is None  # off-menu, live
     assert "1870" in unsupported_reason(Query(**base, method="station", normal_period=(1850, 2020)))
-    assert unsupported_reason(Query(**{**base, "value": 37}, method="grid", normal_period=(1991, 2020))) is None     # every whole degree is saved
-    assert "pre-saved" in unsupported_reason(Query(**{**base, "value": 70}, method="grid", normal_period=(1991, 2020)))   # out of grid range
+    for v in (37, 70):                                                                                    # not in the grid's pre-saved set
+        assert "only has pre-saved" in unsupported_reason(Query(**{**base, "value": v}, method="grid", normal_period=(1991, 2020)))
     assert unsupported_reason(Query(**base, method="grid", normal_period=(1991, 2020))) is None
 
 

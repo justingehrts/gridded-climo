@@ -225,11 +225,14 @@ def fetch_station_thresholds(client: ACISClient, bbox, element, op, value, direc
     return z
 
 
-def build_station_occurrence_server(client, bbox, element, op, direction, thresholds, season, y0=1950, data_dir=DATA_DIR, log=print):
+def build_station_occurrence_server(client, bbox, element, op, direction, thresholds, season, y0=1950, data_dir=DATA_DIR, log=print,
+                                    only_missing: bool = False):
     """Write data/stations/<...>.npz for each threshold from one server-side request each (idempotent: rewrites the file)."""
     for t in thresholds:
-        z = fetch_station_thresholds(client, bbox, element, op, t, direction, season, y0)
         p = station_path(data_dir, element, op, t, direction)
+        if only_missing and p.exists():
+            continue
+        z = fetch_station_thresholds(client, bbox, element, op, t, direction, season, y0)
         p.parent.mkdir(parents=True, exist_ok=True)
         tmp = p.with_name(p.stem + ".tmp.npz")
         np.savez_compressed(tmp, **z)

@@ -11,8 +11,8 @@ pytestmark = pytest.mark.skipif(not (DATA / "occurrence").exists(), reason="run 
 live = pytest.mark.skipif(os.environ.get("RUN_NETWORK_TESTS") != "1", reason="set RUN_NETWORK_TESTS=1 (hits ACIS/NOHRSC)")
 
 
-def fresh():
-    return AppTest.from_file(APP, default_timeout=180).run()
+def fresh(timeout=180):
+    return AppTest.from_file(APP, default_timeout=timeout).run()
 
 
 def gen(at):
@@ -189,19 +189,37 @@ def test_apply_example_preset_sets_only_what_it_contains():
     assert "⬇️ Download KMZ" in labels and "Download preset file" in labels
 
 
-def test_threshold_field_takes_any_whole_degree_on_both_methods():
-    for method, value in (("Grid (ACIS Grid 1)", 33), ("Stations (interpolated)", 34)):
-        at = fresh()
-        at.radio[0].set_value("Average first date").run()
-        at.selectbox[0].select("Temperature at or below").run()
-        at.radio[2].set_value(method).run()
-        field = next(n for n in at.number_input if n.label == "Threshold (°F)")
-        assert field.step == 1 and field.value == 32                      # whole-degree field, default 32
-        field.set_value(value).run()
-        assert f"{value}°F" in gen(at)[0]
+def _threshold_field(at):
+    return next(n for n in at.number_input if n.label == "Threshold (°F)")
 
 
-def test_grid_field_stops_at_its_range_and_snow_takes_tenths():
+def _first_low(at, method):
+    at.radio[0].set_value("Average first date").run()
+    at.selectbox[0].select("Temperature at or below").run()
+    at.radio[2].set_value(method).run()
+
+
+def test_grid_threshold_field_accepts_only_presaved_values():
+    at = fresh()
+    _first_low(at, "Grid (ACIS Grid 1)")
+    f = _threshold_field(at)
+    assert f.step == 1 and f.value == 32
+    f.set_value(36).run()
+    assert "36°F" in gen(at)[0]
+    _threshold_field(at).set_value(37).run()                                    # whole degree, but not pre-saved for the grid
+    assert any("only has pre-saved" in i.value for i in at.info)
+    assert next(b for b in at.button if b.label == "Generate map").disabled
+
+
+@live
+def test_station_threshold_field_fetches_off_menu_whole_degrees_live():
+    at = fresh()
+    _first_low(at, "Stations (interpolated)")
+    _threshold_field(at).set_value(34).run()
+    assert "34°F" in gen(at)[0] and any("fetched live" in c.value for c in at.caption)
+
+
+def test_grid_field_bounds_and_snow_field_takes_tenths():
     at = fresh()
     at.radio[0].set_value("Average first date").run()
     at.selectbox[0].select("Temperature at or below").run()
@@ -212,6 +230,19 @@ def test_grid_field_stops_at_its_range_and_snow_takes_tenths():
     assert (next(n for n in at.number_input if n.label == "Threshold (°F)").min) == -60   # stations: any value
     at.selectbox[0].select("Snowfall").run()
     snow = next(n for n in at.number_input if n.label.startswith("Daily snowfall"))
-    assert snow.step == 0.1
-    snow.set_value(2.5).run()
-    assert 'Snowfall of 2.5" or More' in gen(at)[0]
+    assert snow.step == 0.1 and snow.value == 1.0
+    snow.set_value(2.5).run()                                                    # accepted (tenths)...
+    assert not at.exception and not at.error and not any("tenths" in i.value for i in at.info)
+    snow.set_value(1.25).run()                                                   # ...but hundredths are rejected with a message
+    assert any("tenths" in i.value for i in at.info)
+
+
+@live
+def test_off_menu_snow_amount_fetches_live():
+    at = fresh(timeout=600)                                                      # one big ACIS request (thousands of snow stations)
+    at.radio[0].set_value("Average first date").run()
+    at.selectbox[0].select("Snowfall").run()
+    next(n for n in at.number_input if n.label.startswith("Daily snowfall")).set_value(2.5).run()
+    at.button[0].click().run()
+    assert not at.exception and not at.error
+    assert 'Snowfall of 2.5" or More' in [s.value for s in at.subheader][0]

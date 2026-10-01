@@ -19,7 +19,7 @@ from PIL import Image
 from streamlit_folium import st_folium
 
 from gridded_climo.config import DEFAULT_BBOX, DEFAULT_NORMAL_PERIOD
-from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
+from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, MENU, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
 from gridded_climo.ui.preview import build_map, load_counties_geojson
 from gridded_climo.binning import MODE_LABELS, MODES
 from gridded_climo.registry import Style
@@ -99,7 +99,7 @@ with st.sidebar:
         var = st.selectbox("Variable", ["Temperature at or below", "Temperature at or above", "Snowfall"])
         if var == "Snowfall":
             amount = st.number_input("Daily snowfall at least (in)", 0.1, 30.0, 1.0, 0.1, format="%.1f",
-                                     help="Pre-saved: " + ", ".join(f"{v:g}" for v in STATION_MENU[("snow", "ge")]) + ". Other amounts are fetched live from ACIS (~15-30 s).")
+                                     help="Pre-saved: " + ", ".join(f"{v:g}" for v in STATION_MENU[("snow", "ge")]) + ". Other amounts are fetched live from ACIS (about 1-2 minutes: snow comes from thousands of stations).")
             q_kwargs.update(element="snow", op="ge", value=float(amount), method="station")
             st.caption("Snowfall has no ACIS grid, so this uses station observations interpolated to a map.")
         else:
@@ -120,7 +120,8 @@ with st.sidebar:
                 key=f"thr_{el}_{op}_{'stn' if by_station else 'grid'}",
                 help=(("Whole degrees. Pre-saved (instant): " + ", ".join(f"{v:g}" for v in STATION_MENU[(el, op)])
                        + ". Any other value is fetched live from ACIS (~15-30 s).") if by_station else
-                      f"Whole degrees, {glo} to {ghi}. Every value in this range is pre-saved. Use Stations for values outside it."))
+                      "Whole degrees. The grid method only has these pre-saved: " + ", ".join(str(v) for v in MENU[(el, op)])
+                      + ". Use Stations for any other value."))
             q_kwargs.update(element=el, op=op, value=float(value), method="station" if by_station else "grid")
         q_kwargs["when"] = "first" if when_label == "Average first date" else "last"
     else:
