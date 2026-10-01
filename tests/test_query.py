@@ -20,7 +20,8 @@ def test_first_last_metric_and_style_direction():
 
 def test_unsupported_states_have_reasons():
     assert unsupported_reason(Query(when="last", element="snow", op="ge", value=1.0)) is None  # station path
-    assert "menu" in unsupported_reason(Query(when="last", element="snow", op="ge", value=2.0))
+    assert unsupported_reason(Query(when="last", element="snow", op="ge", value=2.0)) is None   # stations: any amount (fetched live)
+    assert "between" in unsupported_reason(Query(when="last", element="snow", op="ge", value=500))
     assert "at or above" in unsupported_reason(Query(when="last", element="snow", op="le", value=1.0))
     assert "menu" in unsupported_reason(Query(when="first", element="maxt", op="ge", value=91))
     assert "coming soon" in unsupported_reason(Query(when="range_normal", element="snow", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31)))

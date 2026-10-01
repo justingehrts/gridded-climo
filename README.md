@@ -28,9 +28,9 @@ scanned cell by cell) or **stations** (each station's own average date, interpol
 The app reads precomputed data shipped in `data/` (Streamlit Community Cloud can't afford multi-decade pulls):
 ```
 gridded-climo precompute --elements mint,maxt --normals mint,maxt,pcpn     # grid per-year crossings + daily normals
-gridded-climo precompute --stations mint,maxt,snow --elements "" --normals "" --y0 1961   # per-station crossings
+gridded-climo precompute --stations mint,maxt,snow --elements "" --normals "" --y0 1950   # per-station crossings (server-side, ~20 min)
 ```
-Both are resumable (raw ACIS pulls are cached). Set `GRIDDED_CLIMO_ALLOW_LIVE=1` locally to allow off-menu thresholds (computed live; slow).
+The grid command is resumable (raw ACIS pulls are cached). Stations accept any threshold and any years back to 1900 (off-menu values are fetched live from ACIS, ~15-30 s); the grid method is limited to the pre-saved thresholds and 1991+.
 Deploying to Streamlit Community Cloud: `requirements.txt` + `packages.txt` (installs `gdal-bin`) are included.
 
 **Not yet implemented:** full style controls (ramp picker, custom legends, `.wctrp` import).

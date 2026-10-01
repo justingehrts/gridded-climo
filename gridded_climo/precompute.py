@@ -121,10 +121,11 @@ def run_precompute(client, bbox, elements=("mint", "maxt"), normals=("mint", "ma
 
 
 def run_precompute_stations(client, bbox, elements=("mint", "maxt", "snow"), y0=FIRST_YEAR, data_dir=DATA_DIR, log=print):
+    """Server-side threshold search: one request per (element, op, direction, threshold) covering every station and season."""
     from .query import STATION_MENU
-    from .stations import build_station_occurrence
+    from .stations import build_station_occurrence_server
     for (el, op), thresholds in STATION_MENU.items():
         if el in elements:
             for direction in ("first", "last"):
-                build_station_occurrence(client, bbox, el, op, direction, thresholds, default_season(op, direction, el),
-                                         y0, data_dir, log)
+                build_station_occurrence_server(client, bbox, el, op, direction, thresholds, default_season(op, direction, el),
+                                                y0, data_dir, log)

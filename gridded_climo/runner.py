@@ -45,7 +45,8 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
         name += f" ({info['years'][0]}-{info['years'][1]})"
         points = info.get("points")
         if info["source"] == "station":
-            note = f"Station-based: {len(points['value'])} stations interpolated (IDW + 12 km smoothing, 80 km max)"
+            note = (f"Station-based: {len(points['value'])} stations interpolated (IDW + 12 km smoothing, 80 km max); "
+                    + ("pre-saved data" if info["data_source"] == "shipped" else "fetched live from ACIS"))
         else:
             note = "ACIS Grid 1 (precomputed)" if info["source"] == "precomputed" else "ACIS Grid 1, computed live"
     elif metric.kind == "period":

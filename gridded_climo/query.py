@@ -67,15 +67,19 @@ def unsupported_reason(q: Query) -> str | None:
             return "First/last dates are available for temperature and snowfall thresholds."
         if q.op not in ("le", "ge") or q.value is None:
             return "Choose 'at or below' / 'at or above' and a threshold."
-        cover = shipped_years(DATA_DIR).get(method)
+        if method == "station":
+            lo, hi = (-60, 140) if q.element != "snow" else (0.1, 60)
+            if not lo <= q.value <= hi:
+                return f"Threshold should be between {lo} and {hi}."
+            if q.normal_period[0] < 1900:
+                return "Station data is used from 1900 onward."
+            return None
+        cover = shipped_years(DATA_DIR).get("grid")  # grid first/last dates come only from shipped data (GridData has no server-side first/last)
         if cover and q.season is None and not allow_live():
-            if method == "grid" and q.normal_period[0] < cover[0]:
-                return f"Grid data ships for {cover[0]}-{cover[1]}; choose Stations to include earlier years (back to {(shipped_years(DATA_DIR).get('station') or cover)[0]})."
             if q.normal_period[0] < cover[0] or q.normal_period[1] > cover[1]:
-                return f"Shipped {method} data covers {cover[0]}-{cover[1]}; choose years inside that range."
-        menu = (STATION_MENU if method == "station" else MENU).get((q.element, q.op), ())
-        if q.season is None and not allow_live() and q.value not in menu:
-            return f"{q.value:g} isn't in the precomputed menu for this variable (available: {list(menu)})."
+                return f"Grid data ships for {cover[0]}-{cover[1]}; choose Stations to use other years."
+        if q.season is None and not allow_live() and q.value not in MENU.get((q.element, q.op), ()):
+            return f"{q.value:g} isn't in the precomputed grid menu for this variable (available: {list(MENU.get((q.element, q.op), ()))}); Stations accepts any value."
         return None
     if q.element == "snow":
         if q.when == "range_normal":

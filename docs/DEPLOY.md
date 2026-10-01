@@ -23,11 +23,12 @@ at run time. No secrets or API keys are required.
 ```
 pip install -e .            # plus the GDAL CLI
 gridded-climo precompute --elements mint,maxt --normals mint,maxt,pcpn --y0 1991 --workers 1
-gridded-climo precompute --stations mint,maxt,snow --elements "" --normals "" --y0 1991
+gridded-climo precompute --stations mint,maxt,snow --elements "" --normals "" --y0 1950   # server-side; ~20 min total
 git add data && git commit -m "Refresh precomputed data" && git push
 ```
-Both commands are resumable and only add missing seasons. ACIS rate-limits (HTTP 429): keep `--workers 1` and don't run the
-grid and station jobs at the same time. Pass a smaller `--y0` (e.g. 1951) to backfill earlier years.
+The grid command is resumable and only adds missing seasons (ACIS rate-limits with HTTP 429: keep `--workers 1`). The station command
+rewrites each file from one server-side request, so it's safe to re-run any time. Thresholds and years not pre-saved are fetched live
+in the app for the Stations method (~15-30 s); the Grid method needs pre-saved data. Pass a smaller `--y0` (e.g. 1951) to backfill earlier years.
 
 ## Troubleshooting
 - *`gdalwarp: not found`*: `packages.txt` must be at the repo root containing `gdal-bin`.

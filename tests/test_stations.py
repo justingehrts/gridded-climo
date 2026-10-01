@@ -119,11 +119,90 @@ def test_titles_name_the_statistic():
     assert describe(Query(when="first", element="mint", op="le", value=32)).startswith("Average Date of First")
 
 
-def test_year_coverage_messages(monkeypatch):
+def test_year_coverage_and_threshold_rules(monkeypatch):
     import gridded_climo.query as qm
     monkeypatch.setattr(qm, "shipped_years", lambda d=None: {"grid": (1991, 2025), "station": (1950, 2025)})
     base = dict(when="first", element="mint", op="le", value=32)
     assert "Stations" in unsupported_reason(Query(**base, method="grid", normal_period=(1960, 2020)))
     assert unsupported_reason(Query(**base, method="station", normal_period=(1950, 2025))) is None
-    assert "covers" in unsupported_reason(Query(**base, method="station", normal_period=(1940, 2020)))
+    assert unsupported_reason(Query(**{**base, "value": 37}, method="station", normal_period=(1930, 2025))) is None  # off-menu, live
+    assert "1900" in unsupported_reason(Query(**base, method="station", normal_period=(1850, 2020)))
+    assert "menu" in unsupported_reason(Query(**{**base, "value": 37}, method="grid", normal_period=(1991, 2020)))
     assert unsupported_reason(Query(**base, method="grid", normal_period=(1991, 2020))) is None
+
+
+# --- server-side threshold search (response shapes captured from the live API, 2026-10) ---------------------------
+SEASON = {"start": [7, 1], "end": [6, 30]}
+
+
+def _server_response():
+    cell = lambda d, v, m: [[d, v, m]]
+    return {"data": [
+        {"meta": {"ll": [-82.88, 39.99], "sids": ["14821 1", "CMH 3"], "name": "JOHN GLENN"},
+         "data": [cell("2015-10-15", "38", 0), cell("M", "M", 0), cell("2017-10-17", "39", 12)]},          # 2016: never reached
+        {"meta": {"ll": [-83.1, 40.1], "sids": ["X 1"], "name": "SPOTTY"},
+         "data": [cell("2015-10-20", "40", 150), cell("M", "M", 182), cell("2017-10-21", "40", 0)]},      # too much missing data
+        {"meta": {"name": "NO COORDS"}, "data": [cell("M", "M", 365)] * 3},                               # dropped
+    ]}
+
+
+def test_threshold_request_matches_xmacis_shape():
+    from gridded_climo.stations import threshold_request
+    r = threshold_request(BBOX, "mint", "le", 40, "first", SEASON, 2015, 2017)
+    e = r["elems"][0]
+    assert (r["sdate"], r["edate"]) == ("2016-06-30", "2018-06-30")                    # season END dates (std = season-to-date)
+    assert e["interval"] == [1, 0, 0] and e["duration"] == "std" and e["season_start"] == "07-01"
+    assert e["reduce"] == {"reduce": "first_le_40", "add": "value,mcnt"}
+    assert threshold_request(BBOX, "snow", "ge", 1, "last", SEASON, 2015, 2017)["elems"][0]["reduce"]["reduce"] == "last_ge_1.0"
+    cal = threshold_request(BBOX, "maxt", "ge", 90, "first", {"start": [1, 1], "end": [12, 31]}, 2015, 2016)
+    assert (cal["sdate"], cal["edate"], cal["elems"][0]["season_start"]) == ("2015-12-31", "2016-12-31", "01-01")
+
+
+def test_parse_threshold_response_semantics():
+    from gridded_climo.stations import parse_threshold_response
+    z = parse_threshold_response(_server_response(), SEASON, 2015, 2017)
+    assert z["sids"].tolist() == ["14821 1", "X 1"] and z["years"].tolist() == [2015, 2016, 2017]
+    assert z["offsets"][:, 0].tolist() == [106, NO_CROSS, 108]       # Oct 15 = 106 days after Jul 1; 'M' + few missing = never reached
+    assert z["offsets"][:, 1].tolist() == [INVALID, INVALID, 112]    # >10% of the season missing -> not trusted, with or without a date
+    with pytest.raises(ValueError, match="seasons"):
+        parse_threshold_response(_server_response(), SEASON, 2015, 2018)
+
+
+class FakeServerClient:
+    cache = None
+
+    def __init__(self):
+        self.requests = []
+
+    def post(self, endpoint, params):
+        self.requests.append((endpoint, params))
+        return _server_response()
+
+
+def test_live_fallback_when_not_shipped_then_shipped_is_preferred(tmp_path):
+    from gridded_climo.products.station_climo import station_climatology
+    from gridded_climo.stations import fetch_station_thresholds, station_path
+    m = metric_from_query(Query(when="first", element="mint", op="le", value=40, method="station", normal_period=(2015, 2017)))
+    c = FakeServerClient()
+    grid, info = station_climatology(m, (-84.0, 39.0, -82.0, 41.0), (2015, 2017), tmp_path, cell_deg=0.25, client=c)
+    assert info["data_source"] == "live" and len(c.requests) == 1 and c.requests[0][0] == "MultiStnData"
+    assert c.requests[0][1]["bbox"] == "-85,38,-81,42"                    # map bbox + 1 degree margin for edge stations
+    assert info["points"]["name"].tolist() == ["JOHN GLENN"]              # SPOTTY has <20 valid... only 1 valid year -> excluded
+    # ship the file -> served without touching ACIS
+    z = fetch_station_thresholds(FakeServerClient(), BBOX, "mint", "le", 40, "first", SEASON, 2015, 2017)
+    np.savez_compressed(station_path(tmp_path, "mint", "le", 40, "first").parent.mkdir(parents=True, exist_ok=True) or station_path(tmp_path, "mint", "le", 40, "first"), **z)
+    c2 = FakeServerClient()
+    _, info2 = station_climatology(m, (-84.0, 39.0, -82.0, 41.0), (2015, 2017), tmp_path, cell_deg=0.25, client=c2)
+    assert info2["data_source"] == "shipped" and c2.requests == []
+    with pytest.raises(FileNotFoundError, match="live ACIS access is disabled"):
+        station_climatology(m, (-84.0, 39.0, -82.0, 41.0), (2000, 2017), tmp_path, cell_deg=0.25, client=None)  # years not covered
+
+
+def test_build_station_occurrence_server_writes_files(tmp_path, monkeypatch):
+    import gridded_climo.stations as sm
+    from gridded_climo.stations import build_station_occurrence_server, load_station_occurrence
+    monkeypatch.setattr(sm, "last_complete_season", lambda season, today=None: 2017)  # fake client returns 2015-2017
+    build_station_occurrence_server(FakeServerClient(), BBOX, "mint", "le", "first", (40, 32), SEASON, y0=2015, data_dir=tmp_path,
+                                    log=lambda *_: None)
+    z = load_station_occurrence(tmp_path, "mint", "le", 32, "first")
+    assert z["offsets"].shape[1] == 2 and z["years"][0] == 2015

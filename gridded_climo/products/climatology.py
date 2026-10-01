@@ -74,7 +74,7 @@ def climatology(metric: Metric, client, bbox, normal_period: tuple[int, int], da
     thr = metric.threshold
     if metric.source == "acis_stn":
         from .station_climo import station_climatology
-        return station_climatology(metric, bbox, normal_period, data_dir)
+        return station_climatology(metric, bbox, normal_period, data_dir, client=client)
     if metric.source == "acis_grid1" and has_occurrence(data_dir, metric.element, thr["op"], thr["value"], metric.direction) \
             and metric.season == default_season(thr["op"], metric.direction, metric.element):
         return climatology_precomputed(metric, bbox, normal_period, data_dir)
