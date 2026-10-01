@@ -43,8 +43,10 @@ def prefetch(client: ACISClient, element: str, bbox, start: dt.date, end: dt.dat
 def _save_occurrence(path: Path, years, offsets, template, season):
     path.parent.mkdir(parents=True, exist_ok=True)
     arr = np.where(np.isfinite(offsets), offsets, NAN16).astype("int16")
-    np.savez_compressed(path, years=np.asarray(years, "int16"), offsets=arr, west=template.west, north=template.north,
+    tmp = path.with_name(path.stem + ".tmp.npz")   # atomic replace: a reader never sees a half-written file
+    np.savez_compressed(tmp, years=np.asarray(years, "int16"), offsets=arr, west=template.west, north=template.north,
                         dx=template.dx, dy=template.dy, season_start=season["start"], season_end=season["end"])
+    tmp.replace(path)
 
 
 def build_occurrence(client, bbox, element, op, direction, thresholds, y0=FIRST_YEAR, data_dir=DATA_DIR, log=print):

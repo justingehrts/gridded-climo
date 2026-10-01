@@ -23,7 +23,8 @@ def test_unsupported_states_have_reasons():
     assert unsupported_reason(Query(when="last", element="snow", op="ge", value=2.0)) is None   # stations: any amount (fetched live)
     assert "between" in unsupported_reason(Query(when="last", element="snow", op="ge", value=500))
     assert "at or above" in unsupported_reason(Query(when="last", element="snow", op="le", value=1.0))
-    assert "menu" in unsupported_reason(Query(when="first", element="maxt", op="ge", value=91))
+    assert unsupported_reason(Query(when="first", element="maxt", op="ge", value=91)) is None          # any whole degree in range
+    assert "pre-saved thresholds" in unsupported_reason(Query(when="first", element="maxt", op="ge", value=120))
     assert "coming soon" in unsupported_reason(Query(when="range_normal", element="snow", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31)))
     assert "mean and total" in unsupported_reason(Query(when="range_normal", element="maxt", reduce="max", start=dt.date(2001, 1, 1), end=dt.date(2001, 1, 9)))
     assert "mean and total" in unsupported_reason(Query(when="range_specific", element="maxt", reduce="min", departure=True, start=dt.date(2024, 1, 1), end=dt.date(2024, 1, 9)))
@@ -87,3 +88,20 @@ def test_default_color_steps_are_six_on_date_and_temperature_maps():
         assert metric_from_query(q).style.steps == 6
     reg = load_registry()
     assert all(reg[n].style.steps == 6 for n in ("first_freeze", "last_freeze", "last_1in_snow", "avg_high_period", "high_departure_period"))
+
+
+def test_thresholds_are_whole_degrees_for_temperature_and_tenths_for_snow():
+    t = dict(when="first", element="mint", op="le")
+    for method in ("grid", "station"):
+        assert unsupported_reason(Query(**t, value=32, method=method)) is None
+        assert "whole degrees" in unsupported_reason(Query(**t, value=32.5, method=method))
+    s = dict(when="last", element="snow", op="ge")
+    assert all(unsupported_reason(Query(**s, value=v)) is None for v in (0.1, 0.5, 1.0, 2.5, 12.3))
+    assert all("tenths" in unsupported_reason(Query(**s, value=v)) for v in (1.25, 0.05, 2.75))
+
+
+def test_grid_menu_covers_every_whole_degree_in_range_and_defaults_are_inside_it():
+    from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, MENU
+    for key, (lo, hi) in GRID_RANGES.items():
+        assert MENU[key] == tuple(range(lo, hi + 1))
+        assert lo <= DEFAULT_THRESHOLD[key] <= hi

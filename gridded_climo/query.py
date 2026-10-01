@@ -5,19 +5,23 @@ import datetime as dt
 import os
 from dataclasses import dataclass, field
 
-from .precomputed import DATA_DIR, shipped_years
+from .precomputed import DATA_DIR, has_occurrence, shipped_years
 from .registry import Metric, Style
 
 WHENS = ("first", "last", "range_specific", "range_normal")
 TEMP_ELEMENTS = {"mint": "Low (min) temperature", "maxt": "High (max) temperature"}
-# Thresholds with precomputed per-year grids in data/occurrence (see precompute.py)
-MENU: dict[tuple[str, str], tuple[int, ...]] = {
-    ("mint", "le"): (40, 36, 32, 28, 25, 20, 10, 0),
-    ("maxt", "le"): (40, 32, 20, 10, 0),
-    ("maxt", "ge"): (70, 80, 85, 90, 95, 100),
-    ("mint", "ge"): (60, 65, 70, 75),
+# Grid method: EVERY whole-degree threshold in these ranges has pre-saved per-year grids in data/occurrence (see precompute.py),
+# so the UI can take any whole number. Outside the range, use the Stations method (any value, fetched live).
+GRID_RANGES: dict[tuple[str, str], tuple[int, int]] = {
+    ("mint", "le"): (-10, 50), ("maxt", "le"): (-10, 50), ("maxt", "ge"): (50, 105), ("mint", "ge"): (40, 80),
 }
-STATION_MENU: dict[tuple[str, str], tuple[float, ...]] = {**MENU, ("snow", "ge"): (0.1, 1.0, 3.0, 6.0)}
+MENU: dict[tuple[str, str], tuple[int, ...]] = {k: tuple(range(lo, hi + 1)) for k, (lo, hi) in GRID_RANGES.items()}
+# Station method: these values are pre-saved (instant); anything else is fetched from ACIS on demand (~15-30 s).
+STATION_MENU: dict[tuple[str, str], tuple[float, ...]] = {
+    ("mint", "le"): (40, 36, 32, 28, 25, 20, 10, 0), ("maxt", "le"): (40, 32, 20, 10, 0),
+    ("maxt", "ge"): (70, 80, 85, 90, 95, 100), ("mint", "ge"): (60, 65, 70, 75), ("snow", "ge"): (0.1, 1.0, 3.0, 6.0),
+}
+DEFAULT_THRESHOLD: dict[tuple[str, str], int] = {("mint", "le"): 32, ("maxt", "le"): 32, ("maxt", "ge"): 90, ("mint", "ge"): 70}
 NOHRSC_START = dt.datetime(2008, 10, 1)
 
 
@@ -83,6 +87,11 @@ def unsupported_reason(q: Query) -> str | None:
             return "First/last dates are available for temperature and snowfall thresholds."
         if q.op not in ("le", "ge") or q.value is None:
             return "Choose 'at or below' / 'at or above' and a threshold."
+        if q.element == "snow":
+            if abs(q.value * 10 - round(q.value * 10)) > 1e-6:
+                return "Snowfall amounts go in tenths of an inch (for example 0.5 or 2.5)."
+        elif q.value != round(q.value):
+            return "Temperature thresholds must be whole degrees."
         if method == "station":
             lo, hi = (-60, 140) if q.element != "snow" else (0.1, 60)
             if not lo <= q.value <= hi:
@@ -99,8 +108,11 @@ def unsupported_reason(q: Query) -> str | None:
         if cover and q.season is None and not allow_live():
             if q.normal_period[0] < cover[0] or q.normal_period[1] > cover[1]:
                 return f"Grid data ships for {cover[0]}-{cover[1]}; choose Stations to use other years."
-        if q.season is None and not allow_live() and q.value not in MENU.get((q.element, q.op), ()):
-            return f"{q.value:g} isn't in the precomputed grid menu for this variable (available: {list(MENU.get((q.element, q.op), ()))}); Stations accepts any value."
+        lo, hi = GRID_RANGES[(q.element, q.op)]
+        if q.season is None and not allow_live() and not lo <= q.value <= hi:
+            return f"The grid method has pre-saved thresholds from {lo}°F to {hi}°F for this variable; use Stations for other values."
+        if q.season is None and not allow_live() and not has_occurrence(DATA_DIR, q.element, q.op, q.value, q.when):
+            return f"{q.value:g}°F isn't pre-saved for the grid method yet; use Stations (any value works)."
         return None
     if q.element == "snow":
         if q.when == "range_normal":

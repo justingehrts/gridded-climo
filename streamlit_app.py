@@ -19,7 +19,7 @@ from PIL import Image
 from streamlit_folium import st_folium
 
 from gridded_climo.config import DEFAULT_BBOX, DEFAULT_NORMAL_PERIOD
-from gridded_climo.query import MENU, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
+from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
 from gridded_climo.ui.preview import build_map, load_counties_geojson
 from gridded_climo.binning import MODE_LABELS, MODES
 from gridded_climo.registry import Style
@@ -98,7 +98,7 @@ with st.sidebar:
     if when_label != "Custom range":
         var = st.selectbox("Variable", ["Temperature at or below", "Temperature at or above", "Snowfall"])
         if var == "Snowfall":
-            amount = st.number_input("Daily snowfall at least (in)", 0.1, 30.0, 1.0, 0.1,
+            amount = st.number_input("Daily snowfall at least (in)", 0.1, 30.0, 1.0, 0.1, format="%.1f",
                                      help="Pre-saved: " + ", ".join(f"{v:g}" for v in STATION_MENU[("snow", "ge")]) + ". Other amounts are fetched live from ACIS (~15-30 s).")
             q_kwargs.update(element="snow", op="ge", value=float(amount), method="station")
             st.caption("Snowfall has no ACIS grid, so this uses station observations interpolated to a map.")
@@ -113,13 +113,14 @@ with st.sidebar:
                      "cell has a value, but only the pre-saved thresholds and 1991+ years. They agree within ~2 days for typical "
                      "freeze thresholds; warm thresholds (90°F+) can differ more.")
             by_station = method_label.startswith("Stations")
-            menu = MENU[(el, op)]
-            if by_station or allow_live():
-                value = st.number_input("Threshold (°F)", -60.0, 140.0, float(menu[0]), 1.0,
-                                        help=("Pre-saved: " + ", ".join(f"{v:g}" for v in STATION_MENU[(el, op)])
-                                              + ". Other values are fetched live from ACIS (~15-30 s).") if by_station else None)
-            else:
-                value = st.select_slider("Threshold (°F)", options=list(menu), value=menu[0])
+            glo, ghi = GRID_RANGES[(el, op)]
+            lo, hi = (-60, 140) if by_station else (glo, ghi)
+            value = st.number_input(
+                "Threshold (°F)", min_value=lo, max_value=hi, value=min(max(DEFAULT_THRESHOLD[(el, op)], lo), hi), step=1,
+                key=f"thr_{el}_{op}_{'stn' if by_station else 'grid'}",
+                help=(("Whole degrees. Pre-saved (instant): " + ", ".join(f"{v:g}" for v in STATION_MENU[(el, op)])
+                       + ". Any other value is fetched live from ACIS (~15-30 s).") if by_station else
+                      f"Whole degrees, {glo} to {ghi}. Every value in this range is pre-saved. Use Stations for values outside it."))
             q_kwargs.update(element=el, op=op, value=float(value), method="station" if by_station else "grid")
         q_kwargs["when"] = "first" if when_label == "Average first date" else "last"
     else:

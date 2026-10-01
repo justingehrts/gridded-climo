@@ -82,3 +82,15 @@ def test_max_min_not_supported_from_normals(tmp_path):
     build_normals(FakeClient(), BBOX, "pcpn", (2017, 2020), tmp_path, log=lambda *_: None)
     with pytest.raises(ValueError, match="only sum/mean"):
         normal_window_average(_pcpn_metric("max", "average"), BBOX, (3, 1), (3, 5), (2017, 2020), tmp_path)
+
+
+def test_every_grid_menu_threshold_is_shipped():
+    """The UI lets users type any whole degree in GRID_RANGES, so each one needs its pre-saved file (both directions)."""
+    from pathlib import Path
+    from gridded_climo.precomputed import DATA_DIR, occurrence_path
+    from gridded_climo.query import MENU
+    if not (Path(DATA_DIR) / "occurrence").exists():
+        pytest.skip("no shipped data")
+    missing = [(el, op, v, d) for (el, op), vals in MENU.items() for v in vals for d in ("first", "last")
+               if not occurrence_path(DATA_DIR, el, op, v, d).exists()]
+    assert not missing, f"{len(missing)} missing, e.g. {missing[:3]}"
