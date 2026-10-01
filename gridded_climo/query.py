@@ -23,7 +23,7 @@ MENU: dict[tuple[str, str], tuple[int, ...]] = {
     ("maxt", "ge"): _menu(50, 100), ("mint", "ge"): _menu(40, 80),
 }
 GRID_RANGES: dict[tuple[str, str], tuple[int, int]] = {k: (v[0], v[-1]) for k, v in MENU.items()}   # field bounds only
-STATION_MENU: dict[tuple[str, str], tuple[float, ...]] = {**MENU, ("snow", "ge"): (0.1, 1.0, 3.0, 6.0)}
+STATION_MENU: dict[tuple[str, str], tuple[float, ...]] = {**MENU, ("snow", "ge"): (0.1, 1.0, 3.0)}
 DEFAULT_THRESHOLD: dict[tuple[str, str], int] = {("mint", "le"): 32, ("maxt", "le"): 32, ("maxt", "ge"): 90, ("mint", "ge"): 70}
 NOHRSC_START = dt.datetime(2008, 10, 1)
 

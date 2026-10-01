@@ -110,3 +110,8 @@ def test_presaved_temperature_set_is_tens_plus_28_32_36_and_defaults_are_inside_
         assert all(v % 10 == 0 or v in (28, 32, 36) for v in vals)
         assert DEFAULT_THRESHOLD[key] in vals and STATION_MENU[key] == vals    # stations pre-save the same temperatures
     assert not any(v in (28, 32, 36) for key in (("maxt", "ge"), ("mint", "ge")) for v in MENU[key])   # cold extras only for <= maps
+
+
+def test_snow_presaved_amounts_are_tenth_one_and_three_inches():
+    from gridded_climo.query import STATION_MENU
+    assert STATION_MENU[("snow", "ge")] == (0.1, 1.0, 3.0)
