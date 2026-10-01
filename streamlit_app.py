@@ -83,10 +83,11 @@ with st.sidebar:
             else:
                 value = st.select_slider("Threshold (°F)", options=list(menu), value=menu[0])
             method_label = st.radio(
-                "Method", ["Grid (ACIS Grid 1)", "Stations (interpolated)"],
-                help="Grid: NRCC's 5 km daily temperature grid, scanned cell by cell — smooth, every cell has a value. "
-                     "Stations: each station's own average date (what the ACIS website shows), then interpolated — "
-                     "official station values at the dots. The two can differ by days to a couple of weeks locally.")
+                "Method", ["Stations (interpolated)", "Grid (ACIS Grid 1)"],
+                help="Stations: each station's own date (what the ACIS website shows), then interpolated — official values at the dots, "
+                     "and available back to 1950. Grid: NRCC's 5 km daily temperature grid scanned cell by cell — smooth, every "
+                     "cell has a value, shipped for 1991+ only. They agree within ~2 days for typical freeze thresholds; warm "
+                     "thresholds (90°F+) can differ more.")
             q_kwargs.update(element=el, op=op, value=float(value), method="station" if method_label.startswith("Stations") else "grid")
         q_kwargs["when"] = "first" if when_label == "Average first date" else "last"
     else:
@@ -137,13 +138,19 @@ with st.sidebar:
 
     with st.expander("Options"):
         n0, n1 = st.columns(2)
-        normal = (n0.number_input("Normal from", 1950, 2024, DEFAULT_NORMAL_PERIOD[0]), n1.number_input("to", 1951, 2025, DEFAULT_NORMAL_PERIOD[1]))
+        label_y = "Years included: from" if when_label != "Custom range" else "Normal period: from"
+        normal = (n0.number_input(label_y, 1950, 2024, DEFAULT_NORMAL_PERIOD[0]), n1.number_input("to", 1951, 2025, DEFAULT_NORMAL_PERIOD[1]))
+        if when_label != "Custom range":
+            st.caption("For a record (earliest/latest), set the range to all years, e.g. 1950–2025. Years before 1991 need the Stations method.")
         q_kwargs["normal_period"] = (int(normal[0]), int(normal[1]))
         if when_label != "Custom range":
-            stat = st.selectbox("Statistic across years", ["mean", "median", "percentile"])
+            stat_label = st.selectbox("Statistic across years", ["Average date", "Median date", "Earliest on record", "Latest on record", "Percentile"])
+            stat = {"Average date": "mean", "Median date": "median", "Earliest on record": "min", "Latest on record": "max", "Percentile": "percentile"}[stat_label]
             q_kwargs["stat"] = stat
             if stat == "percentile":
                 q_kwargs["percentile"] = st.slider("Percentile", 1, 99, 10)
+            if stat in ("min", "max"):
+                st.caption("Each station's single earliest/latest date in the chosen years; its record year shows in the map tooltip.")
         region_name = st.selectbox("Region", list(REGIONS))
         bbox = REGIONS[region_name]
         if bbox is None:

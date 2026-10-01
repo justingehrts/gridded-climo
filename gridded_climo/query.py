@@ -5,6 +5,7 @@ import datetime as dt
 import os
 from dataclasses import dataclass, field
 
+from .precomputed import DATA_DIR, shipped_years
 from .registry import Metric, Style
 
 WHENS = ("first", "last", "range_specific", "range_normal")
@@ -66,6 +67,12 @@ def unsupported_reason(q: Query) -> str | None:
             return "First/last dates are available for temperature and snowfall thresholds."
         if q.op not in ("le", "ge") or q.value is None:
             return "Choose 'at or below' / 'at or above' and a threshold."
+        cover = shipped_years(DATA_DIR).get(method)
+        if cover and q.season is None and not allow_live():
+            if method == "grid" and q.normal_period[0] < cover[0]:
+                return f"Grid data ships for {cover[0]}-{cover[1]}; choose Stations to include earlier years (back to {(shipped_years(DATA_DIR).get('station') or cover)[0]})."
+            if q.normal_period[0] < cover[0] or q.normal_period[1] > cover[1]:
+                return f"Shipped {method} data covers {cover[0]}-{cover[1]}; choose years inside that range."
         menu = (STATION_MENU if method == "station" else MENU).get((q.element, q.op), ())
         if q.season is None and not allow_live() and q.value not in menu:
             return f"{q.value:g} isn't in the precomputed menu for this variable (available: {list(menu)})."
@@ -111,13 +118,19 @@ def _style(q: Query) -> Style:
     return Style(ramp="Spectral", reverse=True, mode="stepped", steps=12, units_label="°F")
 
 
+def _stat_prefix(q: Query) -> str:
+    return {"mean": "Average Date of", "median": "Median Date of", "min": "Earliest", "max": "Latest",
+            "percentile": f"{q.percentile:g}th Percentile Date of"}[q.stat]
+
+
 def describe(q: Query) -> str:
     el = {"mint": "Low", "maxt": "High", "pcpn": "Precipitation", "snow": "Snowfall"}[q.element]
     if q.when in ("first", "last"):
         rel = "at or below" if q.op == "le" else "at or above"
-        if q.element == "snow":
-            return f"Average Date of {q.when.title()} Snowfall of {q.value:g}\" or More"
-        return f"Average Date of {q.when.title()} {el} Temperature {rel} {q.value:g}°F"
+        what = (f"Snowfall of {q.value:g}\" or More" if q.element == "snow"
+                else f"{el} Temperature {rel} {q.value:g}°F")
+        title = f"{_stat_prefix(q)} {q.when.title()} {what}"
+        return title + (" on Record" if q.stat in ("min", "max") else "")
     kind = {"mean": "Average", "sum": "Total", "max": "Maximum", "min": "Minimum"}[q.reduce]
     if q.element == "snow":
         return "Snowfall Total"

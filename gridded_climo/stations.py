@@ -111,9 +111,11 @@ def build_station_occurrence(client, bbox, element, op, direction, thresholds, s
             cols = [index[s] for s in d["sids"]]
             table[years.index(y), cols] = offs[t]
         p.parent.mkdir(parents=True, exist_ok=True)
-        np.savez_compressed(p, sids=np.array(sids), lon=np.array(meta["lon"], "float32"), lat=np.array(meta["lat"], "float32"),
+        tmp = p.with_name(p.stem + ".tmp.npz")  # atomic replace: a reader never sees a half-written file
+        np.savez_compressed(tmp, sids=np.array(sids), lon=np.array(meta["lon"], "float32"), lat=np.array(meta["lat"], "float32"),
                             name=np.array(meta["name"]), years=np.array(years, "int16"), offsets=table,
                             season_start=season["start"], season_end=season["end"])
+        tmp.replace(p)
     log(f"stations {element} {op} {direction}: wrote {len(thresholds)} files ({len(todo)} new years)")
 
 
@@ -147,6 +149,21 @@ def station_stat(z: dict, normal_period: tuple[int, int], stat: str, p: float | 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         val = {"mean": lambda: np.nanmean(off, axis=0), "median": lambda: np.nanmedian(off, axis=0),
-               "percentile": lambda: np.nanpercentile(off, p, axis=0)}[stat]()
+               "percentile": lambda: np.nanpercentile(off, p, axis=0),
+               "min": lambda: np.nanmin(off, axis=0), "max": lambda: np.nanmax(off, axis=0)}[stat]()
     ok = (n_valid >= min_valid_frac * len(want)) & (n_cross >= min_cross_frac * np.maximum(n_valid, 1)) & np.isfinite(val)
+    station_stat.last_mask = ok  # exposed for extreme_years(); valid until the next call
     return z["lon"][ok], z["lat"][ok], val[ok].astype("float32"), n_valid[ok], z["sids"][ok], z["name"][ok]
+
+
+def extreme_years(z: dict, normal_period: tuple[int, int], stat: str, keep: np.ndarray) -> np.ndarray:
+    """For stat min/max: the (first) year each kept station set its record. `keep` is the boolean mask station_stat used."""
+    years = z["years"].astype(int)
+    sel = np.isin(years, np.arange(normal_period[0], normal_period[1] + 1))
+    off = z["offsets"][sel].astype("float32")
+    off = np.where((off != INVALID) & (off != NO_CROSS), off, np.nan)
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        idx = np.nanargmin(off, axis=0) if stat == "min" else np.nanargmax(off, axis=0)
+    return years[sel][idx][keep]

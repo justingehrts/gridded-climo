@@ -45,6 +45,10 @@ def cross_year_stat(stack: np.ndarray, stat: str, p: float | None = None, min_fr
             out = np.nanmedian(stack, axis=0)
         elif stat == "percentile":
             out = np.nanpercentile(stack, p, axis=0)
+        elif stat == "min":
+            out = np.nanmin(stack, axis=0)
+        elif stat == "max":
+            out = np.nanmax(stack, axis=0)
         else:
             raise ValueError(stat)
     return np.where(enough, out, np.nan).astype("float32")

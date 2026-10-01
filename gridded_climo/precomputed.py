@@ -89,3 +89,17 @@ def monthday_window(start_md: tuple[int, int], end_md: tuple[int, int], years: n
     idx = np.array([doy_index(x) for x in days])
     w = np.array([leap if (x.month, x.day) == (2, 29) else 1.0 for x in days])
     return idx, w
+
+
+def shipped_years(data_dir=DATA_DIR) -> dict[str, tuple[int, int] | None]:
+    """Year coverage of the shipped data ({'grid': (y0, y1), 'station': (y0, y1)}; None if absent), read from one file each."""
+    out = {}
+    for kind, path in (("grid", Path(data_dir) / "occurrence" / "mint_le32_first.npz"),
+                       ("station", Path(data_dir) / "stations" / "mint_le32_first.npz")):
+        try:
+            with np.load(path) as z:
+                ys = z["years"]
+            out[kind] = (int(ys.min()), int(ys.max()))
+        except (OSError, KeyError):
+            out[kind] = None
+    return out

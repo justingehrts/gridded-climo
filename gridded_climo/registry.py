@@ -11,7 +11,7 @@ KINDS = {"climatology", "period", "storm"}
 ELEMENTS = {"mint", "maxt", "pcpn", "snow", "snwd"}
 OPS = {"le", "lt", "ge", "gt"}
 DIRECTIONS = {"first", "last"}
-STATS = {"mean", "median", "percentile"}
+STATS = {"mean", "median", "percentile", "min", "max"}  # min/max = earliest/latest date on record
 PERIOD_REDUCES = {"sum", "mean", "max", "min"}
 SOURCES = {"acis_grid1", "acis_stn", "nohrsc"}
 
