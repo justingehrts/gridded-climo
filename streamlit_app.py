@@ -8,6 +8,12 @@ import tempfile
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+import dataclasses
+import json
+
+import matplotlib as mpl
+import numpy as np
+import pandas as pd
 import streamlit as st
 from PIL import Image
 from streamlit_folium import st_folium
@@ -15,7 +21,12 @@ from streamlit_folium import st_folium
 from gridded_climo.config import DEFAULT_BBOX, DEFAULT_NORMAL_PERIOD
 from gridded_climo.query import MENU, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
 from gridded_climo.ui.preview import build_map, load_counties_geojson
-from gridded_climo.ui.service import generate
+from gridded_climo.binning import MODE_LABELS, MODES
+from gridded_climo.registry import Style
+from gridded_climo.render import PaletteError, RAMPS, parse_legend_csv, parse_wctrp, style_from_json, style_to_json
+from gridded_climo.render.palettes import sample_colors
+from gridded_climo.ui.service import compute, render_computed
+from gridded_climo.ui.style_build import build_style
 
 def _writable_cache_dir() -> Path:
     """Preferred cache dir if we can write there, else a temp dir (hosted filesystems may be read-only)."""
@@ -42,14 +53,32 @@ st.set_page_config(page_title="Gridded Climo", page_icon="🗺️", layout="wide
 
 
 @st.cache_data(show_spinner=False)
-def cached_generate(q: Query, bbox, allow_live_flag: bool):
-    return generate(q, bbox, CACHE_DIR, allow_live=True)
+def cached_compute(q: Query, bbox, allow_live_flag: bool):
+    """The slow part (ACIS / shipped data -> grid). Restyling never re-runs this."""
+    return compute(q, bbox, CACHE_DIR, allow_live=True)
+
+
+@st.cache_data(show_spinner=False, max_entries=48)
+def cached_render(q: Query, bbox, allow_live_flag: bool, style_json: str):
+    """The fast part (grid + style -> PNG / legend / KMZ)."""
+    return render_computed(cached_compute(q, bbox, allow_live_flag), Style(**json.loads(style_json)))
+
+
+@st.cache_data(show_spinner=False)
+def ramp_strip(name: str, reverse: bool) -> Image.Image:
+    cmap = mpl.colormaps[RAMPS.get(name, name) + ("_r" if reverse else "")]
+    arr = (cmap(np.linspace(0, 1, 256))[:, :3] * 255).astype("uint8")[None, :, :].repeat(14, axis=0)
+    return Image.fromarray(arr)
 
 
 @st.cache_data(show_spinner=False)
 def counties():
     return load_counties_geojson()
 
+
+# Imported settings are applied before any widget exists in this run (Streamlit forbids changing a widget after creation).
+if "_pending" in st.session_state:
+    st.session_state.update(st.session_state.pop("_pending"))
 
 # ---------------------------------------------------------------- selectors
 with st.sidebar:
@@ -106,8 +135,16 @@ with st.sidebar:
             q_kwargs["departure"] = st.checkbox("Show departure from normal", help="Value minus the daily normals for the same days.")
 
     st.subheader("3 · Dates")
+    date_mode, custom_starts = "auto", ""
     if when_label != "Custom range":
-        st.caption("Uses every year in the normal period (see Options).")
+        st.caption("Uses every year in the years range (see Options).")
+        date_mode = st.radio("Group dates into", MODES, format_func=MODE_LABELS.get, key="style_date_mode",
+                             help="Automatic: equal color steps across the data. Weekly: 1st–6th, 7th–13th, 14th–20th, 21st–end of "
+                                  "month. Thirds: early / mid / late month. Halves: 1st–15th and 16th–end. Custom: your own bin start dates.")
+        if date_mode == "custom":
+            custom_starts = st.text_input("Bin start dates (in season order)", "Oct 1, Oct 8, Oct 15, Oct 22, Nov 1", key="style_custom_starts",
+                                          help="Each bin runs from its start date to the day before the next one. Data before the first date "
+                                               "gets a 'Before…' bin; data after the last start extends the last bin.")
     elif range_mode == "Specific dates" and el != "snow":
         d1, d2 = st.columns(2)
         first_of_month = TODAY.replace(day=1) - dt.timedelta(days=1)
@@ -180,24 +217,95 @@ else:
 # ---------------------------------------------------------------- main panel
 if reason:
     st.info(reason, icon="ℹ️")
-go = st.sidebar.button("Generate map", type="primary", disabled=bool(reason), use_container_width=True)
+go = st.sidebar.button("Generate map", type="primary", disabled=bool(reason), width="stretch")
 if go:
+    key = (q, tuple(bbox))
+    if st.session_state.get("active") != key:   # a new map starts from clean styling
+        for k in ("bin_colors", "palette", "legend_rows"):
+            st.session_state.pop(k, None)
     with st.status("Building map…", expanded=True) as status:
         try:
-            st.write("Fetching / reading data and rendering…")
-            st.session_state["out"] = cached_generate(q, tuple(bbox), allow_live())
+            st.write("Fetching / reading data…")
+            cached_compute(q, tuple(bbox), allow_live())
+            st.session_state["active"] = key
             status.update(label="Done", state="complete", expanded=False)
         except Exception as e:  # show a readable message instead of a stack trace on air
-            st.session_state.pop("out", None)
+            st.session_state.pop("active", None)
             status.update(label="Failed", state="error")
             st.error(f"{type(e).__name__}: {e}")
 
-out = st.session_state.get("out")
+active = st.session_state.get("active")
+computed = cached_compute(active[0], active[1], allow_live()) if active else None
+default_style = computed.style if computed else Style()
+is_date_map = bool(computed and computed.ref)
+
+# ---- style panel (sidebar)
+with st.sidebar.expander("🎨 Style"):
+    up = st.file_uploader("Import palette / settings", type=["wctrp", "csv", "json"], key="style_upload",
+                          help=".wctrp (MAX palette) or CSV (Value,R,G,B,Alpha) set the colors; JSON restores a full settings export.")
+    if up is not None and st.session_state.get("_imported") != (up.name, up.size):
+        st.session_state["_imported"] = (up.name, up.size)
+        try:
+            data = up.getvalue()
+            if up.name.lower().endswith(".json"):
+                imp = style_from_json(data)
+                # widgets already exist this run, so hand the values to the top of the next run (see _pending below)
+                st.session_state["_pending"] = dict(
+                    style_ramp=imp.ramp if imp.ramp in RAMPS else "Map default", style_flip=imp.reverse,
+                    style_mode=imp.mode.title(), style_steps=imp.steps, style_date_mode=imp.date_mode,
+                    style_custom_starts=imp.custom_starts or "Oct 1, Oct 8, Oct 15, Oct 22, Nov 1",
+                    palette=imp.palette, bin_colors=imp.bin_colors, legend_rows=imp.legend_rows)
+            else:
+                rows = parse_wctrp(data)[0] if up.name.lower().endswith(".wctrp") else parse_legend_csv(data)
+                if is_date_map:   # dates aren't palette values, so only the colors carry over (by position across the bins)
+                    st.session_state["palette"] = [r[1:5] for r in rows]
+                else:
+                    st.session_state["legend_rows"] = rows
+            st.rerun()
+        except PaletteError as e:
+            st.error(str(e))
+    ramp_choice = st.selectbox("Color ramp", ["Map default"] + sorted(RAMPS), key="style_ramp")
+    flip = st.checkbox("Reverse colors", key="style_flip")
+    shown = default_style.ramp if ramp_choice == "Map default" else ramp_choice
+    st.image(ramp_strip(shown, (flip if ramp_choice != "Map default" else (default_style.reverse != flip))), width="stretch")
+    mode_choice = st.radio("Shading", ["Map default", "Stepped", "Smooth"], horizontal=True, key="style_mode")
+    steps = st.slider("Number of steps (automatic grouping)", 3, 20, int(default_style.steps), key="style_steps")
+    if not is_date_map:
+        c1, c2 = st.columns(2)
+        vmin = c1.number_input("Min value", value=None, placeholder="auto", key="style_vmin")
+        vmax = c2.number_input("Max value", value=None, placeholder="auto", key="style_vmax")
+    else:
+        vmin = vmax = None
+    if st.button("Reset all style choices"):
+        for k in ("style_ramp", "style_flip", "style_mode", "style_steps", "style_vmin", "style_vmax", "style_date_mode",
+                  "palette", "bin_colors", "legend_rows", "_imported"):
+            st.session_state.pop(k, None)
+        st.rerun()
+
+style = build_style(
+    default_style, ramp=None if ramp_choice == "Map default" else ramp_choice, flip=flip,
+    mode=None if mode_choice == "Map default" else mode_choice.lower(), steps=steps if steps != default_style.steps else None,
+    vmin=vmin, vmax=vmax, date_mode=date_mode if is_date_map else "auto", custom_starts=custom_starts,
+    palette=st.session_state.get("palette"), bin_colors=st.session_state.get("bin_colors"),
+    legend_rows=st.session_state.get("legend_rows"),
+)
+
+out = None
+if computed:
+    try:
+        out = cached_render(active[0], active[1], allow_live(), json.dumps(dataclasses.asdict(style)))
+    except ValueError as e:   # e.g. unreadable custom bin dates
+        st.error(str(e))
+    except Exception as e:
+        st.error(f"{type(e).__name__}: {e}")
+
 if out:
     st.subheader(out.name)
     if out.note:
         st.caption(out.note)
-    st.download_button("⬇️ Download KMZ", out.kmz, file_name=out.filename, mime="application/vnd.google-earth.kmz", type="primary")
+    dl1, dl2 = st.columns([1, 1])
+    dl1.download_button("⬇️ Download KMZ", out.kmz, file_name=out.filename, mime="application/vnd.google-earth.kmz", type="primary")
+    dl2.download_button("Export style settings (JSON)", style_to_json(style), file_name="gridded_climo_style.json", mime="application/json")
     tab_map, tab_img = st.tabs(["Map", "Image"])
     with tab_map:
         st_folium(build_map(out.png, out.bounds, counties(), out.points), use_container_width=True, height=560, returned_objects=[])
@@ -206,8 +314,43 @@ if out:
         canvas = Image.new("RGBA", overlay.size, (225, 225, 225, 255))
         canvas.alpha_composite(overlay)
         st.image(canvas.resize((overlay.width * 3, overlay.height * 3), Image.NEAREST),
-                 caption="Rendered overlay on neutral gray (transparent areas = no data)", use_container_width=True)
+                 caption="Rendered overlay on neutral gray (transparent areas = no data)", width="stretch")
     if out.legend_png:
         st.image(out.legend_png, caption="Legend (also included in the KMZ)")
-elif not reason:
+
+    with st.expander("🎨 Edit colors"):
+        if out.bins and style.date_mode != "auto":      # one editable color per date bin
+            df = pd.DataFrame([{"Bin": lab, "R": c[0], "G": c[1], "B": c[2], "A": c[3]} for lab, c in out.bins])
+            with st.form("bin_color_form"):
+                edited = st.data_editor(df, disabled=["Bin"], hide_index=True, width="stretch", key="bin_color_editor",
+                                        column_config={c: st.column_config.NumberColumn(c, min_value=0, max_value=255, step=1) for c in "RGBA"})
+                apply_bins = st.form_submit_button("Apply colors")
+            st.caption("A = opacity (0 = transparent). Each row is one date bin and one legend entry.")
+            if apply_bins:
+                new = dict(st.session_state.get("bin_colors") or {})
+                for (lab, old), (_, row) in zip(out.bins, edited.iterrows()):
+                    cur = [int(row[c]) for c in "RGBA"]
+                    if cur != list(old):
+                        new[lab] = cur
+                st.session_state["bin_colors"] = new
+                st.rerun()
+        elif not is_date_map and (style.legend_rows or out.seed_rows):    # numeric maps: value = lower bound of its band
+            rows = style.legend_rows or out.seed_rows
+            df = pd.DataFrame([{"Value": r[0], "R": r[1], "G": r[2], "B": r[3], "A": r[4] if len(r) > 4 else 255} for r in rows])
+            with st.form("legend_form"):
+                edited = st.data_editor(df, num_rows="dynamic", hide_index=True, width="stretch", key="legend_editor")
+                apply_leg = st.form_submit_button("Apply as custom legend")
+            st.caption("Value = the lower bound of that color band, in the map's units. A = opacity (0 = transparent).")
+            if apply_leg:
+                clean = edited.dropna(subset=["Value"]).sort_values("Value")
+                st.session_state["legend_rows"] = [[float(r.Value), int(r.R), int(r.G), int(r.B), int(r.A if r.A == r.A else 255)]
+                                                   for r in clean.itertuples()]
+                st.rerun()
+        else:
+            st.caption("Choose a date grouping (weekly, thirds, halves or custom) to edit the color of each date bin.")
+        if st.button("Reset colors"):
+            for k in ("bin_colors", "palette", "legend_rows"):
+                st.session_state.pop(k, None)
+            st.rerun()
+elif not reason and not computed:
     st.markdown("### Pick a map in the sidebar, then **Generate map**.")

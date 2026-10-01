@@ -33,4 +33,12 @@ gridded-climo precompute --stations mint,maxt,snow --elements "" --normals "" --
 The grid command is resumable (raw ACIS pulls are cached). Stations accept any threshold and any years back to 1900 (off-menu values are fetched live from ACIS, ~15-30 s); the grid method is limited to the pre-saved thresholds and 1991+.
 Deploying to Streamlit Community Cloud: `requirements.txt` + `packages.txt` (installs `gdal-bin`) are included.
 
-**Not yet implemented:** full style controls (ramp picker, custom legends, `.wctrp` import).
+### Styling
+- **Group dates into** (first/last-date maps): *Automatic* (default, equal color steps), *Weekly* (1st-6th, 7th-13th, 14th-20th, 21st-end),
+  *Thirds* (early / mid / late month), *Halves* (1st-15th, 16th-end), or *Custom* (your own bin start dates, e.g. `Oct 1, Oct 8, Oct 15, Nov 1`).
+  Each bin is one color and one legend entry; bins are calendar-aligned, so "first week of October" means the same thing every month.
+- **🎨 Style** (sidebar): color ramp + preview, reverse, stepped/smooth, number of steps, min/max, and import of a MAX `.wctrp` palette,
+  a CSV legend (`Value,R,G,B,Alpha`), or a JSON settings export. For date maps an imported palette supplies colors only (assigned by
+  position across the bins); for numeric maps its values become the color-band thresholds.
+- **🎨 Edit colors** (below the map): edit R/G/B/A for each date bin, or the Value/R/G/B/A rows of a custom numeric legend.
+- Styling re-renders the cached result instantly; it never re-fetches data. **Export style settings** saves everything as JSON.

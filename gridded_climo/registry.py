@@ -30,6 +30,12 @@ class Style:
     vmax: float | None = None
     hide_below: float | None = None  # values below this render fully transparent
     symmetric: bool = False  # diverging data: range is +/- max(|p2|, |p98|) around 0
+    # --- user styling (all optional; defaults reproduce the automatic look) ---
+    date_mode: str = "auto"  # first/last-date maps: auto | weekly | thirds | half | custom (see binning.py)
+    custom_starts: str = ""  # date_mode == custom: "Oct 1, Oct 8, Oct 15, Nov 1" (bin start dates, season order)
+    palette: list | None = None  # [[r,g,b,a], ...] imported palette, sampled by position across the bins
+    bin_colors: dict | None = None  # {bin label: [r,g,b,a]} manual per-bin overrides (date bins)
+    legend_rows: list | None = None  # numeric custom legend: [[value, r,g,b,a], ...]; value = lower bound of its color band
     units_label: str = ""
 
 

@@ -26,6 +26,7 @@ class Result:
     slug: str
     note: str = ""
     points: dict | None = None  # station markers for the preview (station method)
+    ref: tuple[int, int] | None = None  # (month, day) of offset 0 for first/last-date maps (enables date bins)
 
 
 def _to_date(d) -> dt.date:
@@ -36,12 +37,13 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
                allow_live: bool = True, log=print, reports: bool = False) -> Result:
     cache = Cache(st.cache_dir)
     client = ACISClient(st.acis_base_url, cache) if allow_live else None  # None = shipped data only
-    name, label_fmt, note, points = metric.title or metric.name, None, "", None
+    name, label_fmt, note, points, ref_md = metric.title or metric.name, None, "", None, None
 
     if metric.kind == "climatology":
         grid, info = climatology(metric, client, st.bbox, st.normal_period, data_dir, log)
         ref = dt.date(2001, info["ref_month"], info["ref_day"])  # non-leap reference year
         label_fmt = lambda v: (ref + dt.timedelta(days=int(round(v)))).strftime("%b %-d")
+        ref_md = (info["ref_month"], info["ref_day"])
         name += f" ({info['years'][0]}-{info['years'][1]})"
         points = info.get("points")
         if info["source"] == "station":
@@ -80,7 +82,7 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
                 note += f"; storm reports unavailable ({type(ex).__name__})"
     else:
         raise ValueError(metric.kind)
-    return Result(grid, name, metric.style, label_fmt, metric.name, note, points)
+    return Result(grid, name, metric.style, label_fmt, metric.name, note, points, ref_md)
 
 
 def run_query(q: Query, st: Settings | None = None, data_dir=DATA_DIR, allow_live: bool = True, log=print) -> Result:
