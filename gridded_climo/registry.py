@@ -25,7 +25,7 @@ class Style:
     ramp: str = "Viridis"
     reverse: bool = False
     mode: str = "stepped"  # stepped | smooth
-    steps: int = 10
+    steps: int = 6
     vmin: float | None = None
     vmax: float | None = None
     hide_below: float | None = None  # values below this render fully transparent

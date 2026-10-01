@@ -8,7 +8,7 @@ first_freeze:
   direction: first
   season: {start: [7, 1], end: [6, 30]}
   cross_year: {stat: mean}
-  style: {ramp: RdYlBu, reverse: true, mode: stepped, steps: 12, units_label: date}
+  style: {ramp: RdYlBu, reverse: true, mode: stepped, steps: 6, units_label: date}
 
 last_freeze:
   kind: climatology
@@ -19,7 +19,7 @@ last_freeze:
   direction: last
   season: {start: [1, 1], end: [6, 30]}
   cross_year: {stat: mean}
-  style: {ramp: RdYlBu, mode: stepped, steps: 12, units_label: date}
+  style: {ramp: RdYlBu, mode: stepped, steps: 6, units_label: date}
 
 # Snow is not available on any ACIS grid (tested) -> station-based path, not yet implemented.
 last_1in_snow:
@@ -31,7 +31,7 @@ last_1in_snow:
   direction: last
   season: {start: [7, 1], end: [6, 30]}
   cross_year: {stat: mean}
-  style: {ramp: Blues, mode: stepped, steps: 10, units_label: date}
+  style: {ramp: Blues, mode: stepped, steps: 6, units_label: date}
 
 avg_high_period:
   kind: period
@@ -39,7 +39,7 @@ avg_high_period:
   source: acis_grid1
   element: maxt
   reduce: mean
-  style: {ramp: Spectral, reverse: true, mode: stepped, steps: 12, units_label: "°F"}
+  style: {ramp: Spectral, reverse: true, mode: stepped, steps: 6, units_label: "°F"}
 
 high_departure_period:
   kind: period
@@ -48,7 +48,7 @@ high_departure_period:
   element: maxt
   reduce: mean
   normal: departure
-  style: {ramp: coolwarm, mode: stepped, steps: 12, vmin: -15, vmax: 15, units_label: "°F"}
+  style: {ramp: coolwarm, mode: stepped, steps: 6, vmin: -15, vmax: 15, units_label: "°F"}
 
 precip_total_period:
   kind: period

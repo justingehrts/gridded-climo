@@ -131,15 +131,15 @@ def unsupported_reason(q: Query) -> str | None:
 def _style(q: Query) -> Style:
     if q.when in ("first", "last"):
         # Warmer = red. Later first-<=X and earlier last-<=X are warmer; the reverse holds for >=X.
-        return Style(ramp="RdYlBu", reverse=(q.when == "first") == (q.op == "le"), mode="stepped", steps=12, units_label="date")
+        return Style(ramp="RdYlBu", reverse=(q.when == "first") == (q.op == "le"), mode="stepped", steps=6, units_label="date")
     if q.element == "snow":
         return Style(ramp="Blues", mode="stepped", steps=10, vmin=0.5, vmax=24, hide_below=0.1, units_label="in")
     if q.departure:
-        return Style(ramp="coolwarm", mode="stepped", steps=12, symmetric=True,
+        return Style(ramp="coolwarm", mode="stepped", steps=6, symmetric=True,
                      units_label="in" if q.element == "pcpn" else "°F")
     if q.element == "pcpn":
         return Style(ramp="YlGnBu", mode="stepped", steps=10, units_label="in")
-    return Style(ramp="Spectral", reverse=True, mode="stepped", steps=12, units_label="°F")
+    return Style(ramp="Spectral", reverse=True, mode="stepped", steps=6, units_label="°F")
 
 
 def _stat_prefix(q: Query) -> str:

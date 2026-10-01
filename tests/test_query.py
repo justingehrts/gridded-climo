@@ -74,3 +74,16 @@ def test_station_year_limits_and_shipped_normals(monkeypatch):
     assert "1991-2020" in unsupported_reason(Query(**r, normal_period=(1981, 2010)))
     assert "1991-2020" in unsupported_reason(Query(when="range_specific", element="maxt", reduce="mean", departure=True,
                                                    start=dt.date(2024, 7, 1), end=dt.date(2024, 7, 31), normal_period=(1981, 2010)))
+
+
+def test_default_color_steps_are_six_on_date_and_temperature_maps():
+    from gridded_climo.registry import Style
+    from gridded_climo.registry import load_registry
+    assert Style().steps == 6
+    for q in [Query(when="first", element="mint", op="le", value=32), Query(when="last", element="maxt", op="ge", value=90, method="station"),
+              Query(when="last", element="snow", op="ge", value=1.0),
+              Query(when="range_specific", element="maxt", reduce="mean", start=dt.date(2025, 7, 1), end=dt.date(2025, 7, 31)),
+              Query(when="range_specific", element="maxt", reduce="mean", departure=True, start=dt.date(2025, 7, 1), end=dt.date(2025, 7, 31))]:
+        assert metric_from_query(q).style.steps == 6
+    reg = load_registry()
+    assert all(reg[n].style.steps == 6 for n in ("first_freeze", "last_freeze", "last_1in_snow", "avg_high_period", "high_departure_period"))
