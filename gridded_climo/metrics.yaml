@@ -1,0 +1,66 @@
+# Metric registry. kind: climatology | period | storm
+first_freeze:
+  kind: climatology
+  title: Average Date of First Freeze (32°F)
+  source: acis_grid1
+  element: mint
+  threshold: {op: le, value: 32}
+  direction: first
+  season: {start: [7, 1], end: [6, 30]}
+  cross_year: {stat: mean}
+  style: {ramp: RdYlBu, reverse: true, mode: stepped, steps: 6, units_label: date}
+
+last_freeze:
+  kind: climatology
+  title: Average Date of Last Freeze (32°F)
+  source: acis_grid1
+  element: mint
+  threshold: {op: le, value: 32}
+  direction: last
+  season: {start: [1, 1], end: [6, 30]}
+  cross_year: {stat: mean}
+  style: {ramp: RdYlBu, mode: stepped, steps: 6, units_label: date}
+
+# Snow is not available on any ACIS grid (tested) -> station-based path, not yet implemented.
+last_1in_snow:
+  kind: climatology
+  title: Average Date of Last 1" Snowfall
+  source: acis_stn
+  element: snow
+  threshold: {op: ge, value: 1.0}
+  direction: last
+  season: {start: [7, 1], end: [6, 30]}
+  cross_year: {stat: mean}
+  style: {ramp: Blues, mode: stepped, steps: 6, units_label: date}
+
+avg_high_period:
+  kind: period
+  title: Average High Temperature
+  source: acis_grid1
+  element: maxt
+  reduce: mean
+  style: {ramp: Spectral, reverse: true, mode: stepped, steps: 6, units_label: "°F"}
+
+high_departure_period:
+  kind: period
+  title: High Temperature Departure from Normal
+  source: acis_grid1
+  element: maxt
+  reduce: mean
+  normal: departure
+  style: {ramp: coolwarm, mode: stepped, steps: 6, vmin: -15, vmax: 15, units_label: "°F"}
+
+precip_total_period:
+  kind: period
+  title: Total Precipitation
+  source: acis_grid1
+  element: pcpn
+  reduce: sum
+  style: {ramp: YlGnBu, mode: stepped, steps: 10, units_label: "in"}
+
+storm_total_snow:
+  kind: storm
+  title: Storm Total Snowfall
+  source: nohrsc
+  element: snow
+  style: {ramp: Blues, mode: stepped, steps: 10, vmin: 0.5, vmax: 24, hide_below: 0.1, units_label: "in"}
