@@ -187,3 +187,31 @@ def test_apply_example_preset_sets_only_what_it_contains():
     assert at.slider(key="style_steps").value == steps_before           # the preset didn't mention steps
     labels = [b.label for b in at.get("download_button")]
     assert "⬇️ Download KMZ" in labels and "Download preset file" in labels
+
+
+def test_threshold_field_takes_any_whole_degree_on_both_methods():
+    for method, value in (("Grid (ACIS Grid 1)", 33), ("Stations (interpolated)", 34)):
+        at = fresh()
+        at.radio[0].set_value("Average first date").run()
+        at.selectbox[0].select("Temperature at or below").run()
+        at.radio[2].set_value(method).run()
+        field = next(n for n in at.number_input if n.label == "Threshold (°F)")
+        assert field.step == 1 and field.value == 32                      # whole-degree field, default 32
+        field.set_value(value).run()
+        assert f"{value}°F" in gen(at)[0]
+
+
+def test_grid_field_stops_at_its_range_and_snow_takes_tenths():
+    at = fresh()
+    at.radio[0].set_value("Average first date").run()
+    at.selectbox[0].select("Temperature at or below").run()
+    at.radio[2].set_value("Grid (ACIS Grid 1)").run()
+    field = next(n for n in at.number_input if n.label == "Threshold (°F)")
+    assert (field.min, field.max) == (-10, 50)
+    at.radio[2].set_value("Stations (interpolated)").run()
+    assert (next(n for n in at.number_input if n.label == "Threshold (°F)").min) == -60   # stations: any value
+    at.selectbox[0].select("Snowfall").run()
+    snow = next(n for n in at.number_input if n.label.startswith("Daily snowfall"))
+    assert snow.step == 0.1
+    snow.set_value(2.5).run()
+    assert 'Snowfall of 2.5" or More' in gen(at)[0]

@@ -30,6 +30,7 @@ The app reads precomputed data shipped in `data/` (Streamlit Community Cloud can
 gridded-climo precompute --elements mint,maxt --normals mint,maxt,pcpn     # grid per-year crossings + daily normals
 gridded-climo precompute --stations mint,maxt,snow --elements "" --normals "" --y0 1950   # per-station crossings (server-side, ~20 min)
 ```
+The grid build pre-saves every whole degree (about 440 files, ~35 MB): lows ≤ X and highs ≤ X from -10 to 50°F, highs ≥ X from 50 to 105°F, lows ≥ X from 40 to 80°F.
 The grid command is resumable (raw ACIS pulls are cached). Stations accept any threshold and any years back to 1900 (off-menu values are fetched live from ACIS, ~15-30 s); the grid method is limited to the pre-saved thresholds and 1991+.
 Deploying to Streamlit Community Cloud: `requirements.txt` + `packages.txt` (installs `gdal-bin`) are included.
 
