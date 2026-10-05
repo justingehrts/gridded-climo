@@ -27,8 +27,9 @@ def _bbox(s: str):
 
 
 def _period(s: str):
+    """'1991-2020' or 'por-2020' (POR = start of the period of record, resolved once the area and variable are known)."""
     a, b = s.split("-")
-    return int(a), int(b)
+    return ("por" if a.strip().lower() == "por" else int(a)), int(b)
 
 
 def build_parser():
@@ -99,6 +100,18 @@ def main(argv=None):
             a.bbox = buffered_bbox(a.state.upper())
         except KeyError as e:
             sys.exit(str(e))
+    if a.normal_period and a.normal_period[0] == "por":
+        from .acis import ACISClient as _C
+        from .config import ACIS_BASE_URL
+        from .por import station_por
+        from .precomputed import shipped_years
+        if m.source == "acis_grid1":      # the grid's saved data begins here
+            first = (shipped_years().get("grid") or (1991,))[0]
+        else:
+            first = station_por(_C(ACIS_BASE_URL, Cache(a.cache_dir) if a.cache_dir else Cache(Settings().cache_dir)),
+                                a.bbox or Settings().bbox, m.element).first_year
+        print(f"POR start year: {first}")
+        a.normal_period = (first, a.normal_period[1])
     kw = {k: v for k, v in {"bbox": a.bbox, "cache_dir": a.cache_dir, "normal_period": a.normal_period}.items() if v}
     st = Settings(**kw)
     if m.kind == "period" and m.normal != "average" or m.kind == "storm":

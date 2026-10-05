@@ -87,7 +87,11 @@ def test_specific_dates_snowfall_live():
 
 
 def _set_years(at, lo, hi):
-    next(n for n in at.number_input if n.label.startswith(("Years included", "Normal period"))).set_value(lo)
+    start = next((t for t in at.text_input if t.key == "years_from"), None)          # first/last maps: text (year or POR)
+    if start is not None:
+        start.set_value(str(lo))
+    else:                                                                              # custom range: plain number
+        next(n for n in at.number_input if n.label.startswith("Normal period")).set_value(lo)
     next(n for n in at.number_input if n.label == "to").set_value(hi)
 
 
@@ -304,3 +308,79 @@ def test_another_state_runs_live_on_stations():
     _area(at, "Indiana")                                                              # only 72% inside the pre-saved region
     _first_low(at, "Stations (interpolated)")
     assert "32°F" in gen(at)[0] and any("fetched live" in c.value for c in at.caption)
+
+
+def _stub_por(monkeypatch, first=1872, starts=(1872, 1890, 1890, 1895, 1900)):
+    import streamlit as st
+    import gridded_climo.por as por
+    st.cache_data.clear()
+    calls = []
+    monkeypatch.setattr(por, "station_por", lambda client, bbox, element: calls.append((tuple(bbox), element)) or por.Por(first, list(starts)))
+    return calls
+
+
+def _years_page(at, method="Stations (interpolated)"):
+    at.radio[0].set_value("Average first date").run()
+    _var(at).select("Temperature at or below").run()
+    at.radio[2].set_value(method).run()
+
+
+def test_por_in_the_start_year_field(monkeypatch):
+    calls = _stub_por(monkeypatch)
+    at = fresh()
+    _years_page(at)
+    start = next(t for t in at.text_input if t.key == "years_from")
+    assert start.value == "1991" and calls == []                                    # the default doesn't need a lookup
+    start.set_value("por").run()
+    assert not at.exception
+    text = " ".join(c.value for c in at.caption)
+    assert "Using 1872" in text and "Period of record for low temperature here starts in 1872 (1 station" in text
+    assert calls == [((-87.5, 37.0, -78.5, 42.5), "mint")]                         # the area and variable asked about
+    assert not next(b for b in at.button if b.label == "Generate map").disabled
+    assert any("Before ~1895" in w.value for w in at.warning)                       # a very early start is flagged as sparse
+    start.set_value("POR").run()                                                    # any case; cached, so no second lookup
+    assert len(calls) == 1
+
+
+def test_early_year_before_the_record_is_rejected_and_late_years_never_look_it_up(monkeypatch):
+    calls = _stub_por(monkeypatch)
+    at = fresh()
+    _years_page(at)
+    start = next(t for t in at.text_input if t.key == "years_from")
+    start.set_value("1860").run()
+    assert any("begin in 1872" in i.value for i in at.info) and next(b for b in at.button if b.label == "Generate map").disabled
+    start.set_value("1890").run()                                                   # inside the record: fine
+    assert not any("begin in" in i.value for i in at.info)
+    start.set_value("1960").run()
+    assert len(calls) == 1                                                          # only years before 1950 trigger the check
+
+
+def test_bad_start_text_and_inverted_years_are_explained(monkeypatch):
+    _stub_por(monkeypatch)
+    at = fresh()
+    _years_page(at)
+    start = next(t for t in at.text_input if t.key == "years_from")
+    for text, msg in (("soon", "four-digit year"), ("1750", "between"), ("2025", "must be before")):
+        start.set_value(text).run()
+        assert not at.exception and any(msg in i.value for i in at.info), text
+        assert next(b for b in at.button if b.label == "Generate map").disabled
+
+
+def test_por_with_the_grid_method_means_where_the_saved_grid_begins(monkeypatch):
+    calls = _stub_por(monkeypatch)
+    at = fresh()
+    _years_page(at, "Grid (ACIS Grid 1)")
+    next(t for t in at.text_input if t.key == "years_from").set_value("por").run()
+    assert "Using 1991, where the saved grid data begins" in " ".join(c.value for c in at.caption) and calls == []
+    assert not next(b for b in at.button if b.label == "Generate map").disabled
+
+
+@live
+def test_por_start_generates_a_record_map_live():
+    at = fresh(timeout=900)
+    at.selectbox(key="area").select("Ohio").run()
+    _years_page(at)
+    next(t for t in at.text_input if t.key == "years_from").set_value("por").run()
+    assert not at.exception
+    title = gen(at)[0]
+    assert "(18" in title and "-2020)" in title                                      # starts in the 1800s

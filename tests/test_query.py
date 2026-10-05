@@ -69,7 +69,7 @@ def test_station_year_limits_and_shipped_normals(monkeypatch):
     base = dict(when="first", element="mint", op="le", value=32, method="station")
     last = qm.last_complete_year(qm.default_season("le", "first", "mint"))
     assert unsupported_reason(Query(**base, normal_period=(1870, last))) is None
-    assert "1870" in unsupported_reason(Query(**base, normal_period=(1850, 2000)))
+    assert "1850" in unsupported_reason(Query(**base, normal_period=(1800, 2000)))
     assert "latest completed season" in unsupported_reason(Query(**base, normal_period=(1991, last + 1)))
     monkeypatch.setattr(qm, "allow_live", lambda: False)
     r = dict(when="range_normal", element="maxt", reduce="mean", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31))

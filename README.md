@@ -34,6 +34,14 @@ The grid build pre-saves every whole degree (about 440 files, ~35 MB): lows ≤ 
 The grid command is resumable (raw ACIS pulls are cached). Stations accept any threshold and any years back to 1900 (off-menu values are fetched live from ACIS, ~15-30 s); the grid method is limited to the pre-saved thresholds and 1991+.
 Deploying to Streamlit Community Cloud: `requirements.txt` + `packages.txt` (installs `gdal-bin`) are included.
 
+### Start year and POR
+On first/last-date maps, **Years included: from** takes a year (like `1890`) or **`POR`**, the start of the period of record: the earliest year any station
+in the chosen area reports that variable (looked up from ACIS, kept for a day). The app also shows how many stations that start has, since the
+earliest years rest on very few. For the Grid method, POR means 1991, where the saved grid data begins. Years before the area's record are
+rejected with the real start year. The command line takes `--normal-period por-2020`.
+
+Long spans are fetched live from ACIS and are slow: roughly 30 s for 30 years, about a minute back to 1900, and several minutes back to the 1860s.
+
 ### Areas
 The **Area** dropdown lists the Columbus-centered default, every state in the lower 48 (plus DC) and a custom box. A state is drawn with a
 buffer so neighbors and surroundings show: 10% of its longer side, between 0.75° and 2° (Ohio gets 0.75°, about 80 km). State outlines come

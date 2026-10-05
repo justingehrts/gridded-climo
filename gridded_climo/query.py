@@ -39,7 +39,7 @@ def last_complete_year(season: dict, today: dt.date | None = None) -> int:
     return y
 
 
-STATION_FIRST_YEAR = 1870   # ACIS has a handful of stations from the 1870s; the region is dense only from ~1895
+STATION_FIRST_YEAR = 1850   # sanity floor; the real limit is the area's period of record (type POR), and coverage is dense only from ~1895
 SPARSE_BEFORE = 1895
 NORMALS_PERIOD = (1991, 2020)  # daily-normal files are shipped for this period only
 

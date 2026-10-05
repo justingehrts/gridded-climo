@@ -26,6 +26,11 @@ from gridded_climo.registry import Style
 from gridded_climo.render import PaletteError, RAMPS, parse_legend_csv, parse_wctrp, style_from_json, style_to_json
 from gridded_climo.render.palettes import sample_colors
 from gridded_climo.ui.service import compute, render_computed
+from gridded_climo.acis import ACISClient
+from gridded_climo.cache import Cache
+from gridded_climo.config import ACIS_BASE_URL
+from gridded_climo.por import PorError, parse_start, station_por
+from gridded_climo.precomputed import shipped_years
 from gridded_climo.presets import list_presets, preset_slug
 from gridded_climo.regions import CONUS_BOUNDS, buffer_deg, buffered_bbox, presaved_bbox, state_names, states
 from gridded_climo.ui.style_build import build_style, pending_from_json
@@ -63,6 +68,12 @@ def cached_render(q: Query, bbox, allow_live_flag: bool, style_json: str):
     return render_computed(cached_compute(q, bbox, allow_live_flag), Style(**json.loads(style_json)))
 
 
+@st.cache_data(show_spinner="Looking up the period of record…", ttl=24 * 3600)
+def cached_por(bbox, element: str):
+    """When stations in this area began reporting `element` (one small ACIS request, kept a day)."""
+    return station_por(ACISClient(ACIS_BASE_URL, Cache(CACHE_DIR)), bbox, element)
+
+
 @st.cache_data(show_spinner=False)
 def ramp_strip(name: str, reverse: bool) -> Image.Image:
     cmap = mpl.colormaps[RAMPS.get(name, name) + ("_r" if reverse else "")]
@@ -80,6 +91,7 @@ if "_pending" in st.session_state:
     st.session_state.update(st.session_state.pop("_pending"))
 
 # ---------------------------------------------------------------- selectors
+years_error = None      # set by the Options panel when the years can't be used; shown in the main panel and disables Generate
 with st.sidebar:
     st.title("🗺️ Gridded Climo")
     st.caption("Broadcast climate maps · ACIS Grid 1 · NOHRSC snowfall")
@@ -205,12 +217,45 @@ with st.sidebar:
             ymax = last_complete_year(default_season(q_kwargs.get("op", "ge"), q_kwargs["when"], q_kwargs["element"]))
         else:
             ymax = last_complete_year({"start": [1, 1], "end": [12, 31]})
-        normal = (n0.number_input(label_y, STATION_FIRST_YEAR, ymax - 1, DEFAULT_NORMAL_PERIOD[0]),
-                  n1.number_input("to", STATION_FIRST_YEAR + 1, ymax, DEFAULT_NORMAL_PERIOD[1]))
+        years_error = None
+        if when_label == "Custom range":      # daily normals are pre-saved for 1991-2020 only, so this stays a plain number
+            start_year = int(n0.number_input(label_y, STATION_FIRST_YEAR, ymax - 1, DEFAULT_NORMAL_PERIOD[0]))
+        else:
+            raw_start = n0.text_input(label_y, value=str(DEFAULT_NORMAL_PERIOD[0]), key="years_from",
+                                      help="A year (like 1890), or POR for the start of the period of record in the chosen area.")
+            start_year, por_info, parsed = DEFAULT_NORMAL_PERIOD[0], None, None
+            by_grid = q_kwargs.get("method") == "grid"
+            try:
+                parsed = parse_start(raw_start)
+                if parsed == "por":
+                    if by_grid:
+                        start_year = (shipped_years().get("grid") or (DEFAULT_NORMAL_PERIOD[0],))[0]   # the grid's saved data begins here
+                    else:
+                        por_info = cached_por(tuple(bbox), q_kwargs["element"])
+                        start_year = por_info.first_year
+                else:
+                    start_year = parsed
+                    if not by_grid and start_year < 1950:
+                        por_info = cached_por(tuple(bbox), q_kwargs["element"])
+                        if start_year < por_info.first_year:
+                            years_error = f"Records in this area begin in {por_info.first_year}. Use POR, or a year from {por_info.first_year} on."
+                            por_info = None
+            except PorError as e:
+                years_error = str(e)
+            except Exception as e:     # ACIS unreachable, etc.: the typed-year path doesn't need the lookup
+                years_error = f"Couldn't look up the period of record ({type(e).__name__}). Type a year instead."
+        end_year = int(n1.number_input("to", STATION_FIRST_YEAR + 1, ymax, min(DEFAULT_NORMAL_PERIOD[1], ymax)))
+        if years_error is None and start_year >= end_year:
+            years_error = f"The start year ({start_year}) must be before the end year ({end_year})."
+        normal = (start_year, end_year)
         if when_label != "Custom range":
-            st.caption("For a record (earliest/latest), set the range to all the years you want, e.g. 1950–2025. The Stations method works back to 1870 (most reliable from ~1895); the Grid method only has 1991 onward.")
-            if int(normal[0]) < SPARSE_BEFORE:
-                st.warning(f"Before ~{SPARSE_BEFORE} only a handful of stations report in this region, so these maps can be mostly blank or rest on very few stations.")
+            if por_info is not None:
+                st.caption(f"📅 Using {start_year}. " + por_info.describe({"mint": "low temperature", "maxt": "high temperature", "snow": "snowfall"}.get(q_kwargs["element"], "this variable")))
+            elif parsed == "por" and by_grid:
+                st.caption(f"📅 Using {start_year}, where the saved grid data begins.")
+            st.caption("For a record (earliest/latest), start at POR. Stations go back as far as the area's records (most reliable from ~1895); the Grid method has 1991 onward.")
+            if start_year < SPARSE_BEFORE:
+                st.warning(f"Before ~{SPARSE_BEFORE} only a handful of stations report in most areas, so these maps can be mostly blank or rest on very few stations.")
         q_kwargs["normal_period"] = (int(normal[0]), int(normal[1]))
         if when_label != "Custom range":
             stat_label = st.selectbox("Statistic across years", ["Average date", "Median date", "Earliest on record", "Latest on record", "Percentile"])
@@ -235,6 +280,8 @@ else:
         reason = "Choose valid dates."
 
 # ---------------------------------------------------------------- main panel
+if years_error and not reason:
+    reason = years_error
 if reason:
     st.info(reason, icon="ℹ️")
 go = st.sidebar.button("Generate map", type="primary", disabled=bool(reason), width="stretch")
