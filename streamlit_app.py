@@ -27,6 +27,7 @@ from gridded_climo.render import PaletteError, RAMPS, parse_legend_csv, parse_wc
 from gridded_climo.render.palettes import sample_colors
 from gridded_climo.ui.service import compute, render_computed
 from gridded_climo.presets import list_presets, preset_slug
+from gridded_climo.regions import CONUS_BOUNDS, buffer_deg, buffered_bbox, presaved_bbox, state_names, states
 from gridded_climo.ui.style_build import build_style, pending_from_json
 
 def _writable_cache_dir() -> Path:
@@ -41,12 +42,9 @@ def _writable_cache_dir() -> Path:
 
 
 CACHE_DIR = _writable_cache_dir()
-REGIONS = {
-    "Columbus region (default)": DEFAULT_BBOX,
-    "Central Ohio": (-84.5, 39.3, -81.5, 41.0),
-    "Ohio": (-85.0, 38.3, -80.4, 42.1),
-    "Custom…": None,
-}
+DEFAULT_AREA = "Columbus-centered default (pre-saved)"
+STATE_CODES = state_names()                       # {"Ohio": "OH", ...}
+AREAS = [DEFAULT_AREA] + list(STATE_CODES) + ["Custom…"]
 TODAY = dt.date.today()
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
@@ -85,6 +83,28 @@ if "_pending" in st.session_state:
 with st.sidebar:
     st.title("🗺️ Gridded Climo")
     st.caption("Broadcast climate maps · ACIS Grid 1 · NOHRSC snowfall")
+
+    st.subheader("Area")
+    area_name = st.selectbox("Area", AREAS, key="area", label_visibility="collapsed",
+                             help="Pick a state (shown with a buffer so neighbors and surroundings are included) or draw your own box. "
+                                  "Ohio and the Columbus default use pre-saved data; other areas are fetched live from ACIS.")
+    if area_name == DEFAULT_AREA:
+        bbox = DEFAULT_BBOX
+    elif area_name == "Custom…":
+        c1, c2 = st.columns(2)
+        w0, s0, e0, n0_ = CONUS_BOUNDS
+        d0 = DEFAULT_BBOX
+        west = c1.number_input("West", w0, e0, d0[0], 0.1); east = c2.number_input("East", w0, e0, d0[2], 0.1)
+        south = c1.number_input("South", s0, n0_, d0[1], 0.1); north = c2.number_input("North", s0, n0_, d0[3], 0.1)
+        bbox = (west, south, east, north)
+    else:
+        code = STATE_CODES[area_name]
+        bbox = buffered_bbox(code)
+        b = buffer_deg(tuple(states()[code]["bbox"]))
+        st.caption(f"{area_name} plus a {b:.2f}° (~{b * 111:.0f} km) buffer.")
+    if area_name != DEFAULT_AREA and presaved_bbox(tuple(bbox)) is None:
+        st.caption("📡 Outside the pre-saved region: station maps and date ranges are fetched live from ACIS (can take longer), "
+                   "and grid first/last dates and departure maps aren't available here.")
 
     st.subheader("1 · When")
     when_label = st.radio("When", ["Average first date", "Average last date", "Custom range"], label_visibility="collapsed")
@@ -205,20 +225,12 @@ with st.sidebar:
                 "Map smoothing (km)", 0, 15, 3,
                 help="Stations are interpolated, then lightly blurred. 0 = the map matches each station's own value exactly (but looks "
                      "spottier); higher = smoother contours that drift from individual stations (12 km can be ~5 days off at a single airport)."))
-        region_name = st.selectbox("Region", list(REGIONS))
-        bbox = REGIONS[region_name]
-        if bbox is None:
-            w0, s0, e0, n0_ = DEFAULT_BBOX
-            c1, c2 = st.columns(2)
-            west = c1.number_input("West", w0, e0, w0, 0.1); east = c2.number_input("East", w0, e0, e0, 0.1)
-            south = c1.number_input("South", s0, n0_, s0, 0.1); north = c2.number_input("North", s0, n0_, n0_, 0.1)
-            bbox = (west, south, east, north)
 
 q = Query(**{k: v for k, v in q_kwargs.items() if k in Query.__dataclass_fields__})
 if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
     reason = "Region: west must be less than east and south less than north."
 else:
-    reason = unsupported_reason(q) if q.start is not None or q.when in ("first", "last") or q.element == "snow" else "Choose valid dates."
+    reason = unsupported_reason(q, bbox) if q.start is not None or q.when in ("first", "last") or q.element == "snow" else "Choose valid dates."
     if q.when != "first" and q.when != "last" and (q.start is None or q.end is None):
         reason = "Choose valid dates."
 

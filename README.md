@@ -34,6 +34,18 @@ The grid build pre-saves every whole degree (about 440 files, ~35 MB): lows ≤ 
 The grid command is resumable (raw ACIS pulls are cached). Stations accept any threshold and any years back to 1900 (off-menu values are fetched live from ACIS, ~15-30 s); the grid method is limited to the pre-saved thresholds and 1991+.
 Deploying to Streamlit Community Cloud: `requirements.txt` + `packages.txt` (installs `gdal-bin`) are included.
 
+### Areas
+The **Area** dropdown lists the Columbus-centered default, every state in the lower 48 (plus DC) and a custom box. A state is drawn with a
+buffer so neighbors and surroundings show: 10% of its longer side, between 0.75° and 2° (Ohio gets 0.75°, about 80 km). State outlines come
+from ACIS and live in `gridded_climo/states.json`. The CLI takes `--state TX` for the same thing.
+
+Pre-saved data (grid first/last dates, daily normals, per-station files) only covers the Ohio-centered region, so for areas outside it:
+- **Stations** work anywhere in the lower 48 (any threshold, any years): fetched live from ACIS, roughly 10-60 seconds depending on the area.
+- **Date ranges** are fetched live too, capped by area x days so a big state can't exhaust a hosted app (about 100 days for Texas, 400+ for Ohio).
+- **Storm-total snowfall** works anywhere (NOHRSC covers the lower 48).
+- **Grid first/last dates and departure/normal-period maps** need the pre-saved files, so they are Ohio-region only. Ohio itself is cropped to the
+  pre-saved area (its northern buffer over Lake Erie is trimmed).
+
 ### Styling
 - **Group dates into** (first/last-date maps): *Automatic* (default, equal color steps), *Weekly* (1st-6th, 7th-13th, 14th-20th, 21st-end),
   *Thirds* (early / mid / late month), *Halves* (1st-15th, 16th-end), or *Custom* (your own bin start dates, e.g. `Oct 1, Oct 8, Oct 15, Nov 1`).

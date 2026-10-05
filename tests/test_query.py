@@ -115,3 +115,24 @@ def test_presaved_temperature_set_is_tens_plus_28_32_36_and_defaults_are_inside_
 def test_snow_presaved_amounts_are_tenth_one_and_three_inches():
     from gridded_climo.query import STATION_MENU
     assert STATION_MENU[("snow", "ge")] == (0.1, 1.0, 3.0)
+
+
+def test_region_rules_in_validation():
+    from gridded_climo.regions import buffered_bbox
+    tx, oh, ind = buffered_bbox("TX"), buffered_bbox("OH"), buffered_bbox("IN")
+    grid = Query(when="first", element="mint", op="le", value=32, method="grid")
+    stn = Query(when="first", element="mint", op="le", value=32, method="station")
+    assert unsupported_reason(grid) is None and unsupported_reason(grid, oh) is None            # default region and Ohio: pre-saved
+    for bb in (tx, ind):
+        assert "pre-saved for the Ohio-centered region only" in unsupported_reason(grid, bb)
+        assert unsupported_reason(stn, bb) is None                                                # stations work anywhere
+    dep = Query(when="range_specific", element="maxt", reduce="mean", departure=True, start=dt.date(2025, 7, 1), end=dt.date(2025, 7, 31))
+    avg = Query(when="range_normal", element="maxt", reduce="mean", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31))
+    for q in (dep, avg):
+        assert unsupported_reason(q, oh) is None and "daily normals" in unsupported_reason(q, tx)
+    year = Query(when="range_specific", element="maxt", reduce="mean", start=dt.date(2024, 7, 1), end=dt.date(2025, 6, 30))
+    assert unsupported_reason(year, oh) is None and "can use at most" in unsupported_reason(year, tx)
+    month = Query(when="range_specific", element="maxt", reduce="mean", start=dt.date(2025, 7, 1), end=dt.date(2025, 7, 31))
+    assert unsupported_reason(month, tx) is None
+    storm = Query(when="range_specific", element="snow", start=dt.datetime(2024, 1, 5), end=dt.datetime(2024, 1, 8))
+    assert unsupported_reason(storm, tx) is None                                                 # NOHRSC covers the whole lower 48

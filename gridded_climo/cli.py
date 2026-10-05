@@ -36,6 +36,7 @@ def build_parser():
     p.add_argument("--registry", help="metrics.yaml path (default: built-in)")
     p.add_argument("--cache-dir")
     p.add_argument("--bbox", type=_bbox, help="west,south,east,north (default: Columbus, OH region)")
+    p.add_argument("--state", help="two-letter state code; uses the state plus a buffer (instead of --bbox)")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("list", help="list registered metrics")
     pc = sub.add_parser("precompute", help="build data/occurrence + data/normals for the Streamlit app (slow, resumable)")
@@ -92,6 +93,12 @@ def main(argv=None):
     if a.metric not in reg:
         sys.exit(f"unknown metric '{a.metric}'. Try: gridded-climo list")
     m = reg[a.metric]
+    if a.state:
+        from .regions import buffered_bbox
+        try:
+            a.bbox = buffered_bbox(a.state.upper())
+        except KeyError as e:
+            sys.exit(str(e))
     kw = {k: v for k, v in {"bbox": a.bbox, "cache_dir": a.cache_dir, "normal_period": a.normal_period}.items() if v}
     st = Settings(**kw)
     if m.kind == "period" and m.normal != "average" or m.kind == "storm":

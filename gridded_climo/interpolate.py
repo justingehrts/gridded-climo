@@ -54,3 +54,21 @@ def smooth(grid: Grid, sigma_km: float) -> Grid:
     with np.errstate(invalid="ignore", divide="ignore"):
         out = np.where(ok & (den > 1e-3), num / den, np.nan)
     return grid.with_data(out)
+
+
+def adaptive_cell_deg(bbox, base: float = 0.02, max_cells: int = 400_000) -> float:
+    """0.02 deg (~2 km) cells, coarsened only for very large areas so a big state doesn't make millions of cells."""
+    w, s_, e, n = bbox
+    cells = (e - w) * (n - s_) / base**2
+    return base if cells <= max_cells else float(np.sqrt((e - w) * (n - s_) / max_cells))
+
+
+def adaptive_max_km(lon, lat, base: float = 80.0, cap: float = 200.0) -> float:
+    """How far from a station a map cell may be and still be colored: 80 km where stations are dense (Ohio), more where they
+    are sparse (3x the typical gap between neighboring stations, up to 200 km), so the West isn't mostly blank."""
+    lon, lat = np.asarray(lon, float), np.asarray(lat, float)
+    if len(lon) < 3:
+        return base
+    kx = KM_PER_DEG_LAT * np.cos(np.radians(float(np.mean(lat))))
+    d, _ = cKDTree(np.c_[lon * kx, lat * KM_PER_DEG_LAT]).query(np.c_[lon * kx, lat * KM_PER_DEG_LAT], k=2)
+    return float(min(cap, max(base, 3.0 * np.median(d[:, 1]))))

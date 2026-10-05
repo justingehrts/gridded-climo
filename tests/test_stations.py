@@ -262,3 +262,22 @@ def test_smooth_km_validation_and_passthrough():
     from gridded_climo.query import unsupported_reason
     base = dict(when="first", element="mint", op="le", value=32, method="station")
     assert unsupported_reason(Query(**base, smooth_km=0)) is None and "0 and 30" in unsupported_reason(Query(**base, smooth_km=99))
+
+
+def test_stations_use_live_data_outside_the_presaved_region_even_when_a_file_exists(tmp_path):
+    from gridded_climo.products.station_climo import station_climatology
+    from gridded_climo.regions import buffered_bbox
+    from gridded_climo.stations import fetch_station_thresholds, station_path
+    m = metric_from_query(Query(when="first", element="mint", op="le", value=40, method="station", normal_period=(2015, 2017)))
+    z = fetch_station_thresholds(FakeServerClient(), BBOX, "mint", "le", 40, "first", SEASON, 2015, 2017)
+    station_path(tmp_path, "mint", "le", 40, "first").parent.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(station_path(tmp_path, "mint", "le", 40, "first"), **z)           # a shipped file exists...
+    c = FakeServerClient()
+    _, ohio = station_climatology(m, buffered_bbox("OH"), (2015, 2017), tmp_path, client=c)
+    assert ohio["data_source"] == "shipped" and c.requests == []                          # ...and serves Ohio
+    c = FakeServerClient()
+    _, texas = station_climatology(m, buffered_bbox("TX"), (2015, 2017), tmp_path, client=c)
+    assert texas["data_source"] == "live" and len(c.requests) == 1                        # ...but not Texas: it only holds Ohio-region stations
+    assert c.requests[0][1]["bbox"].startswith("-108.961,")                                # Texas box (-107.961) widened by 1 degree
+    with pytest.raises(FileNotFoundError):
+        station_climatology(m, buffered_bbox("TX"), (2015, 2017), tmp_path, client=None)

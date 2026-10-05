@@ -6,7 +6,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..interpolate import grid_for_bbox, idw, smooth
+from ..interpolate import adaptive_cell_deg, adaptive_max_km, grid_for_bbox, idw, smooth
+from ..regions import presaved_bbox
 from ..precomputed import DATA_DIR
 from ..registry import Metric
 from ..stations import (extreme_years, fetch_station_thresholds, load_station_occurrence, station_path, station_stat)
@@ -20,7 +21,8 @@ def _covers(z: dict, normal_period) -> bool:
 def station_data(metric: Metric, bbox, normal_period, data_dir=DATA_DIR, client=None, margin_deg: float = 1.0):
     """-> (z dict, source 'shipped' | 'live')."""
     thr = metric.threshold
-    if station_path(data_dir, metric.element, thr["op"], thr["value"], metric.direction).exists():
+    # shipped files only contain stations inside the pre-saved region, so they can only serve maps that are (nearly) inside it
+    if presaved_bbox(bbox) is not None and station_path(data_dir, metric.element, thr["op"], thr["value"], metric.direction).exists():
         z = load_station_occurrence(data_dir, metric.element, thr["op"], thr["value"], metric.direction)
         if _covers(z, normal_period):
             return z, "shipped"
@@ -34,18 +36,22 @@ def station_data(metric: Metric, bbox, normal_period, data_dir=DATA_DIR, client=
     return z, "live"
 
 
-def station_climatology(metric: Metric, bbox, normal_period, data_dir=DATA_DIR, cell_deg: float = 0.02, max_km: float = 80.0,
+def station_climatology(metric: Metric, bbox, normal_period, data_dir=DATA_DIR, cell_deg: float | None = None, max_km: float | None = None,
                         k: int = 8, power: float = 3.0, smooth_km: float = 3.0, client=None):
     """IDW (k nearest, distance^-power) then a light blur. The old defaults (k=12, power=2, 12 km blur) missed the stations' own
     values by 2.2 days on average and up to 10.6; these keep the map within ~0.3 days of the station values on average."""
     cy = metric.cross_year
     z, src = station_data(metric, bbox, normal_period, data_dir, client)
+    if src == "shipped":
+        bbox = presaved_bbox(bbox)       # crop to the area the shipped stations cover
     lon, lat, val, n_valid, sids, names = station_stat(z, normal_period, cy["stat"], cy.get("p"))
     if cy["stat"] in ("min", "max"):  # show the record year in each station's tooltip
         yrs = extreme_years(z, normal_period, cy["stat"], station_stat.last_mask)
         names = np.array([f"{n} (record {y})" for n, y in zip(names, yrs)])
-    grid = smooth(idw(lon, lat, val, grid_for_bbox(bbox, cell_deg), k=k, power=power, max_km=max_km), smooth_km)
+    cell = cell_deg or adaptive_cell_deg(bbox)
+    reach = max_km or adaptive_max_km(lon, lat)
+    grid = smooth(idw(lon, lat, val, grid_for_bbox(bbox, cell), k=k, power=power, max_km=reach), smooth_km)
     sm, sd = metric.season["start"]
-    info = {"ref_month": sm, "ref_day": sd, "years": normal_period, "source": "station", "data_source": src, "smooth_km": smooth_km,
+    info = {"ref_month": sm, "ref_day": sd, "years": normal_period, "source": "station", "data_source": src, "smooth_km": smooth_km, "reach_km": reach,
             "points": {"lon": lon, "lat": lat, "value": val, "name": names, "n_years": n_valid}}
     return grid, info

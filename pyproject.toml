@@ -19,7 +19,7 @@ build-backend = "setuptools.build_meta"
 include = ["gridded_climo*"]
 
 [tool.setuptools.package-data]
-gridded_climo = ["metrics.yaml"]
+gridded_climo = ["metrics.yaml", "states.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

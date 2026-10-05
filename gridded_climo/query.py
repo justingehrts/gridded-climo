@@ -6,6 +6,7 @@ import os
 from dataclasses import dataclass, field
 
 from .precomputed import DATA_DIR, has_occurrence, shipped_years
+from .regions import PRESAVED_REGION, max_live_days, presaved_bbox
 from .registry import Metric, Style
 
 WHENS = ("first", "last", "range_specific", "range_normal")
@@ -76,8 +77,13 @@ class Query:
     extra: dict = field(default_factory=dict)
 
 
-def unsupported_reason(q: Query) -> str | None:
-    """None if runnable, else a short user-facing explanation (UI disables / CLI errors)."""
+OUTSIDE_PRESAVED = "pre-saved for the Ohio-centered region only"
+
+
+def unsupported_reason(q: Query, bbox=None) -> str | None:
+    """None if runnable, else a short user-facing explanation (UI disables / CLI errors). `bbox` is the map area
+    (default: the pre-saved Ohio-centered region); data that is only pre-saved for that region is limited to it."""
+    bbox = tuple(bbox) if bbox else PRESAVED_REGION
     if q.when not in WHENS:
         return f"unknown 'when': {q.when}"
     if q.when in ("first", "last"):
@@ -107,6 +113,9 @@ def unsupported_reason(q: Query) -> str | None:
             if q.normal_period[1] > last:
                 return f"The latest completed season is {last}; choose an end year of {last} or earlier."
             return None
+        if presaved_bbox(bbox) is None and not allow_live():
+            return (f"Grid first/last dates are {OUTSIDE_PRESAVED}. For this area use the Stations method "
+                    "(it works anywhere in the lower 48).")
         cover = shipped_years(DATA_DIR).get("grid")  # grid first/last dates come only from shipped data (GridData has no server-side first/last)
         if cover and q.season is None and not allow_live():
             if q.normal_period[0] < cover[0] or q.normal_period[1] > cover[1]:
@@ -132,6 +141,8 @@ def unsupported_reason(q: Query) -> str | None:
         return f"unsupported element '{q.element}'"
     if (q.when == "range_normal" or q.departure) and tuple(q.normal_period) != NORMALS_PERIOD and not allow_live():
         return f"Daily normals are shipped for {NORMALS_PERIOD[0]}-{NORMALS_PERIOD[1]} only; use that normal period."
+    if (q.when == "range_normal" or q.departure) and presaved_bbox(bbox) is None and not allow_live():
+        return f"Departure from normal and normal-period averages use daily normals that are {OUTSIDE_PRESAVED}."
     if q.when == "range_normal" and q.reduce not in ("mean", "sum"):
         return "Averaging over the normal period supports mean and total only (not max/min)."
     if q.departure and q.reduce not in ("mean", "sum"):
@@ -142,6 +153,11 @@ def unsupported_reason(q: Query) -> str | None:
         return "Choose a range of one year or less."
     if q.when == "range_specific" and q.end < q.start:
         return "The end date is before the start date."
+    if q.when == "range_specific":
+        days = (q.end - q.start).days + 1
+        if days > max_live_days(bbox):
+            return (f"This area is large, so a map can use at most {max_live_days(bbox)} days of daily data "
+                    f"(you chose {days}). Shorten the range or pick a smaller region.")
     if q.when == "range_normal" and not (q.start and q.end):
         return "Choose a month/day start and end."
     return None

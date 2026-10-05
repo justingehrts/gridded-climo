@@ -47,7 +47,8 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
         name += f" ({info['years'][0]}-{info['years'][1]})"
         points = info.get("points")
         if info["source"] == "station":
-            note = (f"Station-based: {len(points['value'])} stations interpolated (IDW + {info['smooth_km']:g} km smoothing, 80 km max); "
+            note = (f"Station-based: {len(points['value'])} stations interpolated (IDW + {info['smooth_km']:g} km smoothing, up to {info['reach_km']:.0f} km from a station); blank where no station is close enough or "
+                    "the threshold is reached in fewer than half of the years; "
                     + ("pre-saved data" if info["data_source"] == "shipped" else "fetched live from ACIS"))
         else:
             note = "ACIS Grid 1 (precomputed)" if info["source"] == "precomputed" else "ACIS Grid 1, computed live"
@@ -61,7 +62,9 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
         else:
             if client is None:
                 raise RuntimeError("live ACIS access is disabled")
-            grid = period_summary(metric, client, st.bbox, s, e, st.normal_period, data_dir, log)
+            from .regions import presaved_bbox
+            eff = (presaved_bbox(tuple(st.bbox)) or st.bbox) if metric.normal == "departure" else st.bbox   # normals exist for the pre-saved region only
+            grid = period_summary(metric, client, eff, s, e, st.normal_period, data_dir, log)
             name += f" ({s} to {e})" + (f", vs {st.normal_period[0]}-{st.normal_period[1]} normal" if metric.normal else "")
     elif metric.kind == "storm":
         if not (start and end):

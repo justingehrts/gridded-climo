@@ -11,6 +11,11 @@ pytestmark = pytest.mark.skipif(not (DATA / "occurrence").exists(), reason="run 
 live = pytest.mark.skipif(os.environ.get("RUN_NETWORK_TESTS") != "1", reason="set RUN_NETWORK_TESTS=1 (hits ACIS/NOHRSC)")
 
 
+def _var(at):
+    """The 'Variable' selectbox (found by label, so adding other selectboxes can't shift it)."""
+    return next(b for b in at.selectbox if b.label == "Variable")
+
+
 def fresh(timeout=180):
     return AppTest.from_file(APP, default_timeout=timeout).run()
 
@@ -31,7 +36,7 @@ def gen(at):
 def test_first_last_temperature(when, var, method):
     at = fresh()
     at.radio[0].set_value(when).run()
-    at.selectbox[0].select(var).run()
+    _var(at).select(var).run()
     at.radio[2].set_value(method).run()
     assert "Average Date of" in gen(at)[0]
 
@@ -40,7 +45,7 @@ def test_first_last_temperature(when, var, method):
 def test_first_last_snowfall_station_only(when):
     at = fresh()
     at.radio[0].set_value(when).run()
-    at.selectbox[0].select("Snowfall").run()
+    _var(at).select("Snowfall").run()
     assert "Snowfall of 1" in gen(at)[0]
 
 
@@ -48,7 +53,7 @@ def test_normal_average_window_wraps_year():
     at = fresh()
     at.radio[0].set_value("Custom range").run()
     at.radio[1].set_value("Averaged over normal period").run()
-    at.selectbox[0].select("Precipitation").run()           # default window Dec 1 -> Feb 28
+    _var(at).select("Precipitation").run()           # default window Dec 1 -> Feb 28
     assert "average" in gen(at)[0].lower()
 
 
@@ -56,7 +61,7 @@ def test_snow_normal_average_is_disabled_with_reason():
     at = fresh()
     at.radio[0].set_value("Custom range").run()
     at.radio[1].set_value("Averaged over normal period").run()
-    at.selectbox[0].select("Snowfall").run()
+    _var(at).select("Snowfall").run()
     assert any("coming soon" in i.value for i in at.info)
     assert at.button[0].disabled
 
@@ -75,7 +80,7 @@ def test_specific_dates_snowfall_live():
     import datetime as dt
     at = fresh()
     at.radio[0].set_value("Custom range").run()
-    at.selectbox[0].select("Snowfall").run()
+    _var(at).select("Snowfall").run()
     at.date_input[0].set_value(dt.date(2024, 1, 5)).run()
     at.date_input[1].set_value(dt.date(2024, 1, 8)).run()
     assert "Snowfall Total" in gen(at)[0]
@@ -89,7 +94,7 @@ def _set_years(at, lo, hi):
 def test_earliest_snow_on_record_1950_2025():
     at = fresh()
     at.radio[0].set_value("Average first date").run()
-    at.selectbox[0].select("Snowfall").run()
+    _var(at).select("Snowfall").run()
     next(s for s in at.selectbox if s.label == "Statistic across years").select("Earliest on record").run()
     _set_years(at, 1950, 2025)
     at.run()
@@ -119,7 +124,7 @@ def test_departure_requires_shipped_normals():
 
 def _stations_first_freeze(at):
     at.radio[0].set_value("Average first date").run()
-    at.selectbox[0].select("Temperature at or below").run()
+    _var(at).select("Temperature at or below").run()
     at.radio[2].set_value("Stations (interpolated)").run()
     at.button[0].click().run()
     assert not at.exception and not at.error
@@ -161,7 +166,7 @@ def test_ramp_mode_range_controls_apply_to_a_numeric_map():
     at = fresh()
     at.radio[0].set_value("Custom range").run()
     at.radio[1].set_value("Averaged over normal period").run()
-    at.selectbox[0].select("Precipitation").run()
+    _var(at).select("Precipitation").run()
     at.button[0].click().run()
     assert not at.exception and not at.error
     at.selectbox(key="style_ramp").select("Magma").run()
@@ -195,7 +200,7 @@ def _threshold_field(at):
 
 def _first_low(at, method):
     at.radio[0].set_value("Average first date").run()
-    at.selectbox[0].select("Temperature at or below").run()
+    _var(at).select("Temperature at or below").run()
     at.radio[2].set_value(method).run()
 
 
@@ -222,13 +227,13 @@ def test_station_threshold_field_fetches_off_menu_whole_degrees_live():
 def test_grid_field_bounds_and_snow_field_takes_tenths():
     at = fresh()
     at.radio[0].set_value("Average first date").run()
-    at.selectbox[0].select("Temperature at or below").run()
+    _var(at).select("Temperature at or below").run()
     at.radio[2].set_value("Grid (ACIS Grid 1)").run()
     field = next(n for n in at.number_input if n.label == "Threshold (°F)")
     assert (field.min, field.max) == (-10, 50)
     at.radio[2].set_value("Stations (interpolated)").run()
     assert (next(n for n in at.number_input if n.label == "Threshold (°F)").min) == -60   # stations: any value
-    at.selectbox[0].select("Snowfall").run()
+    _var(at).select("Snowfall").run()
     snow = next(n for n in at.number_input if n.label.startswith("Daily snowfall"))
     assert snow.step == 0.1 and snow.value == 1.0
     snow.set_value(2.5).run()                                                    # accepted (tenths)...
@@ -241,8 +246,61 @@ def test_grid_field_bounds_and_snow_field_takes_tenths():
 def test_off_menu_snow_amount_fetches_live():
     at = fresh(timeout=600)                                                      # one big ACIS request (thousands of snow stations)
     at.radio[0].set_value("Average first date").run()
-    at.selectbox[0].select("Snowfall").run()
+    _var(at).select("Snowfall").run()
     next(n for n in at.number_input if n.label.startswith("Daily snowfall")).set_value(2.5).run()
     at.button[0].click().run()
     assert not at.exception and not at.error
     assert 'Snowfall of 2.5" or More' in [s.value for s in at.subheader][0]
+
+
+def _area(at, name):
+    at.selectbox(key="area").select(name).run()
+
+
+def test_area_dropdown_lists_the_default_every_state_and_custom():
+    at = fresh()
+    opts = list(at.selectbox(key="area").options)
+    assert opts[0].startswith("Columbus-centered default") and opts[-1] == "Custom…"
+    assert len(opts) == 49 + 2 and {"Ohio", "Texas", "District of Columbia"} <= set(opts)
+    assert opts[1:-1] == sorted(opts[1:-1])                                          # states A-Z
+    _area(at, "Ohio")
+    assert any("Ohio plus a 0.75°" in c.value for c in at.caption)
+
+
+def test_ohio_area_runs_from_presaved_data_on_both_methods():
+    for method in ("Grid (ACIS Grid 1)", "Stations (interpolated)"):
+        at = fresh()
+        _area(at, "Ohio")
+        _first_low(at, method)
+        title = gen(at)[0]
+        assert "32°F" in title and any(("pre-saved" in c.value) or ("Grid 1" in c.value) for c in at.caption)
+
+
+def test_other_states_explain_what_isnt_available_without_fetching():
+    at = fresh()
+    _area(at, "Texas")
+    assert any("Outside the pre-saved region" in c.value for c in at.caption)
+    _first_low(at, "Grid (ACIS Grid 1)")
+    assert any("Ohio-centered region only" in i.value for i in at.info)
+    assert next(b for b in at.button if b.label == "Generate map").disabled
+    at.radio[2].set_value("Stations (interpolated)").run()                            # stations are allowed anywhere
+    assert not any("Ohio-centered" in i.value for i in at.info)
+    assert not next(b for b in at.button if b.label == "Generate map").disabled
+
+
+def test_custom_area_accepts_a_box_anywhere_in_the_lower_48():
+    at = fresh()
+    _area(at, "Custom…")
+    west = next(n for n in at.number_input if n.label == "West")
+    assert west.min == -125.5
+    west.set_value(-100.0).run()
+    next(n for n in at.number_input if n.label == "East").set_value(-95.0).run()
+    assert not at.exception
+
+
+@live
+def test_another_state_runs_live_on_stations():
+    at = fresh(timeout=600)
+    _area(at, "Indiana")                                                              # only 72% inside the pre-saved region
+    _first_low(at, "Stations (interpolated)")
+    assert "32°F" in gen(at)[0] and any("fetched live" in c.value for c in at.caption)
