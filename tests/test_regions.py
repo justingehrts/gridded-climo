@@ -59,3 +59,32 @@ def test_interpolation_settings_adapt_to_area_and_station_density():
     lon, lat = np.meshgrid(np.arange(-110, -100, 1.5), np.arange(36, 42, 1.5))
     assert 120 < adaptive_max_km(lon.ravel(), lat.ravel()) <= 200              # sparse network: reaches farther, capped
     assert adaptive_max_km([-83, -82], [40, 40]) == 80                         # too few stations to judge
+
+
+def test_grid_first_last_goes_live_outside_the_presaved_region():
+    """With a live client, Texas must be scanned from daily grids, not read from the Ohio-only file."""
+    from gridded_climo.products.climatology import climatology
+    from gridded_climo.query import Query, metric_from_query
+
+    class Live:
+        called = 0
+
+        def daily(self, *a, **k):
+            Live.called += 1
+            raise RuntimeError("live path")
+    m = metric_from_query(Query(when="first", element="mint", op="le", value=32, method="grid"))
+    g, info = climatology(m, Live(), buffered_bbox("OH"), (1991, 2020))
+    assert info["source"] == "precomputed" and Live.called == 0
+    with pytest.raises(RuntimeError, match="live path"):
+        climatology(m, Live(), buffered_bbox("TX"), (1991, 2020))
+    assert Live.called == 1
+
+
+def test_normals_based_maps_have_no_live_escape_hatch(monkeypatch):
+    import datetime as dt
+    import gridded_climo.query as qm
+    monkeypatch.setattr(qm, "allow_live", lambda: True)
+    q = qm.Query(when="range_specific", element="maxt", reduce="mean", departure=True, start=dt.date(2025, 7, 1), end=dt.date(2025, 7, 31))
+    assert "daily normals" in qm.unsupported_reason(q, buffered_bbox("TX"))
+    g = qm.Query(when="first", element="mint", op="le", value=37, method="grid")      # off-menu grid value: live scan allowed locally
+    assert qm.unsupported_reason(g, buffered_bbox("TX")) is None

@@ -141,7 +141,7 @@ def unsupported_reason(q: Query, bbox=None) -> str | None:
         return f"unsupported element '{q.element}'"
     if (q.when == "range_normal" or q.departure) and tuple(q.normal_period) != NORMALS_PERIOD and not allow_live():
         return f"Daily normals are shipped for {NORMALS_PERIOD[0]}-{NORMALS_PERIOD[1]} only; use that normal period."
-    if (q.when == "range_normal" or q.departure) and presaved_bbox(bbox) is None and not allow_live():
+    if (q.when == "range_normal" or q.departure) and presaved_bbox(bbox) is None:      # normals can't be computed live, so no escape hatch
         return f"Departure from normal and normal-period averages use daily normals that are {OUTSIDE_PRESAVED}."
     if q.when == "range_normal" and q.reduce not in ("mean", "sum"):
         return "Averaging over the normal period supports mean and total only (not max/min)."

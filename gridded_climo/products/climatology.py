@@ -11,6 +11,7 @@ import numpy as np
 from ..grid import Grid
 from ..precomputed import DATA_DIR, has_occurrence, load_occurrence
 from ..query import default_season
+from ..regions import presaved_bbox
 from ..registry import Metric
 
 _OPS = {"le": operator.le, "lt": operator.lt, "ge": operator.ge, "gt": operator.gt}
@@ -75,7 +76,9 @@ def climatology(metric: Metric, client, bbox, normal_period: tuple[int, int], da
     if metric.source == "acis_stn":
         from .station_climo import station_climatology
         return station_climatology(metric, bbox, normal_period, data_dir, smooth_km=smooth_km, client=client)
-    if metric.source == "acis_grid1" and has_occurrence(data_dir, metric.element, thr["op"], thr["value"], metric.direction) \
+    # pre-saved grids only cover the Ohio-centered region; anywhere else the daily grids must be scanned live (slow, local use)
+    if metric.source == "acis_grid1" and presaved_bbox(tuple(bbox)) is not None \
+            and has_occurrence(data_dir, metric.element, thr["op"], thr["value"], metric.direction) \
             and metric.season == default_season(thr["op"], metric.direction, metric.element):
         return climatology_precomputed(metric, bbox, normal_period, data_dir)
     if client is None:
