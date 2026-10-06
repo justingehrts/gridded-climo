@@ -281,3 +281,68 @@ def test_stations_use_live_data_outside_the_presaved_region_even_when_a_file_exi
     assert c.requests[0][1]["bbox"].startswith("-108.961,")                                # Texas box (-107.961) widened by 1 degree
     with pytest.raises(FileNotFoundError):
         station_climatology(m, buffered_bbox("TX"), (2015, 2017), tmp_path, client=None)
+
+
+def _table(sids, years, rows, names=None):
+    lon = np.array([-83.0 + (ord(sid[0].lower()) - 97) * 0.1 for sid in sids], "float32")      # a station keeps its location in every table
+    return {"sids": np.array(sids), "lon": lon, "lat": np.full(len(sids), 40.0, "float32"),
+            "name": np.array(names or [s.upper() for s in sids]), "years": np.array(years, "int16"), "offsets": np.array(rows, "int16")}
+
+
+def test_merge_unions_stations_and_fills_gaps_with_invalid():
+    from gridded_climo.stations import merge_station_tables
+    late = _table(["a", "b"], [1950, 1951], [[10, 20], [11, NO_CROSS]])
+    early = _table(["b", "c"], [1900, 1901], [[21, 30], [22, INVALID]], names=["B-EARLY", "C"])
+    m = merge_station_tables([late, early])                        # order of arguments doesn't matter for the result's years
+    assert m["years"].tolist() == [1900, 1901, 1950, 1951] and m["sids"].tolist() == ["a", "b", "c"]   # c exists only in the early years
+    assert m["offsets"].tolist() == [[INVALID, 21, 30], [INVALID, 22, INVALID], [10, 20, INVALID], [11, NO_CROSS, INVALID]]
+    assert m["name"].tolist() == ["A", "B", "C"] and m["offsets"].dtype == np.int16       # metadata from the first table that has the station
+    with pytest.raises(ValueError, match="different years"):
+        merge_station_tables([late, _table(["a"], [1951], [[5]])])
+
+
+class EarlyClient:
+    cache = None
+
+    def __init__(self):
+        self.requests = []
+
+    def post(self, endpoint, params):
+        self.requests.append((params["sdate"], params["edate"]))
+        y0, y1 = int(params["sdate"][:4]) - 0, int(params["edate"][:4])      # season END dates -> season years are y0-1 ... y1-1
+        n = y1 - y0 + 1
+        cell = lambda d: [[d, "30", 0]]
+        yrs = range(y0 - 1, y1)
+        return {"data": [{"meta": {"ll": [-81.6, 40.0], "sids": ["old 1"], "name": "OLD"}, "data": [cell(f"{y}-10-20") for y in yrs]},
+                         {"meta": {"ll": [-83.0, 40.0], "sids": ["a"], "name": "A"}, "data": [cell(f"{y}-10-25") for y in yrs]}]}
+
+
+def test_extend_station_file_fetches_only_the_missing_early_seasons_in_chunks(tmp_path):
+    from gridded_climo.stations import extend_station_file, load_station_occurrence, station_path
+    p = station_path(tmp_path, "mint", "le", 32, "first")
+    p.parent.mkdir(parents=True, exist_ok=True)
+    existing = _table(["a"], [1950, 1951], [[20], [21]])
+    np.savez_compressed(p, **existing, season_start=np.array([7, 1]), season_end=np.array([6, 30]))
+    c = EarlyClient()
+    assert extend_station_file(c, BBOX, "mint", "le", 32, "first", SEASON, 1930, tmp_path, chunk=10, log=lambda *_: None)
+    assert len(c.requests) == 2 and c.requests[0][0].startswith("1931") and c.requests[-1][1].startswith("1950")   # 1930-1939, 1940-1949 only
+    z = load_station_occurrence(tmp_path, "mint", "le", 32, "first")
+    assert z["years"].tolist() == list(range(1930, 1952)) and set(z["sids"].tolist()) == {"a", "old 1"}
+    a = z["sids"].tolist().index("a")
+    assert z["offsets"][0, a] == 116 and z["offsets"][-1, a] == 21 and z["offsets"][-2, a] == 20     # new early row; old rows untouched
+    assert not extend_station_file(c, BBOX, "mint", "le", 32, "first", SEASON, 1930, tmp_path, chunk=10, log=lambda *_: None)   # already there
+    assert not extend_station_file(c, BBOX, "mint", "le", 33, "first", SEASON, 1930, tmp_path, log=lambda *_: None)             # no file: nothing
+    assert len(c.requests) == 2
+
+
+def test_merge_keeps_distinct_stations_that_share_an_acis_id():
+    """Regression: Greensburg 2 E / 3 SW / Greensburg share one ACIS ID but are different stations; merging by ID alone overwrote them."""
+    from gridded_climo.stations import merge_station_tables
+    def tbl(years, rows):
+        return {"sids": np.array(["123547 2"] * 3), "lon": np.array([-85.45, -85.55, -85.4891], "float32"), "lat": np.array([39.3333, 39.3333, 39.3475], "float32"),
+                "name": np.array(["GREENSBURG 2 E", "GREENSBURG 3 SW", "GREENSBURG"]), "years": np.array(years, "int16"), "offsets": np.array(rows, "int16")}
+    late = tbl([1950], [[96, 100, 111]])
+    early = tbl([1900], [[80, INVALID, 85]])
+    m = merge_station_tables([late, early])
+    assert m["offsets"].shape == (2, 3) and m["name"].tolist() == ["GREENSBURG 2 E", "GREENSBURG 3 SW", "GREENSBURG"]
+    assert m["offsets"].tolist() == [[80, INVALID, 85], [96, 100, 111]]            # each station keeps its own column

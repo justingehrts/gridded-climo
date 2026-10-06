@@ -147,3 +147,20 @@ def prune_unlisted(data_dir=DATA_DIR, log=print) -> int:
                 f.unlink(); removed += 1
     log(f"pruned {removed} files no longer in the threshold menus")
     return removed
+
+
+def run_extend_stations(client, bbox, elements=("mint", "maxt", "snow"), to="por", data_dir=DATA_DIR, log=print, floor: int = 1850):
+    """Extend the saved per-station files back to `to` ('por' = the period of record for each element in `bbox`, or a year)."""
+    from .por import station_por
+    from .query import STATION_MENU
+    from .stations import extend_station_file
+    for el in elements:
+        y0 = max(floor, station_por(client, bbox, el).first_year) if to == "por" else int(to)
+        log(f"{el}: extending back to {y0}")
+        for (e, op), thresholds in STATION_MENU.items():
+            if e != el:
+                continue
+            for direction in ("first", "last"):
+                season = default_season(op, direction, el)
+                for t in thresholds:
+                    extend_station_file(client, bbox, el, op, t, direction, season, y0, data_dir, log=log)

@@ -238,3 +238,62 @@ def build_station_occurrence_server(client, bbox, element, op, direction, thresh
         np.savez_compressed(tmp, **z)
         tmp.replace(p)
         log(f"stations {element} {op}{t:g} {direction}: {z['offsets'].shape[1]} stations x {z['offsets'].shape[0]} seasons ({z['years'][0]}-{z['years'][-1]})")
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Extending shipped files back in time: fetch only the missing early seasons and merge them into the existing table.
+# ---------------------------------------------------------------------------------------------------------------
+def _station_key(sid, lon, lat) -> tuple:
+    """A station's identity. ACIS station IDs are not unique on their own (stations that moved or were renamed can share the first
+    ID, e.g. Greensburg 2 E / 3 SW / Greensburg), so the location (to ~100 m) is part of the key."""
+    return (str(sid), round(float(lon), 3), round(float(lat), 3))
+
+
+def merge_station_tables(tables: list[dict]) -> dict:
+    """Merge per-station season tables (disjoint year ranges) into one: union of stations, INVALID where a station has no
+    row for a year. Station metadata comes from the first table that lists the station."""
+    all_years = np.concatenate([t["years"].astype(int) for t in tables])
+    if len(set(all_years.tolist())) != len(all_years):
+        raise ValueError("tables to merge must cover different years")
+    years = sorted(all_years.tolist())
+    order, meta, sids = {}, {"lon": [], "lat": [], "name": []}, []
+    for t in tables:
+        for j in range(len(t["sids"])):
+            key = _station_key(t["sids"][j], t["lon"][j], t["lat"][j])
+            if key not in order:
+                order[key] = len(order)
+                sids.append(t["sids"][j])
+                for k in meta:
+                    meta[k].append(t[k][j])
+    out = np.full((len(years), len(order)), INVALID, "int16")
+    row = {y: i for i, y in enumerate(years)}
+    for t in tables:
+        cols = np.array([order[_station_key(t["sids"][j], t["lon"][j], t["lat"][j])] for j in range(len(t["sids"]))])
+        for i, y in enumerate(t["years"].astype(int)):
+            out[row[y], cols] = t["offsets"][i]
+    return {"sids": np.array(sids), "lon": np.array(meta["lon"], "float32"), "lat": np.array(meta["lat"], "float32"),
+            "name": np.array(meta["name"]), "years": np.array(years, "int16"), "offsets": out}
+
+
+def extend_station_file(client, bbox, element, op, value, direction, season, y0: int, data_dir=DATA_DIR, chunk: int = 40, log=print) -> bool:
+    """Prepend seasons y0..(first shipped year - 1) to an existing station file. Returns False if nothing to do.
+    The request is split into `chunk`-season pieces so no single ACIS call runs long."""
+    p = station_path(data_dir, element, op, value, direction)
+    if not p.exists():
+        return False
+    z = {k: v for k, v in np.load(p, allow_pickle=False).items()}
+    first = int(z["years"].min())
+    if first <= y0:
+        return False
+    pieces, a = [z], y0
+    while a < first:
+        b = min(a + chunk - 1, first - 1)
+        pieces.append(fetch_station_thresholds(client, bbox, element, op, value, direction, season, a, b))
+        a = b + 1
+    merged = merge_station_tables(pieces)
+    merged["season_start"], merged["season_end"] = z["season_start"], z["season_end"]
+    tmp = p.with_name(p.stem + ".tmp.npz")
+    np.savez_compressed(tmp, **merged)
+    tmp.replace(p)
+    log(f"{p.name}: {first} -> {y0} ({merged['offsets'].shape[1]} stations x {merged['offsets'].shape[0]} seasons)")
+    return True

@@ -46,6 +46,7 @@ def build_parser():
     pc.add_argument("--normal-period", type=_period, metavar="YYYY-YYYY", help="period for daily normals (default 1991-2020)")
     pc.add_argument("--stations", default="", help="elements for station-based files, e.g. mint,maxt,snow")
     pc.add_argument("--missing-only", action="store_true", help="stations: skip thresholds that already have a file")
+    pc.add_argument("--extend-to", metavar="YEAR|por", help="stations: prepend earlier seasons to the existing files (por = period of record)")
     pc.add_argument("--prune", action="store_true", help="delete pre-saved files whose threshold is no longer in the menus, then exit")
     pc.add_argument("--y0", type=int, default=1950)
     pc.add_argument("--workers", type=int, default=3)
@@ -79,6 +80,11 @@ def main(argv=None):
         from .precomputed import DATA_DIR
         st = Settings(**{k: v for k, v in {"bbox": a.bbox, "cache_dir": a.cache_dir, "normal_period": a.normal_period}.items() if v})
         client = ACISClient(st.acis_base_url, Cache(st.cache_dir))
+        if a.stations and a.extend_to:
+            from .precompute import run_extend_stations
+            run_extend_stations(client, st.bbox, tuple(a.stations.split(",")), a.extend_to, a.data_dir or DATA_DIR,
+                                log=lambda m: print(m, flush=True))
+            return 0
         if a.stations:
             from .precompute import run_precompute_stations
             run_precompute_stations(client, st.bbox, tuple(a.stations.split(",")), a.y0, a.data_dir or DATA_DIR,

@@ -94,3 +94,23 @@ def test_every_grid_menu_threshold_is_shipped():
     missing = [(el, op, v, d) for (el, op), vals in MENU.items() for v in vals for d in ("first", "last")
                if not occurrence_path(DATA_DIR, el, op, v, d).exists()]
     assert not missing, f"{len(missing)} missing, e.g. {missing[:3]}"
+
+
+def test_saved_station_files_reach_back_to_the_ohio_period_of_record():
+    """After `precompute --stations ... --extend-to por`, popular thresholds for the default region are instant for any start year
+    back to the area's record (about 1866 for temperatures, 1857 for snow), and every file in a set agrees on its first year."""
+    import numpy as np
+    from pathlib import Path
+    from gridded_climo.precomputed import DATA_DIR
+    files = sorted((Path(DATA_DIR) / "stations").glob("*.npz"))
+    if not files:
+        pytest.skip("no shipped station data")
+    first = {}
+    for f in files:
+        with np.load(f) as z:
+            first.setdefault(f.name.split("_")[0], set()).add(int(z["years"].min()))
+    if min(min(v) for v in first.values()) > 1900:
+        pytest.skip("station files have not been extended to the period of record")
+    assert all(len(v) == 1 for v in first.values()), first                      # one start year per variable
+    assert first["mint"] == first["maxt"] and 1860 <= next(iter(first["mint"])) <= 1875
+    assert 1850 <= next(iter(first["snow"])) <= 1870
