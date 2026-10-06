@@ -40,7 +40,10 @@ in the chosen area reports that variable (looked up from ACIS, kept for a day). 
 earliest years rest on very few. For the Grid method, POR means 1991, where the saved grid data begins. Years before the area's record are
 rejected with the real start year. The command line takes `--normal-period por-2020`.
 
-Long spans are fetched live from ACIS and are slow: roughly 30 s for 30 years, about a minute back to 1900, and several minutes back to the 1860s.
+For the Ohio-centered region the saved station files reach back to the period of record (1866 for temperatures, 1857 for snow), so POR and any
+start year are instant at the pre-saved thresholds. Anything not saved (another threshold, or another area) is fetched live from ACIS, which is
+slow for long spans: roughly 30 s for 30 years, a minute or so back to 1900, and several minutes back to the 1860s.
+To extend saved files yourself: `gridded-climo precompute --stations mint,maxt,snow --elements "" --normals "" --extend-to por` (fetches only the missing early seasons).
 
 ### Areas
 The **Area** dropdown lists the Columbus-centered default, every state in the lower 48 (plus DC) and a custom box. A state is drawn with a
