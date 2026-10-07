@@ -10,6 +10,11 @@ from .regions import PRESAVED_REGION, max_live_days, presaved_bbox
 from .registry import Metric, Style
 
 WHENS = ("first", "last", "range_specific", "range_normal")
+DERIVED_ELEMENTS = ("avgt", "hdd", "cdd", "gdd")
+RANGE_ELEMENTS = {"maxt": "High temperature", "mint": "Low temperature", "avgt": "Average temperature", "pcpn": "Precipitation",
+                  "snow": "Snowfall", "hdd": "Heating degree days (base 65)", "cdd": "Cooling degree days (base 65)",
+                  "gdd": "Growing degree days (base 50)"}
+RANGE_REDUCES = {"mean": "Average", "sum": "Total", "max": "Maximum", "min": "Minimum", "count": "Number of days", "pct": "Percent of days"}
 TEMP_ELEMENTS = {"mint": "Low (min) temperature", "maxt": "High (max) temperature"}
 # Pre-saved temperature thresholds (grid AND stations): every 10 degrees, plus 28, 32 and 36 for the cold-side (<=) maps.
 # The grid method can ONLY use these (its first/last dates can't be computed on demand in the hosted app); the station method
@@ -64,7 +69,7 @@ class Query:
     element: str                   # mint | maxt | pcpn | snow
     op: str | None = None          # le | ge   (first/last only)
     value: float | None = None     # threshold X (first/last only)
-    reduce: str = "mean"           # sum|mean|max|min (range modes)
+    reduce: str = "mean"           # mean|sum|max|min|count|pct (range modes); count/pct (and optionally the others) use op/value as a day filter
     start: dt.datetime | dt.date | None = None
     end: dt.datetime | dt.date | None = None
     departure: bool = False        # range_specific only
@@ -137,8 +142,18 @@ def unsupported_reason(q: Query, bbox=None) -> str | None:
         if isinstance(q.start, dt.datetime) and q.start < NOHRSC_START:
             return "NOHRSC snowfall analyses begin Oct 2008."
         return None
-    if q.element not in ("mint", "maxt", "pcpn"):
+    if q.element not in ("mint", "maxt", "pcpn") + DERIVED_ELEMENTS:
         return f"unsupported element '{q.element}'"
+    if q.reduce not in RANGE_REDUCES:
+        return f"unknown summary '{q.reduce}'"
+    filtered = q.reduce in ("count", "pct") or q.value is not None
+    if filtered:
+        if q.op not in ("le", "ge", "lt", "gt") or q.value is None:
+            return "Choose 'at or below' / 'at or above' and a threshold for the days to include."
+        if q.when == "range_normal" or q.departure:
+            return "Day counts and thresholded summaries work for specific dates only (the shipped daily normals are averages)."
+    if q.element in DERIVED_ELEMENTS and (q.when == "range_normal" or q.departure):
+        return "Average temperature and degree days work for specific dates only for now."
     if (q.when == "range_normal" or q.departure) and tuple(q.normal_period) != NORMALS_PERIOD and not allow_live():
         return f"Daily normals are shipped for {NORMALS_PERIOD[0]}-{NORMALS_PERIOD[1]} only; use that normal period."
     if (q.when == "range_normal" or q.departure) and presaved_bbox(bbox) is None:      # normals can't be computed live, so no escape hatch
@@ -155,6 +170,8 @@ def unsupported_reason(q: Query, bbox=None) -> str | None:
         return "The end date is before the start date."
     if q.when == "range_specific":
         days = (q.end - q.start).days + 1
+        if q.element in DERIVED_ELEMENTS:
+            days *= 2                                  # max and min grids are both pulled
         if days > max_live_days(bbox):
             return (f"This area is large, so a map can use at most {max_live_days(bbox)} days of daily data "
                     f"(you chose {days}). Shorten the range or pick a smaller region.")
@@ -169,6 +186,13 @@ def _style(q: Query) -> Style:
         return Style(ramp="RdYlBu", reverse=(q.when == "first") == (q.op == "le"), mode="stepped", steps=6, units_label="date")
     if q.element == "snow":
         return Style(ramp="Blues", mode="stepped", steps=10, vmin=0.5, vmax=24, hide_below=0.1, units_label="in")
+    if q.reduce == "count" and q.when != "first":
+        return Style(ramp="YlOrRd", mode="stepped", steps=6, units_label="days")
+    if q.reduce == "pct":
+        return Style(ramp="YlOrRd", mode="stepped", steps=6, units_label="%")
+    if q.element in ("hdd", "cdd", "gdd"):
+        return Style(ramp={"hdd": "Blues", "cdd": "YlOrRd", "gdd": "YlGn"}[q.element], mode="stepped", steps=6,
+                     units_label="°F-days" if q.reduce != "max" else "°F-days")
     if q.departure:
         return Style(ramp="coolwarm", mode="stepped", steps=6, symmetric=True,
                      units_label="in" if q.element == "pcpn" else "°F")
@@ -183,16 +207,23 @@ def _stat_prefix(q: Query) -> str:
 
 
 def describe(q: Query) -> str:
-    el = {"mint": "Low", "maxt": "High", "pcpn": "Precipitation", "snow": "Snowfall"}[q.element]
+    el = {"mint": "Low", "maxt": "High", "pcpn": "Precipitation", "snow": "Snowfall", "avgt": "Average Temperature",
+          "hdd": "Heating Degree Days", "cdd": "Cooling Degree Days", "gdd": "Growing Degree Days"}[q.element]
     if q.when in ("first", "last"):
         rel = "at or below" if q.op == "le" else "at or above"
         what = (f"Snowfall of {q.value:g}\" or More" if q.element == "snow"
                 else f"{el} Temperature {rel} {q.value:g}°F")
         title = f"{_stat_prefix(q)} {q.when.title()} {what}"
         return title + (" on Record" if q.stat in ("min", "max") else "")
-    kind = {"mean": "Average", "sum": "Total", "max": "Maximum", "min": "Minimum"}[q.reduce]
+    kind = {"mean": "Average", "sum": "Total", "max": "Maximum", "min": "Minimum"}.get(q.reduce)
     if q.element == "snow":
         return "Snowfall Total"
+    unit = "in" if q.element == "pcpn" else "°F"
+    if q.value is not None and q.op:
+        rel = f"{'≤' if q.op in ('le', 'lt') else '≥'} {q.value:g}{unit}"
+        if q.reduce in ("count", "pct"):
+            return f"{'Number' if q.reduce == 'count' else 'Percent'} of Days with {el} {rel}"
+        return f"{kind} {el} on Days {rel}"
     label = f"{kind} {el}" if q.element != "pcpn" else f"{kind if q.reduce != 'mean' else 'Average'} Precipitation"
     return label + (" Departure from Normal" if q.departure else "")
 
@@ -214,4 +245,5 @@ def metric_from_query(q: Query) -> Metric:
         return Metric(name="storm_total_snow", kind="storm", source="nohrsc", element="snow", title=title, style=style).validate()
     normal = "average" if q.when == "range_normal" else ("departure" if q.departure else None)
     return Metric(name=f"{q.element}_{q.reduce}_{q.when}", kind="period", source="acis_grid1", element=q.element,
-                  title=title, reduce=q.reduce, normal=normal, style=style).validate()
+                  title=title, reduce=q.reduce, normal=normal, style=style,
+                  threshold={"op": q.op, "value": q.value} if q.value is not None else None).validate()

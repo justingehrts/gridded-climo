@@ -120,7 +120,7 @@ def test_off_menu_threshold_and_pre_shipped_years_fetch_live():
 def test_departure_requires_shipped_normals():
     at = fresh()
     at.radio[0].set_value("Custom range").run()
-    at.checkbox[0].set_value(True).run()
+    next(c for c in at.checkbox if c.label == "Show departure from normal").set_value(True).run()
     _set_years(at, 1981, 2010)
     at.run()
     assert any("1991-2020" in i.value for i in at.info) and at.button[0].disabled
@@ -384,3 +384,13 @@ def test_por_start_generates_a_record_map_live():
     assert not at.exception
     title = gen(at)[0]
     assert "(18" in title and "-2020)" in title                                      # starts in the 1800s
+
+
+def test_count_days_summary_shows_threshold_field():
+    at = fresh()
+    at.radio[0].set_value("Custom range").run()
+    _var(at).select("Average temperature").run()
+    next(b for b in at.selectbox if b.label == "Summary").select("count").run()
+    assert not at.exception
+    assert any(n.label.startswith("Threshold") for n in at.number_input)
+    assert not any(c.label == "Show departure from normal" for c in at.checkbox)

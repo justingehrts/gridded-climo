@@ -6,6 +6,7 @@ import warnings
 
 import numpy as np
 
+from ..acis import daily_any
 from ..grid import Grid
 from ..precomputed import DATA_DIR, actual_indices, load_normals, monthday_window
 from ..registry import Metric
@@ -41,10 +42,32 @@ def normal_window_average(metric: Metric, bbox, start_md, end_md, normal_period,
     return template.with_data(out).clip(bbox), {"years": (int(years.min()), int(years.max()))}
 
 
+_OPS = {"le": np.less_equal, "lt": np.less, "ge": np.greater_equal, "gt": np.greater}
+
+
+def reduce_conditional(daily: np.ndarray, how: str, op: str, value: float) -> np.ndarray:
+    """Summaries over only the days where daily <op> value. count/pct: number / percent of valid days that qualify. A sum over
+    zero qualifying days is 0; mean/max/min of none is blank."""
+    valid = np.isfinite(daily)
+    with np.errstate(invalid="ignore"):
+        ok = valid & _OPS[op](daily, value)
+    n_valid = valid.sum(axis=0)
+    if how == "count":
+        out = ok.sum(axis=0).astype("float32")
+    elif how == "pct":
+        out = 100.0 * ok.sum(axis=0) / np.maximum(n_valid, 1)
+    else:
+        out = reduce_daily(np.where(ok, daily, np.nan), how)
+        if how == "sum":
+            out = np.where(n_valid > 0, np.nan_to_num(out), np.nan)
+    return np.where(n_valid > 0, out, np.nan).astype("float32")
+
+
 def period_summary(metric: Metric, client, bbox, start: dt.date, end: dt.date, normal_period, data_dir=DATA_DIR, log=print) -> Grid:
     """One real date range from live ACIS daily grids; optionally minus the daily normals for the same days."""
-    _, template, daily = client.daily(metric.element, bbox, start, end)
-    value = reduce_daily(daily, metric.reduce)
+    _, template, daily = daily_any(client, metric.element, bbox, start, end)
+    value = reduce_conditional(daily, metric.reduce, metric.threshold["op"], float(metric.threshold["value"])) if metric.threshold \
+        else reduce_daily(daily, metric.reduce)
     if metric.normal == "departure":
         normals, _, ntemplate = load_normals(data_dir, metric.element, normal_period)
         sel = normals[actual_indices(start, end)]

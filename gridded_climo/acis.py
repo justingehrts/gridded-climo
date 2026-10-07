@@ -90,6 +90,27 @@ class ACISClient:
         return dates, template, data
 
 
+def derive(element: str, tmax: np.ndarray, tmin: np.ndarray) -> np.ndarray:
+    """Daily avg temp / degree days from daily max and min (ACIS conventions: HDD/CDD base 65; GDD base 50 with max capped at 86 and min floored at 50)."""
+    if element == "avgt":
+        return ((tmax + tmin) / 2).astype("float32")
+    if element in ("hdd", "cdd"):
+        avg = (tmax + tmin) / 2
+        return np.maximum(0, 65 - avg if element == "hdd" else avg - 65).astype("float32")
+    if element == "gdd":
+        return np.maximum(0, (np.minimum(tmax, 86) + np.maximum(tmin, 50)) / 2 - 50).astype("float32")
+    raise ValueError(element)
+
+
+def daily_any(client, element: str, bbox, start: dt.date, end: dt.date):
+    """Like client.daily, but also serves derived elements (avgt, hdd, cdd, gdd)."""
+    if element not in ("avgt", "hdd", "cdd", "gdd"):
+        return client.daily(element, bbox, start, end)
+    dates, template, tmax = client.daily("maxt", bbox, start, end)
+    _, _, tmin = client.daily("mint", bbox, start, end)
+    return dates, template, derive(element, tmax, tmin)
+
+
 def quarter_chunks(start: dt.date, end: dt.date):
     """Calendar-quarter-aligned (start, end) chunks covering [start, end] (full quarters, not clipped)."""
     y, q = start.year, (start.month - 1) // 3

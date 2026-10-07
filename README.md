@@ -82,3 +82,11 @@ placed at the city's main airport and replaces that airport's own record (labell
 lists them (rebuild with `python -m gridded_climo.threaded_build`); `precompute --stations ... --add-threaded` re-threads the shipped
 files. Other stations in the same city (old downtown, NAS, university sites) stay separate, since ACIS doesn't say which stations a
 threaded record is made of.
+
+## Custom-range summaries
+
+For specific dates the Variable list covers high, low and average temperature, precipitation, snowfall (NOHRSC totals) and heating /
+cooling (base 65) / growing (base 50) degree days. Summaries: average, total, maximum, minimum, **number of days** and **percent of days**
+meeting a threshold; any other summary can also be limited to days at/above or at/below a threshold (e.g. total of highs ≥ 80°F).
+Average temperature and degree days are derived from the daily max/min grids. Thresholded summaries, day counts and the derived variables
+are specific-dates only (the shipped daily normals are averages, so there is no normal-period average or departure for them).

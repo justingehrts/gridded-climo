@@ -19,7 +19,7 @@ from PIL import Image
 from streamlit_folium import st_folium
 
 from gridded_climo.config import DEFAULT_BBOX, DEFAULT_NORMAL_PERIOD
-from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, MENU, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
+from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, MENU, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, RANGE_ELEMENTS, RANGE_REDUCES, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
 from gridded_climo.ui.preview import build_map, load_counties_geojson
 from gridded_climo.binning import MODE_LABELS, MODES
 from gridded_climo.registry import Style
@@ -157,16 +157,28 @@ with st.sidebar:
             q_kwargs.update(element=el, op=op, value=float(value), method="station" if by_station else "grid")
         q_kwargs["when"] = "first" if when_label == "Average first date" else "last"
     else:
-        var = st.selectbox("Variable", ["High temperature", "Low temperature", "Precipitation", "Snowfall"])
-        el = {"High temperature": "maxt", "Low temperature": "mint", "Precipitation": "pcpn", "Snowfall": "snow"}[var]
+        specific = range_mode == "Specific dates"
+        labels = {k: v for k, v in RANGE_ELEMENTS.items() if specific or k in ("maxt", "mint", "pcpn", "snow")}
+        chosen = st.selectbox("Variable", list(labels.values()), key=f"range_var_{'s' if specific else 'n'}")
+        el = next(k for k, v in labels.items() if v == chosen)
         q_kwargs["element"] = el
         if el != "snow":
-            default = "sum" if el == "pcpn" else "mean"
-            opts = ["mean", "sum", "max", "min"]
-            q_kwargs["reduce"] = st.selectbox("Summarize as", opts, index=opts.index(default),
-                                              format_func={"mean": "Average", "sum": "Total", "max": "Maximum", "min": "Minimum"}.get)
+            default = "sum" if el in ("pcpn", "hdd", "cdd", "gdd") else "mean"
+            opts = list(RANGE_REDUCES) if specific else ["mean", "sum", "max", "min"]
+            q_kwargs["reduce"] = st.selectbox("Summary", opts, index=opts.index(default), format_func=RANGE_REDUCES.get, key="range_reduce")
+            counting = q_kwargs["reduce"] in ("count", "pct")
+            if specific and (counting or st.checkbox("Only include days meeting a threshold", key="range_filter",
+                                                     help="For example, a total of daily highs only on days at or above 80°F.")):
+                is_in = el == "pcpn"
+                c1, c2 = st.columns(2)
+                rel = c1.selectbox("Days where value is", ["at or above", "at or below"], key="range_op")
+                thr = c2.number_input("Threshold (in)" if is_in else "Threshold (°F)" if el in ("maxt", "mint", "avgt") else "Threshold",
+                                      value=0.01 if is_in else 80.0 if el == "maxt" else 32.0 if el == "mint" else 65.0 if el == "avgt" else 10.0,
+                                      step=0.01 if is_in else 1.0, format="%.2f" if is_in else "%.0f", key=f"range_thr_{el}")
+                q_kwargs.update(op="ge" if rel == "at or above" else "le", value=float(thr))
         q_kwargs["when"] = "range_specific" if range_mode == "Specific dates" else "range_normal"
-        if range_mode == "Specific dates" and el != "snow":
+        if range_mode == "Specific dates" and el in ("maxt", "mint", "pcpn") and q_kwargs.get("value") is None \
+                and q_kwargs.get("reduce") in ("mean", "sum"):
             q_kwargs["departure"] = st.checkbox("Show departure from normal", help="Value minus the daily normals for the same days.")
 
     st.subheader("3 · Dates")

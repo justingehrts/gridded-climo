@@ -8,11 +8,12 @@ from typing import Any
 import yaml
 
 KINDS = {"climatology", "period", "storm"}
-ELEMENTS = {"mint", "maxt", "pcpn", "snow", "snwd"}
+ELEMENTS = {"mint", "maxt", "pcpn", "snow", "snwd", "avgt", "hdd", "cdd", "gdd"}
+DERIVED = {"avgt", "hdd", "cdd", "gdd"}   # computed from daily max/min grids
 OPS = {"le", "lt", "ge", "gt"}
 DIRECTIONS = {"first", "last"}
 STATS = {"mean", "median", "percentile", "min", "max"}  # min/max = earliest/latest date on record
-PERIOD_REDUCES = {"sum", "mean", "max", "min"}
+PERIOD_REDUCES = {"sum", "mean", "max", "min", "count", "pct"}   # count/pct = number / percent of days meeting `threshold`
 SOURCES = {"acis_grid1", "acis_stn", "nohrsc"}
 
 
@@ -81,6 +82,10 @@ class Metric:
         if self.kind == "period":
             if self.reduce not in PERIOD_REDUCES:
                 bad(f"reduce must be one of {sorted(PERIOD_REDUCES)}")
+            if self.threshold is not None and (self.threshold.get("op") not in OPS or "value" not in self.threshold):
+                bad("threshold needs {op: le|lt|ge|gt, value: <number>}")
+            if self.reduce in ("count", "pct") and not self.threshold:
+                bad("count/pct need a threshold")
             if self.normal not in (None, "departure", "average"):
                 bad("normal must be null, 'departure' (specific dates minus normal) or 'average' (same month/days averaged over the normal period)")
         if self.style.mode not in ("stepped", "smooth"):
