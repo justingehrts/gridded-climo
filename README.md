@@ -73,3 +73,12 @@ Pre-saved data (grid first/last dates, daily normals, per-station files) only co
   only the settings a preset contains are changed. To create one, restyle a map, open *Save this look as a preset*, name it, download the file,
   put it in `presets/`, and commit (Community Cloud's disk is temporary, so the app can't store presets itself). Presets hold the look only,
   never the data or the threshold, and a preset's numeric legend is ignored on date maps.
+
+## Threaded station records
+
+Station maps use NWS *threaded* records (e.g. `CMHthr` "Columbus Area") wherever one exists. A threaded record stitches a city's
+successive stations into one continuous period of record, so it reaches much further back than the current airport station. Each is
+placed at the city's main airport and replaces that airport's own record (labelled "… (threaded)"). `gridded_climo/threaded.json`
+lists them (rebuild with `python -m gridded_climo.threaded_build`); `precompute --stations ... --add-threaded` re-threads the shipped
+files. Other stations in the same city (old downtown, NAS, university sites) stay separate, since ACIS doesn't say which stations a
+threaded record is made of.

@@ -164,3 +164,14 @@ def run_extend_stations(client, bbox, elements=("mint", "maxt", "snow"), to="por
                 season = default_season(op, direction, el)
                 for t in thresholds:
                     extend_station_file(client, bbox, el, op, t, direction, season, y0, data_dir, log=log)
+
+
+def run_add_threaded(client, bbox, elements=("mint", "maxt", "snow"), data_dir=DATA_DIR, log=print):
+    """Put threaded records (placed at their main airports) into every shipped station file."""
+    from .query import STATION_MENU
+    from .stations import add_threaded_to_file
+    for (el, op), thresholds in STATION_MENU.items():
+        if el in elements:
+            for direction in ("first", "last"):
+                for t in thresholds:
+                    add_threaded_to_file(client, bbox, el, op, t, direction, default_season(op, direction, el), data_dir, log)

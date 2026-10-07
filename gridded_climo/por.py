@@ -56,9 +56,20 @@ def station_por(client, bbox, element: str) -> Por:
             first = next((r[0] for r in vr if r and r[0]), None)       # first range with a start date
             if first:
                 years.append(int(first[:4]))
+        from . import stations
+        from .threaded import threaded_in_bbox
+        entries = threaded_in_bbox(tuple(bbox)) if stations.USE_THREADED else {}
+        if entries:       # threaded records (placed at their airports) are used in place of those stations, and often start much earlier
+            t = client.post("MultiStnData", {"sids": ",".join(entries), "sdate": "2024-01-01", "edate": "2024-01-01",
+                                             "elems": [{"name": element}], "meta": ["valid_daterange", "sids"]})
+            for s in t.get("data", []):
+                vr = (s.get("meta") or {}).get("valid_daterange") or []
+                first = next((r[0] for r in vr if r and r[0]), None)
+                if first:
+                    years.append(int(first[:4]))
         return {"starts": np.array(sorted(years), dtype="int16")}
 
-    arr = client.cache.get_or_compute("acis_por_v1", params, fetch) if getattr(client, "cache", None) else fetch()
+    arr = client.cache.get_or_compute("acis_por_v2", params, fetch) if getattr(client, "cache", None) else fetch()
     starts = [int(y) for y in arr["starts"]]
     if not starts:
         raise PorError("No stations in this area report that variable, so there is no period of record.")

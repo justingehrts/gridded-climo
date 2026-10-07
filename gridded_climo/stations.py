@@ -215,12 +215,34 @@ def last_complete_season(season: dict, today: dt.date | None = None) -> int:
     return y
 
 
-def fetch_station_thresholds(client: ACISClient, bbox, element, op, value, direction, season, y0, y1=None) -> dict:
-    """One MultiStnData request for all stations/seasons in [y0, y1] (y1 defaults to the last complete season)."""
+USE_THREADED = True      # tests switch this off; threaded records are otherwise used wherever they exist
+
+
+def fetch_threaded_thresholds(client: ACISClient, entries: dict, element, op, value, direction, season, y0, y1) -> dict:
+    """Same server-side search, asked for by ID: threaded records come back without coordinates, so ours are filled in."""
+    req = threshold_request((0, 0, 1, 1), element, op, value, direction, season, y0, y1)
+    req.pop("bbox")
+    req["sids"] = ",".join(entries)
+    out = client.post("MultiStnData", req)
+    for r in out.get("data", []):
+        e = entries.get((r.get("meta") or {}).get("sids", [None])[0])
+        if e:
+            r["meta"]["ll"] = [e["lon"], e["lat"]]
+    return parse_threshold_response(out, season, y0, y1)
+
+
+def fetch_station_thresholds(client: ACISClient, bbox, element, op, value, direction, season, y0, y1=None, use_threaded: bool | None = None) -> dict:
+    """One MultiStnData request for all stations/seasons in [y0, y1] (y1 defaults to the last complete season), then threaded records
+    (one more small request) swapped in for the airport stations they replace."""
     y1 = y1 or last_complete_season(season)
     req = threshold_request(bbox, element, op, value, direction, season, y0, y1)
     out = client.post("MultiStnData", req)
     z = parse_threshold_response(out, season, y0, y1)
+    if USE_THREADED if use_threaded is None else use_threaded:
+        from .threaded import apply_threaded, threaded_in_bbox
+        entries = threaded_in_bbox(tuple(bbox))
+        if entries:
+            z = apply_threaded(z, fetch_threaded_thresholds(client, entries, element, op, value, direction, season, y0, y1), entries)
     z["season_start"], z["season_end"] = np.array(season["start"]), np.array(season["end"])
     return z
 
@@ -296,4 +318,22 @@ def extend_station_file(client, bbox, element, op, value, direction, season, y0:
     np.savez_compressed(tmp, **merged)
     tmp.replace(p)
     log(f"{p.name}: {first} -> {y0} ({merged['offsets'].shape[1]} stations x {merged['offsets'].shape[0]} seasons)")
+    return True
+
+
+def add_threaded_to_file(client, bbox, element, op, value, direction, season, data_dir=DATA_DIR, log=print) -> bool:
+    """Swap threaded records into an existing station file (idempotent: any earlier threaded columns are dropped first)."""
+    from .threaded import apply_threaded, strip_threaded, threaded_in_bbox
+    p = station_path(data_dir, element, op, value, direction)
+    entries = threaded_in_bbox(tuple(bbox))
+    if not p.exists() or not entries:
+        return False
+    z = strip_threaded({k: v for k, v in np.load(p, allow_pickle=False).items()})
+    y0, y1 = int(z["years"].min()), int(z["years"].max())
+    out = apply_threaded(z, fetch_threaded_thresholds(client, entries, element, op, value, direction, season, y0, y1), entries)
+    out["season_start"], out["season_end"] = z["season_start"], z["season_end"]
+    tmp = p.with_name(p.stem + ".tmp.npz")
+    np.savez_compressed(tmp, **out)
+    tmp.replace(p)
+    log(f"{p.name}: {sum(1 for s in out['sids'] if str(s).split(' ')[0].endswith('thr'))} threaded of {out['offsets'].shape[1]} stations")
     return True

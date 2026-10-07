@@ -23,4 +23,4 @@ gridded_climo = ["metrics.yaml", "states.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["network: hits live ACIS/NOHRSC (run with RUN_NETWORK_TESTS=1)"]
+markers = ["threaded: exercises threaded-record lookups", "network: hits live ACIS/NOHRSC (run with RUN_NETWORK_TESTS=1)"]
