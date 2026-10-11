@@ -1,0 +1,5422 @@
+{
+ "8D3thr 9": {
+  "airport": "SISSETON MUNICIPAL AP",
+  "code": "8D3",
+  "first_record": "1931-08-01",
+  "lat": 45.669,
+  "lon": -96.9918,
+  "name": "Sisseton Area",
+  "replaces": [
+   [
+    "94993 1",
+    -96.992,
+    45.669
+   ]
+  ]
+ },
+ "AATthr 9": {
+  "airport": "ALTURAS MUNICIPAL AP",
+  "code": "AAT",
+  "first_record": "1935-05-01",
+  "lat": 41.4836,
+  "lon": -120.5615,
+  "name": "Alturas Area",
+  "replaces": [
+   [
+    "94299 1",
+    -120.561,
+    41.484
+   ]
+  ]
+ },
+ "ABEthr 9": {
+  "airport": "ALLENTOWN LEHIGH VALLEY INTERNATIONAL AIRPORT",
+  "code": "ABE",
+  "first_record": "1922-03-01",
+  "lat": 40.6498,
+  "lon": -75.4477,
+  "name": "Allentown Area",
+  "replaces": [
+   [
+    "14737 1",
+    -75.448,
+    40.65
+   ]
+  ]
+ },
+ "ABIthr 9": {
+  "airport": "ABILENE REGIONAL AP",
+  "code": "ABI",
+  "first_record": "1885-09-15",
+  "lat": 32.4106,
+  "lon": -99.6821,
+  "name": "Abilene Area",
+  "replaces": [
+   [
+    "13962 1",
+    -99.682,
+    32.411
+   ]
+  ]
+ },
+ "ABQthr 9": {
+  "airport": "ALBUQUERQUE INTL AP",
+  "code": "ABQ",
+  "first_record": "1891-12-01",
+  "lat": 35.0419,
+  "lon": -106.6154,
+  "name": "Albuquerque Area",
+  "replaces": [
+   [
+    "23004 1",
+    -106.617,
+    35.05
+   ],
+   [
+    "23050 1",
+    -106.615,
+    35.042
+   ]
+  ]
+ },
+ "ABRthr 9": {
+  "airport": "ABERDEEN REGIONAL AP",
+  "code": "ABR",
+  "first_record": "1893-01-01",
+  "lat": 45.4436,
+  "lon": -98.4138,
+  "name": "Aberdeen Area",
+  "replaces": [
+   [
+    "14929 1",
+    -98.414,
+    45.444
+   ]
+  ]
+ },
+ "ABYthr 9": {
+  "airport": "ALBANY SW GEORGIA REGIONAL AP",
+  "code": "ABY",
+  "first_record": "1892-07-01",
+  "lat": 31.5364,
+  "lon": -84.1958,
+  "name": "Albany Area",
+  "replaces": [
+   [
+    "13869 1",
+    -84.196,
+    31.536
+   ]
+  ]
+ },
+ "ACTthr 9": {
+  "airport": "WACO REGIONAL AP",
+  "code": "ACT",
+  "first_record": "1901-12-01",
+  "lat": 31.618,
+  "lon": -97.2283,
+  "name": "Waco Area",
+  "replaces": [
+   [
+    "13959 1",
+    -97.228,
+    31.618
+   ]
+  ]
+ },
+ "ACYthr 9": {
+  "airport": "ATLANTIC CITY INTL AP",
+  "code": "ACY",
+  "first_record": "1943-08-01",
+  "lat": 39.452,
+  "lon": -74.567,
+  "name": "Atlantic City Area",
+  "replaces": [
+   [
+    "93730 1",
+    -74.567,
+    39.452
+   ]
+  ]
+ },
+ "AGSthr 9": {
+  "airport": "AUGUSTA BUSH FIELD AP",
+  "code": "AGS",
+  "first_record": "1874-05-06",
+  "lat": 33.3652,
+  "lon": -81.9635,
+  "name": "Augusta Area",
+  "replaces": [
+   [
+    "03820 1",
+    -81.964,
+    33.365
+   ]
+  ]
+ },
+ "AHNthr 9": {
+  "airport": "ATHENS BEN EPPS AP",
+  "code": "AHN",
+  "first_record": "1884-10-24",
+  "lat": 33.9477,
+  "lon": -83.3274,
+  "name": "Athens Area",
+  "replaces": [
+   [
+    "13873 1",
+    -83.327,
+    33.948
+   ]
+  ]
+ },
+ "ALBthr 9": {
+  "airport": "ALBANY INTERNATIONAL AIRPORT",
+  "code": "ALB",
+  "first_record": "1874-01-01",
+  "lat": 42.7472,
+  "lon": -73.7991,
+  "name": "Albany Area",
+  "replaces": [
+   [
+    "14735 1",
+    -73.799,
+    42.747
+   ]
+  ]
+ },
+ "ALOthr 9": {
+  "airport": "WATERLOO MUNICIPAL AP",
+  "code": "ALO",
+  "first_record": "1895-01-21",
+  "lat": 42.5544,
+  "lon": -92.4013,
+  "name": "Waterloo Area",
+  "replaces": [
+   [
+    "94910 1",
+    -92.401,
+    42.554
+   ]
+  ]
+ },
+ "ALSthr 9": {
+  "airport": "ALAMOSA-BERGMAN FIELD",
+  "code": "ALS",
+  "first_record": "1906-05-01",
+  "lat": 37.4393,
+  "lon": -105.8618,
+  "name": "Alamosa Area",
+  "replaces": [
+   [
+    "23061 1",
+    -105.862,
+    37.439
+   ]
+  ]
+ },
+ "AMAthr 9": {
+  "airport": "AMARILLO AP",
+  "code": "AMA",
+  "first_record": "1892-01-01",
+  "lat": 35.2203,
+  "lon": -101.7173,
+  "name": "Amarillo Area",
+  "replaces": [
+   [
+    "23047 1",
+    -101.717,
+    35.22
+   ]
+  ]
+ },
+ "ANJthr 9": {
+  "airport": "SAULT STE MARIE SANDERSON FIELD",
+  "code": "ANJ",
+  "first_record": "1888-07-01",
+  "lat": 46.48,
+  "lon": -84.3581,
+  "name": "Sault Ste Marie Area",
+  "replaces": [
+   [
+    "14847 1",
+    -84.358,
+    46.48
+   ]
+  ]
+ },
+ "APNthr 9": {
+  "airport": "ALPENA COUNTY REGIONAL AP",
+  "code": "APN",
+  "first_record": "1916-10-21",
+  "lat": 45.0716,
+  "lon": -83.5645,
+  "name": "Alpena Area",
+  "replaces": [
+   [
+    "94849 1",
+    -83.565,
+    45.072
+   ]
+  ]
+ },
+ "ASTthr 9": {
+  "airport": "ASTORIA AIRPORT (PORT OF)",
+  "code": "AST",
+  "first_record": "1887-04-01",
+  "lat": 46.1569,
+  "lon": -123.8833,
+  "name": "Astoria Area",
+  "replaces": [
+   [
+    "94224 1",
+    -123.883,
+    46.157
+   ]
+  ]
+ },
+ "ASXthr 9": {
+  "airport": "ASHLAND KENNEDY MEMORIAL AP",
+  "code": "ASX",
+  "first_record": "1893-03-01",
+  "lat": 46.5468,
+  "lon": -90.9185,
+  "name": "Ashland Area",
+  "replaces": [
+   [
+    "94929 1",
+    -90.918,
+    46.547
+   ]
+  ]
+ },
+ "ATLthr 9": {
+  "airport": "ATLANTA HARTSFIELD-JACKSON INTERNATIONAL AIRPORT",
+  "code": "ATL",
+  "first_record": "1878-10-04",
+  "lat": 33.6297,
+  "lon": -84.4422,
+  "name": "Atlanta Area",
+  "replaces": [
+   [
+    "13874 1",
+    -84.442,
+    33.63
+   ]
+  ]
+ },
+ "ATTthr 9": {
+  "airport": "AUSTIN-CAMP MABRY",
+  "code": "ATT",
+  "first_record": "1897-09-01",
+  "lat": 30.3208,
+  "lon": -97.7604,
+  "name": "Austin Area",
+  "replaces": [
+   [
+    "13958 1",
+    -97.76,
+    30.321
+   ]
+  ]
+ },
+ "AUSthr 9": {
+  "airport": "AUSTIN BERGSTROM INTL AP",
+  "code": "AUS",
+  "first_record": "1942-10-17",
+  "lat": 30.1831,
+  "lon": -97.6799,
+  "name": "Austin-Bergstrom Airport Area",
+  "replaces": [
+   [
+    "13904 1",
+    -97.68,
+    30.183
+   ],
+   [
+    "13958 1",
+    -97.76,
+    30.321
+   ]
+  ]
+ },
+ "AUWthr 9": {
+  "airport": "WAUSAU ASOS",
+  "code": "AUW",
+  "first_record": "1895-04-01",
+  "lat": 44.9275,
+  "lon": -89.6253,
+  "name": "Wausau Area",
+  "replaces": [
+   [
+    "14897 1",
+    -89.625,
+    44.928
+   ]
+  ]
+ },
+ "AVLthr 9": {
+  "airport": "ASHEVILLE REGIONAL AIRPORT",
+  "code": "AVL",
+  "first_record": "1876-11-01",
+  "lat": 35.4318,
+  "lon": -82.5379,
+  "name": "Asheville Area",
+  "replaces": [
+   [
+    "03812 1",
+    -82.538,
+    35.432
+   ]
+  ]
+ },
+ "AVPthr 9": {
+  "airport": "WILKES-BARRE/SCRANTON INTERNATIONAL AIRPORT",
+  "code": "AVP",
+  "first_record": "1901-01-01",
+  "lat": 41.3335,
+  "lon": -75.7227,
+  "name": "Avoca Area",
+  "replaces": [
+   [
+    "14777 1",
+    -75.723,
+    41.333
+   ]
+  ]
+ },
+ "AZOthr 9": {
+  "airport": "KALAMAZOO BATTLE CREEK INTL AP",
+  "code": "AZO",
+  "first_record": "1887-06-01",
+  "lat": 42.2283,
+  "lon": -85.546,
+  "name": "Kalamazoo Area",
+  "replaces": [
+   [
+    "94815 1",
+    -85.546,
+    42.228
+   ]
+  ]
+ },
+ "BAFthr 9": {
+  "airport": "WESTFIELD-BARNES REGIONAL AIRPORT",
+  "code": "BAF",
+  "first_record": "1926-01-01",
+  "lat": 42.16,
+  "lon": -72.7125,
+  "name": "Westfield Area",
+  "replaces": [
+   [
+    "14775 1",
+    -72.712,
+    42.16
+   ]
+  ]
+ },
+ "BDLthr 9": {
+  "airport": "HARTFORD-BRADLEY INTERNATIONAL AIRPORT",
+  "code": "BDL",
+  "first_record": "1905-01-01",
+  "lat": 41.9374,
+  "lon": -72.682,
+  "name": "Hartford Area",
+  "replaces": [
+   [
+    "14740 1",
+    -72.682,
+    41.937
+   ]
+  ]
+ },
+ "BDRthr 9": {
+  "airport": "IGOR I SIKORSKY MEMORIAL AIRPORT",
+  "code": "BDR",
+  "first_record": "1948-07-01",
+  "lat": 41.1642,
+  "lon": -73.1266,
+  "name": "Bridgeport Area",
+  "replaces": [
+   [
+    "94702 1",
+    -73.127,
+    41.164
+   ]
+  ]
+ },
+ "BFFthr 9": {
+  "airport": "SCOTTSBLUFF W B HEILIG FIELD AP",
+  "code": "BFF",
+  "first_record": "1893-01-01",
+  "lat": 41.8747,
+  "lon": -103.6011,
+  "name": "Scottsbluff Area",
+  "replaces": [
+   [
+    "24028 1",
+    -103.601,
+    41.875
+   ]
+  ]
+ },
+ "BFLthr 9": {
+  "airport": "BAKERSFIELD AP",
+  "code": "BFL",
+  "first_record": "1893-01-01",
+  "lat": 35.4342,
+  "lon": -119.0552,
+  "name": "Bakersfield Area",
+  "replaces": [
+   [
+    "23155 1",
+    -119.055,
+    35.434
+   ]
+  ]
+ },
+ "BGDthr 9": {
+  "airport": "BORGER HUTCHINSON COUNTY AP",
+  "code": "BGD",
+  "first_record": "1949-02-05",
+  "lat": 35.695,
+  "lon": -101.3955,
+  "name": "Borger Area",
+  "replaces": [
+   [
+    "03024 1",
+    -101.396,
+    35.695
+   ]
+  ]
+ },
+ "BGMthr 9": {
+  "airport": "BINGHAMTON (GREATER AP)",
+  "code": "BGM",
+  "first_record": "1951-05-25",
+  "lat": 42.2068,
+  "lon": -75.9799,
+  "name": "Binghamton Area",
+  "replaces": [
+   [
+    "04725 1",
+    -75.98,
+    42.207
+   ]
+  ]
+ },
+ "BGRthr 9": {
+  "airport": "BANGOR INTERNATIONAL AIRPORT",
+  "code": "BGR",
+  "first_record": "1925-12-01",
+  "lat": 44.7979,
+  "lon": -68.8185,
+  "name": "Bangor Area",
+  "replaces": [
+   [
+    "14601 1",
+    -68.817,
+    44.8
+   ],
+   [
+    "14606 1",
+    -68.819,
+    44.798
+   ]
+  ]
+ },
+ "BHMthr 9": {
+  "airport": "BIRMINGHAM AP",
+  "code": "BHM",
+  "first_record": "1896-05-01",
+  "lat": 33.5654,
+  "lon": -86.7449,
+  "name": "Birmingham Area",
+  "replaces": [
+   [
+    "13876 1",
+    -86.745,
+    33.565
+   ]
+  ]
+ },
+ "BIHthr 9": {
+  "airport": "BISHOP AIRPORT",
+  "code": "BIH",
+  "first_record": "1943-09-01",
+  "lat": 37.3711,
+  "lon": -118.3589,
+  "name": "Bishop Area",
+  "replaces": [
+   [
+    "23157 1",
+    -118.359,
+    37.371
+   ]
+  ]
+ },
+ "BILthr 9": {
+  "airport": "BILLINGS INTERNATIONAL AIRPORT",
+  "code": "BIL",
+  "first_record": "1934-08-23",
+  "lat": 45.8072,
+  "lon": -108.5462,
+  "name": "Billings Area",
+  "replaces": [
+   [
+    "24033 1",
+    -108.546,
+    45.807
+   ]
+  ]
+ },
+ "BISthr 9": {
+  "airport": "BISMARCK MUNICIPAL AP",
+  "code": "BIS",
+  "first_record": "1874-10-01",
+  "lat": 46.7823,
+  "lon": -100.7575,
+  "name": "Bismarck Area",
+  "replaces": [
+   [
+    "24011 1",
+    -100.758,
+    46.782
+   ]
+  ]
+ },
+ "BIVthr 9": {
+  "airport": "HOLLAND TULIP CITY AP",
+  "code": "BIV",
+  "first_record": "1905-06-24",
+  "lat": 42.7463,
+  "lon": -86.0968,
+  "name": "Holland Area",
+  "replaces": [
+   [
+    "04839 1",
+    -86.097,
+    42.746
+   ]
+  ]
+ },
+ "BKEthr 9": {
+  "airport": "BAKER CITY AIRPORT",
+  "code": "BKE",
+  "first_record": "1928-01-01",
+  "lat": 44.843,
+  "lon": -117.8099,
+  "name": "Baker City Area",
+  "replaces": [
+   [
+    "24130 1",
+    -117.81,
+    44.843
+   ]
+  ]
+ },
+ "BKVthr 9": {
+  "airport": "BROOKSVILLE HERNANDO COUNTY AP",
+  "code": "BKV",
+  "first_record": "1892-01-01",
+  "lat": 28.4739,
+  "lon": -82.4537,
+  "name": "Brooksville Area",
+  "replaces": [
+   [
+    "12818 1",
+    -82.454,
+    28.474
+   ]
+  ]
+ },
+ "BKWthr 9": {
+  "airport": "BECKLEY RALEIGH COUNTY AIRPORT",
+  "code": "BKW",
+  "first_record": "1896-04-02",
+  "lat": 37.7836,
+  "lon": -81.1228,
+  "name": "Beckley Area",
+  "replaces": [
+   [
+    "03872 1",
+    -81.123,
+    37.784
+   ]
+  ]
+ },
+ "BLFthr 9": {
+  "airport": "BLUEFIELD MERCER COUNTY AIRPORT",
+  "code": "BLF",
+  "first_record": "1909-01-01",
+  "lat": 37.2978,
+  "lon": -81.2036,
+  "name": "Bluefield Area",
+  "replaces": [
+   [
+    "03859 1",
+    -81.204,
+    37.298
+   ]
+  ]
+ },
+ "BNAthr 9": {
+  "airport": "NASHVILLE INTL AP",
+  "code": "BNA",
+  "first_record": "1873-12-01",
+  "lat": 36.1105,
+  "lon": -86.6881,
+  "name": "Nashville Area",
+  "replaces": [
+   [
+    "13897 1",
+    -86.688,
+    36.111
+   ]
+  ]
+ },
+ "BNOthr 9": {
+  "airport": "BURNS MUNICIPAL AIRPORT",
+  "code": "BNO",
+  "first_record": "1939-01-01",
+  "lat": 43.5949,
+  "lon": -118.9579,
+  "name": "Burns Area",
+  "replaces": [
+   [
+    "94185 1",
+    -118.958,
+    43.595
+   ]
+  ]
+ },
+ "BOIthr 9": {
+  "airport": "BOISE AIR TERMINAL",
+  "code": "BOI",
+  "first_record": "1877-07-01",
+  "lat": 43.5671,
+  "lon": -116.2406,
+  "name": "Boise Area",
+  "replaces": [
+   [
+    "24131 1",
+    -116.241,
+    43.567
+   ]
+  ]
+ },
+ "BOSthr 9": {
+  "airport": "BOSTON LOGAN INTERNATIONAL AIRPORT",
+  "code": "BOS",
+  "first_record": "1872-03-01",
+  "lat": 42.3606,
+  "lon": -71.0097,
+  "name": "Boston Area",
+  "replaces": [
+   [
+    "14739 1",
+    -71.01,
+    42.361
+   ]
+  ]
+ },
+ "BPTthr 9": {
+  "airport": "PORT ARTHUR SE TX REGIONAL AP",
+  "code": "BPT",
+  "first_record": "1901-11-01",
+  "lat": 29.952,
+  "lon": -94.0262,
+  "name": "Beaumont-Port Arthur Area",
+  "replaces": [
+   [
+    "12917 1",
+    -94.026,
+    29.952
+   ]
+  ]
+ },
+ "BRDthr 9": {
+  "airport": "BRAINERD CROW WING COUNTY AP",
+  "code": "BRD",
+  "first_record": "1898-11-01",
+  "lat": 46.4021,
+  "lon": -94.1273,
+  "name": "Brainerd Area",
+  "replaces": [
+   [
+    "94938 1",
+    -94.127,
+    46.402
+   ]
+  ]
+ },
+ "BRLthr 9": {
+  "airport": "BURLINGTON MUNICIPAL AP",
+  "code": "BRL",
+  "first_record": "1897-07-14",
+  "lat": 40.7729,
+  "lon": -91.1255,
+  "name": "Burlington Area",
+  "replaces": [
+   [
+    "14931 1",
+    -91.125,
+    40.773
+   ]
+  ]
+ },
+ "BROthr 9": {
+  "airport": "BROWNSVILLE S PADRE ISLAND INTL AP",
+  "code": "BRO",
+  "first_record": "1878-01-01",
+  "lat": 25.9146,
+  "lon": -97.4231,
+  "name": "Brownsville Area",
+  "replaces": [
+   [
+    "12919 1",
+    -97.423,
+    25.915
+   ]
+  ]
+ },
+ "BTLthr 9": {
+  "airport": "BATTLE CREEK KELLOGG AP",
+  "code": "BTL",
+  "first_record": "1895-01-01",
+  "lat": 42.3119,
+  "lon": -85.2415,
+  "name": "Battle Creek Area",
+  "replaces": [
+   [
+    "14815 1",
+    -85.241,
+    42.312
+   ]
+  ]
+ },
+ "BTRthr 9": {
+  "airport": "BATON ROUGE METRO AP",
+  "code": "BTR",
+  "first_record": "1892-06-01",
+  "lat": 30.5378,
+  "lon": -91.1468,
+  "name": "Baton Rouge Area",
+  "replaces": [
+   [
+    "13970 1",
+    -91.147,
+    30.538
+   ]
+  ]
+ },
+ "BTVthr 9": {
+  "airport": "BURLINGTON INTERNATIONAL AIRPORT",
+  "code": "BTV",
+  "first_record": "1884-01-01",
+  "lat": 44.4682,
+  "lon": -73.1499,
+  "name": "Burlington Area",
+  "replaces": [
+   [
+    "14742 1",
+    -73.15,
+    44.468
+   ]
+  ]
+ },
+ "BUFthr 9": {
+  "airport": "BUFFALO NIAGARA INTERNATIONAL AIRPOR",
+  "code": "BUF",
+  "first_record": "1873-08-01",
+  "lat": 42.94,
+  "lon": -78.7361,
+  "name": "Buffalo Area",
+  "replaces": [
+   [
+    "14733 1",
+    -78.736,
+    42.94
+   ]
+  ]
+ },
+ "BURthr 9": {
+  "airport": "BURBANK GLENDALE PASADENA AP",
+  "code": "BUR",
+  "first_record": "1939-12-01",
+  "lat": 34.1997,
+  "lon": -118.3654,
+  "name": "Burbank Glendale Pasadena Area",
+  "replaces": [
+   [
+    "23152 1",
+    -118.365,
+    34.2
+   ]
+  ]
+ },
+ "BWIthr 9": {
+  "airport": "BALTIMORE-WASHINGTON INTERNATIONAL AIRPORT",
+  "code": "BWI",
+  "first_record": "1872-07-22",
+  "lat": 39.1733,
+  "lon": -76.6841,
+  "name": "Baltimore Area",
+  "replaces": [
+   [
+    "93721 1",
+    -76.684,
+    39.173
+   ]
+  ]
+ },
+ "BYIthr 9": {
+  "airport": "BURLEY MUNICIPAL AIRPORT",
+  "code": "BYI",
+  "first_record": "1917-07-01",
+  "lat": 42.5453,
+  "lon": -113.7686,
+  "name": "Burley Area",
+  "replaces": [
+   [
+    "24133 1",
+    -113.769,
+    42.545
+   ]
+  ]
+ },
+ "CAEthr 9": {
+  "airport": "COLUMBIA METROPOLITAN AP",
+  "code": "CAE",
+  "first_record": "1887-06-05",
+  "lat": 33.9423,
+  "lon": -81.118,
+  "name": "Columbia Area",
+  "replaces": [
+   [
+    "13883 1",
+    -81.118,
+    33.942
+   ]
+  ]
+ },
+ "CAKthr 9": {
+  "airport": "AKRON CANTON AP",
+  "code": "CAK",
+  "first_record": "1887-03-08",
+  "lat": 40.9181,
+  "lon": -81.4434,
+  "name": "Akron Area",
+  "replaces": [
+   [
+    "14895 1",
+    -81.443,
+    40.918
+   ]
+  ]
+ },
+ "CAOthr 9": {
+  "airport": "CLAYTON MUNICIPAL AIR PARK",
+  "code": "CAO",
+  "first_record": "1896-02-01",
+  "lat": 36.4483,
+  "lon": -103.1537,
+  "name": "Clayton Area",
+  "replaces": [
+   [
+    "23051 1",
+    -103.154,
+    36.448
+   ]
+  ]
+ },
+ "CARthr 9": {
+  "airport": "CARIBOU WFO",
+  "code": "CAR",
+  "first_record": "1939-01-16",
+  "lat": 46.8705,
+  "lon": -68.0172,
+  "name": "Caribou Area",
+  "replaces": [
+   [
+    "14607 1",
+    -68.017,
+    46.87
+   ]
+  ]
+ },
+ "CDSthr 9": {
+  "airport": "CHILDRESS MUNICIPAL AP",
+  "code": "CDS",
+  "first_record": "1893-01-01",
+  "lat": 34.4275,
+  "lon": -100.2839,
+  "name": "Childress Area",
+  "replaces": [
+   [
+    "23007 1",
+    -100.284,
+    34.427
+   ]
+  ]
+ },
+ "CECthr 9": {
+  "airport": "CRESCENT CITY MCNAMARA AP",
+  "code": "CEC",
+  "first_record": "1894-03-01",
+  "lat": 41.7836,
+  "lon": -124.238,
+  "name": "Crescent City Area",
+  "replaces": [
+   [
+    "24286 1",
+    -124.238,
+    41.784
+   ]
+  ]
+ },
+ "CHAthr 9": {
+  "airport": "CHATTANOOGA AP",
+  "code": "CHA",
+  "first_record": "1879-01-09",
+  "lat": 35.0336,
+  "lon": -85.2004,
+  "name": "Chattanooga Area",
+  "replaces": [
+   [
+    "13882 1",
+    -85.2,
+    35.034
+   ]
+  ]
+ },
+ "CHOthr 9": {
+  "airport": "CHARLOTTESVILLE ALBEMARLE AIRPORT",
+  "code": "CHO",
+  "first_record": "1893-01-01",
+  "lat": 38.1374,
+  "lon": -78.4551,
+  "name": "Charlottesville Area",
+  "replaces": [
+   [
+    "93736 1",
+    -78.455,
+    38.137
+   ]
+  ]
+ },
+ "CHSthr 9": {
+  "airport": "CHARLESTON INTL. AIRPORT",
+  "code": "CHS",
+  "first_record": "1937-03-02",
+  "lat": 32.8995,
+  "lon": -80.0407,
+  "name": "Charleston Area",
+  "replaces": [
+   [
+    "13880 1",
+    -80.041,
+    32.899
+   ]
+  ]
+ },
+ "CIDthr 9": {
+  "airport": "CEDAR RAPIDS MUNICIPAL AP",
+  "code": "CID",
+  "first_record": "1893-01-01",
+  "lat": 41.8829,
+  "lon": -91.7246,
+  "name": "Cedar Rapids Area",
+  "replaces": [
+   [
+    "14990 1",
+    -91.725,
+    41.883
+   ]
+  ]
+ },
+ "CKBthr 9": {
+  "airport": "CLARKSBURG BENEDUM AP",
+  "code": "CKB",
+  "first_record": "1922-11-17",
+  "lat": 39.3022,
+  "lon": -80.2239,
+  "name": "Clarksburg Area",
+  "replaces": [
+   [
+    "03802 1",
+    -80.224,
+    39.302
+   ]
+  ]
+ },
+ "CLEthr 9": {
+  "airport": "CLEVELAND-HOPKINS INTL AP",
+  "code": "CLE",
+  "first_record": "1871-01-01",
+  "lat": 41.4057,
+  "lon": -81.8519,
+  "name": "Cleveland Area",
+  "replaces": [
+   [
+    "14820 1",
+    -81.852,
+    41.406
+   ]
+  ]
+ },
+ "CLLthr 9": {
+  "airport": "COLLEGE STATION EASTERWOOD FLD",
+  "code": "CLL",
+  "first_record": "1882-05-15",
+  "lat": 30.5912,
+  "lon": -96.3631,
+  "name": "College Station Area",
+  "replaces": [
+   [
+    "03904 1",
+    -96.363,
+    30.591
+   ]
+  ]
+ },
+ "CLTthr 9": {
+  "airport": "CHARLOTTE DOUGLAS AIRPORT",
+  "code": "CLT",
+  "first_record": "1878-10-06",
+  "lat": 35.2225,
+  "lon": -80.9543,
+  "name": "Charlotte Area",
+  "replaces": [
+   [
+    "13881 1",
+    -80.954,
+    35.223
+   ]
+  ]
+ },
+ "CMAthr 9": {
+  "airport": "CAMARILLO AP",
+  "code": "CMA",
+  "first_record": "1923-06-01",
+  "lat": 34.2114,
+  "lon": -119.0876,
+  "name": "Camarillo Area",
+  "replaces": [
+   [
+    "23136 1",
+    -119.088,
+    34.211
+   ]
+  ]
+ },
+ "CMHthr 9": {
+  "airport": "JOHN GLENN INTERNATIONAL AIRPORT",
+  "code": "CMH",
+  "first_record": "1878-07-01",
+  "lat": 39.9907,
+  "lon": -82.877,
+  "name": "Columbus Area",
+  "replaces": [
+   [
+    "14821 1",
+    -82.877,
+    39.991
+   ]
+  ]
+ },
+ "CNKthr 9": {
+  "airport": "CONCORDIA ASOS",
+  "code": "CNK",
+  "first_record": "1885-05-01",
+  "lat": 39.5513,
+  "lon": -97.6508,
+  "name": "Concordia Area",
+  "replaces": [
+   [
+    "13984 1",
+    -97.651,
+    39.551
+   ]
+  ]
+ },
+ "CONthr 9": {
+  "airport": "CONCORD MUNICIPAL AIRPORT",
+  "code": "CON",
+  "first_record": "1868-09-01",
+  "lat": 43.2049,
+  "lon": -71.5026,
+  "name": "Concord Area",
+  "replaces": [
+   [
+    "14745 1",
+    -71.503,
+    43.205
+   ]
+  ]
+ },
+ "COSthr 9": {
+  "airport": "COLORADO SPRINGS MUNICIPAL AP",
+  "code": "COS",
+  "first_record": "1894-11-01",
+  "lat": 38.8095,
+  "lon": -104.6887,
+  "name": "Colorado Springs Area",
+  "replaces": [
+   [
+    "93037 1",
+    -104.689,
+    38.809
+   ]
+  ]
+ },
+ "COUthr 9": {
+  "airport": "COLUMBIA REGIONAL AIRPORT",
+  "code": "COU",
+  "first_record": "1889-09-01",
+  "lat": 38.817,
+  "lon": -92.2147,
+  "name": "Columbia Area",
+  "replaces": [
+   [
+    "03945 1",
+    -92.215,
+    38.817
+   ],
+   [
+    "13983 1",
+    -92.367,
+    38.967
+   ]
+  ]
+ },
+ "CPRthr 9": {
+  "airport": "CASPER-NATRONA COUNTY AP",
+  "code": "CPR",
+  "first_record": "1939-12-01",
+  "lat": 42.8978,
+  "lon": -106.4736,
+  "name": "Casper Area",
+  "replaces": [
+   [
+    "24089 1",
+    -106.474,
+    42.898
+   ]
+  ]
+ },
+ "CQTthr 9": {
+  "airport": "LOS ANGELES DOWNTOWN",
+  "code": "CQT",
+  "first_record": "1877-07-01",
+  "lat": 34.0678,
+  "lon": -118.2417,
+  "name": "Los Angeles Downtown Area",
+  "replaces": [
+   [
+    "93134 1",
+    -118.242,
+    34.068
+   ]
+  ]
+ },
+ "CREthr 9": {
+  "airport": "NORTH MYRTLE BEACH",
+  "code": "CRE",
+  "first_record": "1931-08-05",
+  "lat": 33.8162,
+  "lon": -78.7204,
+  "name": "Myrtle Beach Area",
+  "replaces": [
+   [
+    "93718 1",
+    -78.72,
+    33.816
+   ]
+  ]
+ },
+ "CRPthr 9": {
+  "airport": "CORPUS CHRISTI INTL AP",
+  "code": "CRP",
+  "first_record": "1887-02-01",
+  "lat": 27.7734,
+  "lon": -97.513,
+  "name": "Corpus Christi Area",
+  "replaces": [
+   [
+    "12924 1",
+    -97.513,
+    27.773
+   ]
+  ]
+ },
+ "CRWthr 9": {
+  "airport": "CHARLESTON - WEST VIRGINIA INTERNATIONAL YEAGER AIRPORT",
+  "code": "CRW",
+  "first_record": "1892-04-01",
+  "lat": 38.3795,
+  "lon": -81.5911,
+  "name": "Charleston Area",
+  "replaces": [
+   [
+    "13866 1",
+    -81.591,
+    38.38
+   ]
+  ]
+ },
+ "CSGthr 9": {
+  "airport": "COLUMBUS METROPOLITAN AP",
+  "code": "CSG",
+  "first_record": "1891-10-29",
+  "lat": 32.5162,
+  "lon": -84.9422,
+  "name": "Columbus Area",
+  "replaces": [
+   [
+    "93842 1",
+    -84.942,
+    32.516
+   ]
+  ]
+ },
+ "CVGthr 9": {
+  "airport": "CINCINNATI/NORTHERN KENTUCKY INTERNATIONAL AIRPORT",
+  "code": "CVG",
+  "first_record": "1872-05-07",
+  "lat": 39.0444,
+  "lon": -84.6724,
+  "name": "Cincinnati Area",
+  "replaces": [
+   [
+    "93814 1",
+    -84.672,
+    39.044
+   ]
+  ]
+ },
+ "CYSthr 9": {
+  "airport": "CHEYENNE WSFO AP",
+  "code": "CYS",
+  "first_record": "1872-10-20",
+  "lat": 41.1579,
+  "lon": -104.8081,
+  "name": "Cheyenne Area",
+  "replaces": [
+   [
+    "24018 1",
+    -104.808,
+    41.158
+   ]
+  ]
+ },
+ "DABthr 9": {
+  "airport": "DAYTONA BEACH INTL AP",
+  "code": "DAB",
+  "first_record": "1923-02-01",
+  "lat": 29.1735,
+  "lon": -81.0718,
+  "name": "Daytona Beach Area",
+  "replaces": [
+   [
+    "12834 1",
+    -81.072,
+    29.174
+   ]
+  ]
+ },
+ "DALthr 9": {
+  "airport": "DALLAS FAA AP",
+  "code": "DAL",
+  "first_record": "1913-10-15",
+  "lat": 32.8384,
+  "lon": -96.8358,
+  "name": "Dallas Area",
+  "replaces": [
+   [
+    "13960 1",
+    -96.836,
+    32.838
+   ]
+  ]
+ },
+ "DANthr 9": {
+  "airport": "DANVILLE REGIONAL AIRPORT",
+  "code": "DAN",
+  "first_record": "1916-04-01",
+  "lat": 36.5729,
+  "lon": -79.335,
+  "name": "Danville Area",
+  "replaces": [
+   [
+    "13728 1",
+    -79.335,
+    36.573
+   ]
+  ]
+ },
+ "DAYthr 9": {
+  "airport": "DAYTON INTERNATIONAL AIRPORT",
+  "code": "DAY",
+  "first_record": "1893-06-01",
+  "lat": 39.9064,
+  "lon": -84.2185,
+  "name": "Dayton Area",
+  "replaces": [
+   [
+    "93815 1",
+    -84.219,
+    39.906
+   ]
+  ]
+ },
+ "DBQthr 9": {
+  "airport": "DUBUQUE REGIONAL AP",
+  "code": "DBQ",
+  "first_record": "1874-05-10",
+  "lat": 42.3983,
+  "lon": -90.7091,
+  "name": "Dubuque Area",
+  "replaces": [
+   [
+    "94908 1",
+    -90.709,
+    42.398
+   ]
+  ]
+ },
+ "DCAthr 9": {
+  "airport": "WASHINGTON REAGAN NATIONAL AIRPORT",
+  "code": "DCA",
+  "first_record": "1871-01-01",
+  "lat": 38.8472,
+  "lon": -77.0345,
+  "name": "Washington Area",
+  "replaces": [
+   [
+    "13743 1",
+    -77.035,
+    38.847
+   ]
+  ]
+ },
+ "DDCthr 9": {
+  "airport": "DODGE CITY REGIONAL AP",
+  "code": "DDC",
+  "first_record": "1874-09-15",
+  "lat": 37.7711,
+  "lon": -99.9691,
+  "name": "Dodge City Area",
+  "replaces": [
+   [
+    "13985 1",
+    -99.969,
+    37.771
+   ]
+  ]
+ },
+ "DENthr 9": {
+  "airport": "DENVER INTL AP",
+  "code": "DEN",
+  "first_record": "1872-01-01",
+  "lat": 39.8466,
+  "lon": -104.6562,
+  "name": "Denver Area",
+  "replaces": [
+   [
+    "03017 1",
+    -104.656,
+    39.847
+   ],
+   [
+    "23062 1",
+    -104.869,
+    39.767
+   ]
+  ]
+ },
+ "DEQthr 9": {
+  "airport": "DE QUEEN SEVIER COUNTY AP",
+  "code": "DEQ",
+  "first_record": "1902-06-01",
+  "lat": 34.048,
+  "lon": -94.4016,
+  "name": "Dequeen Area",
+  "replaces": [
+   [
+    "53925 1",
+    -94.402,
+    34.048
+   ]
+  ]
+ },
+ "DFWthr 9": {
+  "airport": "DAL-FTW WSCMO AP",
+  "code": "DFW",
+  "first_record": "1898-09-01",
+  "lat": 32.8974,
+  "lon": -97.022,
+  "name": "Dallas-Fort Worth Area",
+  "replaces": [
+   [
+    "03927 1",
+    -97.022,
+    32.897
+   ]
+  ]
+ },
+ "DLHthr 9": {
+  "airport": "DULUTH INTL AP",
+  "code": "DLH",
+  "first_record": "1874-05-13",
+  "lat": 46.8436,
+  "lon": -92.1866,
+  "name": "Duluth Area",
+  "replaces": [
+   [
+    "14913 1",
+    -92.187,
+    46.844
+   ]
+  ]
+ },
+ "DMHthr 9": {
+  "airport": "MARYLAND SCIENCE CENTER",
+  "code": "DMH",
+  "first_record": "1950-07-23",
+  "lat": 39.2814,
+  "lon": -76.6111,
+  "name": "Baltimore Downtown Area",
+  "replaces": [
+   [
+    "93784 1",
+    -76.611,
+    39.281
+   ]
+  ]
+ },
+ "DRTthr 9": {
+  "airport": "DEL RIO INTERNATIONAL AP",
+  "code": "DRT",
+  "first_record": "1905-12-01",
+  "lat": 29.3784,
+  "lon": -100.927,
+  "name": "Del Rio Area",
+  "replaces": [
+   [
+    "22010 1",
+    -100.927,
+    29.378
+   ]
+  ]
+ },
+ "DSMthr 9": {
+  "airport": "DES MOINES INTL AP",
+  "code": "DSM",
+  "first_record": "1878-08-01",
+  "lat": 41.5339,
+  "lon": -93.6531,
+  "name": "Des Moines Area",
+  "replaces": [
+   [
+    "14933 1",
+    -93.653,
+    41.534
+   ]
+  ]
+ },
+ "DTWthr 9": {
+  "airport": "DETROIT METRO AIRPORT",
+  "code": "DTW",
+  "first_record": "1874-01-01",
+  "lat": 42.2311,
+  "lon": -83.3312,
+  "name": "Detroit Area",
+  "replaces": [
+   [
+    "94847 1",
+    -83.331,
+    42.231
+   ]
+  ]
+ },
+ "EAUthr 9": {
+  "airport": "CHIPPEWA VALLEY REGIONAL AIRPORT",
+  "code": "EAU",
+  "first_record": "1893-01-01",
+  "lat": 44.8665,
+  "lon": -91.4881,
+  "name": "Eau Claire Area",
+  "replaces": [
+   [
+    "14991 1",
+    -91.488,
+    44.867
+   ]
+  ]
+ },
+ "ECGthr 9": {
+  "airport": "ELIZABETH CITY COAST GUARD AIR STN",
+  "code": "ECG",
+  "first_record": "1934-01-01",
+  "lat": 36.2577,
+  "lon": -76.1716,
+  "name": "Elizabeth City Area",
+  "replaces": [
+   [
+    "13786 1",
+    -76.172,
+    36.258
+   ]
+  ]
+ },
+ "EEDthr 9": {
+  "airport": "NEEDLES AIRPORT",
+  "code": "EED",
+  "first_record": "1888-07-01",
+  "lat": 34.7678,
+  "lon": -114.6184,
+  "name": "Needles Area",
+  "replaces": [
+   [
+    "23179 1",
+    -114.618,
+    34.768
+   ]
+  ]
+ },
+ "EKAthr 9": {
+  "airport": "EUREKA WFO WOODLEY ISLAND",
+  "code": "EKA",
+  "first_record": "1886-12-01",
+  "lat": 40.8097,
+  "lon": -124.1602,
+  "name": "Eureka Area",
+  "replaces": [
+   [
+    "24213 1",
+    -124.16,
+    40.81
+   ]
+  ]
+ },
+ "EKNthr 9": {
+  "airport": "ELKINS- RANDOLPH COUNTY AIRPORT",
+  "code": "EKN",
+  "first_record": "1899-01-01",
+  "lat": 38.8899,
+  "lon": -79.8554,
+  "name": "Elkins Area",
+  "replaces": [
+   [
+    "13729 1",
+    -79.855,
+    38.89
+   ]
+  ]
+ },
+ "EKOthr 9": {
+  "airport": "ELKO REGIONAL AIRPORT",
+  "code": "EKO",
+  "first_record": "1888-02-01",
+  "lat": 40.824,
+  "lon": -115.7863,
+  "name": "Elko Area",
+  "replaces": [
+   [
+    "24121 1",
+    -115.786,
+    40.824
+   ]
+  ]
+ },
+ "ELPthr 9": {
+  "airport": "EL PASO INTL AP",
+  "code": "ELP",
+  "first_record": "1879-01-01",
+  "lat": 31.8123,
+  "lon": -106.3774,
+  "name": "El Paso Area",
+  "replaces": [
+   [
+    "23044 1",
+    -106.377,
+    31.812
+   ]
+  ]
+ },
+ "ELYthr 9": {
+  "airport": "ELY AIRPORT",
+  "code": "ELY",
+  "first_record": "1893-01-01",
+  "lat": 39.2954,
+  "lon": -114.8467,
+  "name": "Ely Area",
+  "replaces": [
+   [
+    "23154 1",
+    -114.847,
+    39.295
+   ]
+  ]
+ },
+ "ERIthr 9": {
+  "airport": "ERIE INTL AP",
+  "code": "ERI",
+  "first_record": "1873-05-25",
+  "lat": 42.0803,
+  "lon": -80.1824,
+  "name": "Erie Area",
+  "replaces": [
+   [
+    "14860 1",
+    -80.182,
+    42.08
+   ]
+  ]
+ },
+ "EUGthr 9": {
+  "airport": "EUGENE-MAHLON SWEET FIELD",
+  "code": "EUG",
+  "first_record": "1893-01-01",
+  "lat": 44.1331,
+  "lon": -123.2156,
+  "name": "Eugene Area",
+  "replaces": [
+   [
+    "24221 1",
+    -123.216,
+    44.133
+   ]
+  ]
+ },
+ "EVVthr 9": {
+  "airport": "EVANSVILLE REGIONAL AP",
+  "code": "EVV",
+  "first_record": "1897-01-01",
+  "lat": 38.0502,
+  "lon": -87.5147,
+  "name": "Evansville Area",
+  "replaces": [
+   [
+    "93817 1",
+    -87.515,
+    38.05
+   ]
+  ]
+ },
+ "EWNthr 9": {
+  "airport": "NEW BERN - COASTAL CAROLINA REGIONAL AIRPORT",
+  "code": "EWN",
+  "first_record": "1933-01-01",
+  "lat": 35.0684,
+  "lon": -77.0478,
+  "name": "New Bern Area",
+  "replaces": [
+   [
+    "93719 1",
+    -77.048,
+    35.068
+   ]
+  ]
+ },
+ "EWRthr 9": {
+  "airport": "NEWARK LIBERTY INTL AP",
+  "code": "EWR",
+  "first_record": "1843-05-01",
+  "lat": 40.6827,
+  "lon": -74.1693,
+  "name": "Newark Area",
+  "replaces": [
+   [
+    "14734 1",
+    -74.169,
+    40.683
+   ]
+  ]
+ },
+ "EYWthr 9": {
+  "airport": "KEY WEST INTL AIRPORT",
+  "code": "EYW",
+  "first_record": "1872-07-01",
+  "lat": 24.5571,
+  "lon": -81.7554,
+  "name": "Key West Area",
+  "replaces": [
+   [
+    "12836 1",
+    -81.755,
+    24.557
+   ]
+  ]
+ },
+ "FARthr 9": {
+  "airport": "FARGO HECTOR INTL AP",
+  "code": "FAR",
+  "first_record": "1881-01-01",
+  "lat": 46.9242,
+  "lon": -96.8119,
+  "name": "Fargo Area",
+  "replaces": [
+   [
+    "14914 1",
+    -96.812,
+    46.924
+   ]
+  ]
+ },
+ "FATthr 9": {
+  "airport": "FRESNO YOSEMITE INT'L",
+  "code": "FAT",
+  "first_record": "1887-08-16",
+  "lat": 36.78,
+  "lon": -119.7202,
+  "name": "Fresno Area",
+  "replaces": [
+   [
+    "93193 1",
+    -119.72,
+    36.78
+   ]
+  ]
+ },
+ "FAYthr 9": {
+  "airport": "FAYETTEVILLE REGIONAL AP GRANNIS FIELD",
+  "code": "FAY",
+  "first_record": "1910-01-01",
+  "lat": 34.9895,
+  "lon": -78.88,
+  "name": "Fayetteville Area",
+  "replaces": [
+   [
+    "93740 1",
+    -78.88,
+    34.99
+   ]
+  ]
+ },
+ "FCAthr 9": {
+  "airport": "KALISPELL GLACIER AIRPORT",
+  "code": "FCA",
+  "first_record": "1899-05-01",
+  "lat": 48.3041,
+  "lon": -114.2643,
+  "name": "Kalispell Area",
+  "replaces": [
+   [
+    "24146 1",
+    -114.264,
+    48.304
+   ]
+  ]
+ },
+ "FLGthr 9": {
+  "airport": "FLAGSTAFF AP",
+  "code": "FLG",
+  "first_record": "1898-09-11",
+  "lat": 35.1443,
+  "lon": -111.6664,
+  "name": "Flagstaff Area",
+  "replaces": [
+   [
+    "03103 1",
+    -111.666,
+    35.144
+   ]
+  ]
+ },
+ "FLLthr 9": {
+  "airport": "FORT LAUDERDALE INTERNATIONAL AIRPORT",
+  "code": "FLL",
+  "first_record": "1912-11-01",
+  "lat": 26.0787,
+  "lon": -80.1622,
+  "name": "Fort Lauderdale Area",
+  "replaces": [
+   [
+    "12849 1",
+    -80.162,
+    26.079
+   ]
+  ]
+ },
+ "FMYthr 9": {
+  "airport": "FORT MYERS PAGE FIELD AP",
+  "code": "FMY",
+  "first_record": "1892-01-01",
+  "lat": 26.5849,
+  "lon": -81.8615,
+  "name": "Fort Myers Area",
+  "replaces": [
+   [
+    "12835 1",
+    -81.861,
+    26.585
+   ]
+  ]
+ },
+ "FNTthr 9": {
+  "airport": "FLINT FCWOS",
+  "code": "FNT",
+  "first_record": "1921-01-01",
+  "lat": 42.9668,
+  "lon": -83.75,
+  "name": "Flint Area",
+  "replaces": [
+   [
+    "14826 1",
+    -83.75,
+    42.967
+   ]
+  ]
+ },
+ "FPRthr 9": {
+  "airport": "FORT PIERCE ST LUCIE COUNTY INTL AP",
+  "code": "FPR",
+  "first_record": "1901-01-01",
+  "lat": 27.4982,
+  "lon": -80.3763,
+  "name": "Fort Pierce Area",
+  "replaces": [
+   [
+    "12895 1",
+    -80.376,
+    27.498
+   ]
+  ]
+ },
+ "FSDthr 9": {
+  "airport": "SIOUX FALLS FOSS FIELD",
+  "code": "FSD",
+  "first_record": "1893-01-01",
+  "lat": 43.5775,
+  "lon": -96.7539,
+  "name": "Sioux Falls Area",
+  "replaces": [
+   [
+    "14944 1",
+    -96.754,
+    43.578
+   ]
+  ]
+ },
+ "FSMthr 9": {
+  "airport": "FORT SMITH REGIONAL AP",
+  "code": "FSM",
+  "first_record": "1882-06-01",
+  "lat": 35.3335,
+  "lon": -94.3653,
+  "name": "Fort Smith Area",
+  "replaces": [
+   [
+    "13964 1",
+    -94.365,
+    35.333
+   ]
+  ]
+ },
+ "FWAthr 9": {
+  "airport": "FORT WAYNE INTL AP",
+  "code": "FWA",
+  "first_record": "1897-02-02",
+  "lat": 40.9725,
+  "lon": -85.2064,
+  "name": "Fort Wayne Area",
+  "replaces": [
+   [
+    "14827 1",
+    -85.206,
+    40.972
+   ]
+  ]
+ },
+ "GEDthr 9": {
+  "airport": "GEORGETOWN-DELAWARE COASTAL AIRPORT",
+  "code": "GED",
+  "first_record": "1945-02-01",
+  "lat": 38.6897,
+  "lon": -75.3625,
+  "name": "Georgetown Area",
+  "replaces": [
+   [
+    "13764 1",
+    -75.362,
+    38.69
+   ]
+  ]
+ },
+ "GEGthr 9": {
+  "airport": "SPOKANE INTERNATIONAL AIRPORT",
+  "code": "GEG",
+  "first_record": "1881-02-01",
+  "lat": 47.6217,
+  "lon": -117.528,
+  "name": "Spokane Area",
+  "replaces": [
+   [
+    "24157 1",
+    -117.528,
+    47.622
+   ]
+  ]
+ },
+ "GFKthr 9": {
+  "airport": "GRAND FORKS INTL AP",
+  "code": "GFK",
+  "first_record": "1941-04-01",
+  "lat": 47.9428,
+  "lon": -97.1829,
+  "name": "Grand Forks Area",
+  "replaces": [
+   [
+    "14916 1",
+    -97.183,
+    47.943
+   ]
+  ]
+ },
+ "GFLthr 9": {
+  "airport": "GLENS FALLS/FLOYD BENNETT MEMORIAL AIRPORT",
+  "code": "GFL",
+  "first_record": "1893-01-01",
+  "lat": 43.3385,
+  "lon": -73.6102,
+  "name": "Glens Falls Area",
+  "replaces": [
+   [
+    "14750 1",
+    -73.61,
+    43.338
+   ]
+  ]
+ },
+ "GGGthr 9": {
+  "airport": "LONGVIEW E TX RGNL AP",
+  "code": "GGG",
+  "first_record": "1902-01-01",
+  "lat": 32.3909,
+  "lon": -94.714,
+  "name": "Longview Area",
+  "replaces": [
+   [
+    "03901 1",
+    -94.714,
+    32.391
+   ]
+  ]
+ },
+ "GGWthr 9": {
+  "airport": "GLASGOW INTERNATIONAL AP",
+  "code": "GGW",
+  "first_record": "1893-10-01",
+  "lat": 48.2142,
+  "lon": -106.6214,
+  "name": "Glasgow Area",
+  "replaces": [
+   [
+    "94008 1",
+    -106.621,
+    48.214
+   ]
+  ]
+ },
+ "GIFthr 9": {
+  "airport": "WINTER HAVEN GILBERT AP",
+  "code": "GIF",
+  "first_record": "1941-03-01",
+  "lat": 28.0614,
+  "lon": -81.7568,
+  "name": "Winter Haven Area",
+  "replaces": [
+   [
+    "12876 1",
+    -81.757,
+    28.061
+   ]
+  ]
+ },
+ "GJTthr 9": {
+  "airport": "GRAND JUNCTION WALKER FIELD",
+  "code": "GJT",
+  "first_record": "1893-01-01",
+  "lat": 39.1344,
+  "lon": -108.5408,
+  "name": "Grand Junction Area",
+  "replaces": [
+   [
+    "23066 1",
+    -108.541,
+    39.134
+   ]
+  ]
+ },
+ "GLDthr 9": {
+  "airport": "GOODLAND RENNER FIELD",
+  "code": "GLD",
+  "first_record": "1895-06-13",
+  "lat": 39.3673,
+  "lon": -101.6932,
+  "name": "Goodland Area",
+  "replaces": [
+   [
+    "23065 1",
+    -101.693,
+    39.367
+   ]
+  ]
+ },
+ "GLHthr 9": {
+  "airport": "GREENVILLE ASOS",
+  "code": "GLH",
+  "first_record": "1903-01-01",
+  "lat": 33.4939,
+  "lon": -90.9806,
+  "name": "Greenville Area",
+  "replaces": [
+   [
+    "13939 1",
+    -90.981,
+    33.494
+   ]
+  ]
+ },
+ "GLSthr 9": {
+  "airport": "GALVESTON SCHOLES FIELD",
+  "code": "GLS",
+  "first_record": "1874-05-10",
+  "lat": 29.2704,
+  "lon": -94.8642,
+  "name": "Galveston Area",
+  "replaces": [
+   [
+    "12923 1",
+    -94.864,
+    29.27
+   ]
+  ]
+ },
+ "GNVthr 9": {
+  "airport": "GAINESVILLE REGIONAL AP",
+  "code": "GNV",
+  "first_record": "1890-07-13",
+  "lat": 29.6917,
+  "lon": -82.276,
+  "name": "Gainesville Area",
+  "replaces": [
+   [
+    "12816 1",
+    -82.276,
+    29.692
+   ]
+  ]
+ },
+ "GPTthr 9": {
+  "airport": "GULFPORT - BILOXI AIRPORT",
+  "code": "GPT",
+  "first_record": "1893-06-01",
+  "lat": 30.4121,
+  "lon": -89.0809,
+  "name": "Gulfport Area",
+  "replaces": [
+   [
+    "93874 1",
+    -89.081,
+    30.412
+   ]
+  ]
+ },
+ "GRBthr 9": {
+  "airport": "GREEN BAY A S INTL AP",
+  "code": "GRB",
+  "first_record": "1886-09-01",
+  "lat": 44.4796,
+  "lon": -88.1371,
+  "name": "Green Bay Area",
+  "replaces": [
+   [
+    "14898 1",
+    -88.137,
+    44.48
+   ]
+  ]
+ },
+ "GRIthr 9": {
+  "airport": "GRAND ISLAND CENTRAL NE REGIONAL AP",
+  "code": "GRI",
+  "first_record": "1895-10-01",
+  "lat": 40.9615,
+  "lon": -98.313,
+  "name": "Grand Island Area",
+  "replaces": [
+   [
+    "14935 1",
+    -98.313,
+    40.961
+   ]
+  ]
+ },
+ "GRRthr 9": {
+  "airport": "GRAND RAPIDS GERALD R FORD INTL AP",
+  "code": "GRR",
+  "first_record": "1892-06-01",
+  "lat": 42.8821,
+  "lon": -85.523,
+  "name": "Grand Rapids Area",
+  "replaces": [
+   [
+    "94860 1",
+    -85.523,
+    42.882
+   ]
+  ]
+ },
+ "GSOthr 9": {
+  "airport": "GREENSBORO/PIEDMONT TRIAD INTERNATIONAL AIRPORT",
+  "code": "GSO",
+  "first_record": "1903-01-01",
+  "lat": 36.0969,
+  "lon": -79.9432,
+  "name": "Greensboro Area",
+  "replaces": [
+   [
+    "13723 1",
+    -79.943,
+    36.097
+   ]
+  ]
+ },
+ "GSPthr 9": {
+  "airport": "GRNVL SPART INTL AP",
+  "code": "GSP",
+  "first_record": "1884-04-01",
+  "lat": 34.9061,
+  "lon": -82.2125,
+  "name": "Greenville-Spartanburg Area",
+  "replaces": [
+   [
+    "03870 1",
+    -82.213,
+    34.906
+   ]
+  ]
+ },
+ "GTFthr 9": {
+  "airport": "GREAT FALLS AIRPORT",
+  "code": "GTF",
+  "first_record": "1891-12-01",
+  "lat": 47.4733,
+  "lon": -111.3828,
+  "name": "Great Falls Area",
+  "replaces": [
+   [
+    "24143 1",
+    -111.383,
+    47.473
+   ]
+  ]
+ },
+ "GWOthr 9": {
+  "airport": "GREENWOOD LEFLORE AP",
+  "code": "GWO",
+  "first_record": "1948-01-01",
+  "lat": 33.4961,
+  "lon": -90.0895,
+  "name": "Greenwood Area",
+  "replaces": [
+   [
+    "13978 1",
+    -90.089,
+    33.496
+   ]
+  ]
+ },
+ "HBGthr 9": {
+  "airport": "HATTIESBURG CHAIN MUNICIPAL AP",
+  "code": "HBG",
+  "first_record": "1893-01-01",
+  "lat": 31.2695,
+  "lon": -89.2561,
+  "name": "Hattiesburg Area",
+  "replaces": [
+   [
+    "13833 1",
+    -89.256,
+    31.27
+   ]
+  ]
+ },
+ "HGRthr 9": {
+  "airport": "HAGERSTOWN REGIONAL AIRPORT",
+  "code": "HGR",
+  "first_record": "1899-01-01",
+  "lat": 39.7062,
+  "lon": -77.7304,
+  "name": "Hagerstown Area",
+  "replaces": [
+   [
+    "93706 1",
+    -77.73,
+    39.706
+   ]
+  ]
+ },
+ "HIBthr 9": {
+  "airport": "HIBBING CHISHOLM HIBBING AP",
+  "code": "HIB",
+  "first_record": "1938-04-01",
+  "lat": 47.3804,
+  "lon": -92.8325,
+  "name": "Hibbing Area",
+  "replaces": [
+   [
+    "94931 1",
+    -92.832,
+    47.38
+   ]
+  ]
+ },
+ "HIOthr 9": {
+  "airport": "PORTLAND-HILLSBORO AP",
+  "code": "HIO",
+  "first_record": "1929-11-07",
+  "lat": 45.5476,
+  "lon": -122.9557,
+  "name": "Hillsboro Area",
+  "replaces": [
+   [
+    "94261 1",
+    -122.956,
+    45.548
+   ]
+  ]
+ },
+ "HJOthr 9": {
+  "airport": "HANFORD MUNICIPAL AP",
+  "code": "HJO",
+  "first_record": "1899-07-01",
+  "lat": 36.3114,
+  "lon": -119.6232,
+  "name": "Hanford Area",
+  "replaces": [
+   [
+    "53119 1",
+    -119.623,
+    36.311
+   ]
+  ]
+ },
+ "HLGthr 9": {
+  "airport": "WHEELING OHIO COUNTY AP",
+  "code": "HLG",
+  "first_record": "1899-11-01",
+  "lat": 40.1699,
+  "lon": -80.6441,
+  "name": "Wheeling Area",
+  "replaces": [
+   [
+    "14894 1",
+    -80.644,
+    40.17
+   ]
+  ]
+ },
+ "HLNthr 9": {
+  "airport": "HELENA AIRPORT ASOS",
+  "code": "HLN",
+  "first_record": "1880-04-01",
+  "lat": 46.6044,
+  "lon": -111.9892,
+  "name": "Helena Area",
+  "replaces": [
+   [
+    "24144 1",
+    -111.989,
+    46.604
+   ]
+  ]
+ },
+ "HONthr 9": {
+  "airport": "HURON REGIONAL AP",
+  "code": "HON",
+  "first_record": "1881-07-01",
+  "lat": 44.3792,
+  "lon": -98.2228,
+  "name": "Huron Area",
+  "replaces": [
+   [
+    "14936 1",
+    -98.223,
+    44.379
+   ]
+  ]
+ },
+ "HROthr 9": {
+  "airport": "HARRISON BOONE COUNTY AP",
+  "code": "HRO",
+  "first_record": "1892-01-01",
+  "lat": 36.2673,
+  "lon": -93.1566,
+  "name": "Harrison Area",
+  "replaces": [
+   [
+    "13971 1",
+    -93.157,
+    36.267
+   ]
+  ]
+ },
+ "HSEthr 9": {
+  "airport": "CAPE HATTERAS - BILLY MITCHELL FIELD",
+  "code": "HSE",
+  "first_record": "1893-01-01",
+  "lat": 35.2324,
+  "lon": -75.6222,
+  "name": "Cape Hatteras Area",
+  "replaces": [
+   [
+    "93729 1",
+    -75.622,
+    35.232
+   ]
+  ]
+ },
+ "HSIthr 9": {
+  "airport": "HASTINGS MUNICIPAL AIRPORT",
+  "code": "HSI",
+  "first_record": "1907-05-01",
+  "lat": 40.6002,
+  "lon": -98.4264,
+  "name": "Hastings Area",
+  "replaces": [
+   [
+    "94949 1",
+    -98.426,
+    40.6
+   ]
+  ]
+ },
+ "HSVthr 9": {
+  "airport": "HUNTSVILLE INTNL AP",
+  "code": "HSV",
+  "first_record": "1907-04-01",
+  "lat": 34.6441,
+  "lon": -86.7862,
+  "name": "Huntsville Area",
+  "replaces": [
+   [
+    "03856 1",
+    -86.786,
+    34.644
+   ]
+  ]
+ },
+ "HTLthr 9": {
+  "airport": "HOUGHTON LAKE ROSCOMMON COUNTY AP",
+  "code": "HTL",
+  "first_record": "1913-01-01",
+  "lat": 44.359,
+  "lon": -84.6739,
+  "name": "Houghton Lake Area",
+  "replaces": [
+   [
+    "94814 1",
+    -84.674,
+    44.359
+   ]
+  ]
+ },
+ "HTSthr 9": {
+  "airport": "HUNTINGTON TRI-STATE AIRPORT",
+  "code": "HTS",
+  "first_record": "1891-12-03",
+  "lat": 38.3653,
+  "lon": -82.5548,
+  "name": "Huntington Area",
+  "replaces": [
+   [
+    "03860 1",
+    -82.555,
+    38.365
+   ]
+  ]
+ },
+ "HVRthr 9": {
+  "airport": "HAVRE AP ASOS",
+  "code": "HVR",
+  "first_record": "1880-01-01",
+  "lat": 48.5425,
+  "lon": -109.7644,
+  "name": "Havre Area",
+  "replaces": [
+   [
+    "94012 1",
+    -109.764,
+    48.543
+   ]
+  ]
+ },
+ "HYRthr 9": {
+  "airport": "HAYWARD MUNICIPAL AP",
+  "code": "HYR",
+  "first_record": "1893-03-01",
+  "lat": 46.0303,
+  "lon": -91.4426,
+  "name": "Hayward Area",
+  "replaces": [
+   [
+    "94973 1",
+    -91.443,
+    46.03
+   ]
+  ]
+ },
+ "IADthr 9": {
+  "airport": "WASHINGTON DULLES INTL AP",
+  "code": "IAD",
+  "first_record": "1960-04-01",
+  "lat": 38.9348,
+  "lon": -77.4473,
+  "name": "Sterling-Dulles Airport Area",
+  "replaces": [
+   [
+    "93738 1",
+    -77.447,
+    38.935
+   ]
+  ]
+ },
+ "IAHthr 9": {
+  "airport": "HOUSTON INTERCONTINENTAL AP",
+  "code": "IAH",
+  "first_record": "1888-07-01",
+  "lat": 29.9844,
+  "lon": -95.3607,
+  "name": "Houston Area",
+  "replaces": [
+   [
+    "12960 1",
+    -95.361,
+    29.984
+   ]
+  ]
+ },
+ "ICTthr 9": {
+  "airport": "WICHITA DWIGHT D. EISENHOWER NATIONAL AIRPORT",
+  "code": "ICT",
+  "first_record": "1888-07-01",
+  "lat": 37.6475,
+  "lon": -97.43,
+  "name": "Wichita Area",
+  "replaces": [
+   [
+    "03928 1",
+    -97.43,
+    37.648
+   ]
+  ]
+ },
+ "IGMthr 9": {
+  "airport": "KINGMAN AIRPORT",
+  "code": "IGM",
+  "first_record": "1901-05-12",
+  "lat": 35.2574,
+  "lon": -113.934,
+  "name": "Kingman Area",
+  "replaces": [
+   [
+    "93167 1",
+    -113.934,
+    35.257
+   ]
+  ]
+ },
+ "ILGthr 9": {
+  "airport": "WILMINGTON AIRPORT",
+  "code": "ILG",
+  "first_record": "1894-01-01",
+  "lat": 39.6744,
+  "lon": -75.6057,
+  "name": "Wilmington Area",
+  "replaces": [
+   [
+    "13781 1",
+    -75.606,
+    39.674
+   ]
+  ]
+ },
+ "ILMthr 9": {
+  "airport": "WILMINGTON INT'L AIRPORT",
+  "code": "ILM",
+  "first_record": "1873-03-01",
+  "lat": 34.2668,
+  "lon": -77.8999,
+  "name": "Wilmington Area",
+  "replaces": [
+   [
+    "13748 1",
+    -77.9,
+    34.267
+   ]
+  ]
+ },
+ "ILNthr 9": {
+  "airport": "WILMINGTON AIR PARK",
+  "code": "ILN",
+  "first_record": "1917-04-08",
+  "lat": 39.4308,
+  "lon": -83.777,
+  "name": "Wilmington Area",
+  "replaces": [
+   [
+    "13841 1",
+    -83.777,
+    39.431
+   ]
+  ]
+ },
+ "INDthr 9": {
+  "airport": "INDIANAPOLIS INTL AP",
+  "code": "IND",
+  "first_record": "1871-03-01",
+  "lat": 39.7251,
+  "lon": -86.2816,
+  "name": "Indianapolis Area",
+  "replaces": [
+   [
+    "93819 1",
+    -86.282,
+    39.725
+   ]
+  ]
+ },
+ "INLthr 9": {
+  "airport": "INTERNATIONAL FALLS INTL AP",
+  "code": "INL",
+  "first_record": "1897-01-15",
+  "lat": 48.5594,
+  "lon": -93.3955,
+  "name": "International Falls Area",
+  "replaces": [
+   [
+    "14918 1",
+    -93.396,
+    48.559
+   ]
+  ]
+ },
+ "INWthr 9": {
+  "airport": "WINSLOW AIRPORT",
+  "code": "INW",
+  "first_record": "1915-01-01",
+  "lat": 35.0279,
+  "lon": -110.7221,
+  "name": "Winslow Area",
+  "replaces": [
+   [
+    "23194 1",
+    -110.722,
+    35.028
+   ]
+  ]
+ },
+ "IPLthr 9": {
+  "airport": "IMPERIAL COUNTY AP",
+  "code": "IPL",
+  "first_record": "1925-10-01",
+  "lat": 32.8346,
+  "lon": -115.5766,
+  "name": "El Centro Area",
+  "replaces": [
+   [
+    "03144 1",
+    -115.577,
+    32.835
+   ]
+  ]
+ },
+ "IPTthr 9": {
+  "airport": "WILLIAMSPORT REGIONAL AP",
+  "code": "IPT",
+  "first_record": "1895-02-07",
+  "lat": 41.243,
+  "lon": -76.9217,
+  "name": "Williamsport Area",
+  "replaces": [
+   [
+    "14778 1",
+    -76.922,
+    41.243
+   ]
+  ]
+ },
+ "ISNthr 9": {
+  "airport": "WILLISTON SLOULIN FLD",
+  "code": "ISN",
+  "first_record": "1894-01-01",
+  "lat": 48.1738,
+  "lon": -103.6366,
+  "name": "Williston Area",
+  "replaces": [
+   [
+    "94014 1",
+    -103.637,
+    48.174
+   ]
+  ]
+ },
+ "ISPthr 9": {
+  "airport": "ISLIP-LI MACARTHUR AP",
+  "code": "ISP",
+  "first_record": "1963-09-05",
+  "lat": 40.7939,
+  "lon": -73.1018,
+  "name": "Islip Area",
+  "replaces": [
+   [
+    "04781 1",
+    -73.102,
+    40.794
+   ]
+  ]
+ },
+ "JANthr 9": {
+  "airport": "JACKSON INTL AP",
+  "code": "JAN",
+  "first_record": "1896-01-01",
+  "lat": 32.3198,
+  "lon": -90.0778,
+  "name": "Jackson Area",
+  "replaces": [
+   [
+    "03940 1",
+    -90.078,
+    32.32
+   ]
+  ]
+ },
+ "JAXthr 9": {
+  "airport": "JACKSONVILLE INTL AP",
+  "code": "JAX",
+  "first_record": "1871-09-12",
+  "lat": 30.4953,
+  "lon": -81.6937,
+  "name": "Jacksonville Area",
+  "replaces": [
+   [
+    "13889 1",
+    -81.694,
+    30.495
+   ]
+  ]
+ },
+ "JBRthr 9": {
+  "airport": "JONESBORO MUNICIPAL AP",
+  "code": "JBR",
+  "first_record": "1893-04-02",
+  "lat": 35.8357,
+  "lon": -90.6442,
+  "name": "Jonesboro Area",
+  "replaces": [
+   [
+    "03953 1",
+    -90.644,
+    35.836
+   ]
+  ]
+ },
+ "JEFthr 9": {
+  "airport": "JEFFERSON CITY MEMORIAL AP",
+  "code": "JEF",
+  "first_record": "1894-11-01",
+  "lat": 38.5945,
+  "lon": -92.1567,
+  "name": "Jefferson City Area",
+  "replaces": [
+   [
+    "03963 1",
+    -92.157,
+    38.595
+   ]
+  ]
+ },
+ "JERthr 9": {
+  "airport": "JEROME COUNTY AP",
+  "code": "JER",
+  "first_record": "1915-09-13",
+  "lat": 42.7274,
+  "lon": -114.4547,
+  "name": "Jerome Area",
+  "replaces": [
+   [
+    "04110 1",
+    -114.455,
+    42.727
+   ]
+  ]
+ },
+ "JFKthr 9": {
+  "airport": "JFK INTERNATIONAL AIRPORT",
+  "code": "JFK",
+  "first_record": "1948-07-17",
+  "lat": 40.6392,
+  "lon": -73.7639,
+  "name": "New York-Kennedy Airport Area",
+  "replaces": [
+   [
+    "94789 1",
+    -73.764,
+    40.639
+   ]
+  ]
+ },
+ "JKLthr 9": {
+  "airport": "JACKSON JULIAN CARROLL AP",
+  "code": "JKL",
+  "first_record": "1981-01-01",
+  "lat": 37.5913,
+  "lon": -83.3137,
+  "name": "Jackson Area",
+  "replaces": [
+   [
+    "03889 1",
+    -83.314,
+    37.591
+   ]
+  ]
+ },
+ "LALthr 9": {
+  "airport": "LAKELAND LINDER REGIONAL AP",
+  "code": "LAL",
+  "first_record": "1948-07-01",
+  "lat": 28.0,
+  "lon": -82.05,
+  "name": "Lakeland Area",
+  "replaces": [
+   [
+    "12883 1",
+    -82.05,
+    28.0
+   ]
+  ]
+ },
+ "LANthr 9": {
+  "airport": "LANSING CAPITAL CITY AP",
+  "code": "LAN",
+  "first_record": "1863-04-01",
+  "lat": 42.7761,
+  "lon": -84.5997,
+  "name": "Lansing Area",
+  "replaces": [
+   [
+    "14836 1",
+    -84.6,
+    42.776
+   ]
+  ]
+ },
+ "LASthr 9": {
+  "airport": "HARRY REID INTL AP",
+  "code": "LAS",
+  "first_record": "1937-01-01",
+  "lat": 36.0719,
+  "lon": -115.1634,
+  "name": "Las Vegas Area",
+  "replaces": [
+   [
+    "23169 1",
+    -115.163,
+    36.072
+   ]
+  ]
+ },
+ "LAWthr 9": {
+  "airport": "LAWTON MUNICIPAL AP",
+  "code": "LAW",
+  "first_record": "1912-07-02",
+  "lat": 34.5577,
+  "lon": -98.4172,
+  "name": "Lawton Area",
+  "replaces": [
+   [
+    "03950 1",
+    -98.417,
+    34.558
+   ]
+  ]
+ },
+ "LAXthr 9": {
+  "airport": "LOS ANGELES INTL AP",
+  "code": "LAX",
+  "first_record": "1944-08-01",
+  "lat": 33.9382,
+  "lon": -118.3866,
+  "name": "Los Angeles Airport Area",
+  "replaces": [
+   [
+    "23174 1",
+    -118.387,
+    33.938
+   ]
+  ]
+ },
+ "LBBthr 9": {
+  "airport": "LUBBOCK INTL AP",
+  "code": "LBB",
+  "first_record": "1911-01-01",
+  "lat": 33.6658,
+  "lon": -101.8233,
+  "name": "Lubbock Area",
+  "replaces": [
+   [
+    "23042 1",
+    -101.823,
+    33.666
+   ]
+  ]
+ },
+ "LBFthr 9": {
+  "airport": "NORTH PLATTE REGIONAL AP",
+  "code": "LBF",
+  "first_record": "1874-09-18",
+  "lat": 41.122,
+  "lon": -100.6689,
+  "name": "North Platte Area",
+  "replaces": [
+   [
+    "24023 1",
+    -100.669,
+    41.122
+   ]
+  ]
+ },
+ "LBTthr 9": {
+  "airport": "LUMBERTON REGIONAL AIRPORT",
+  "code": "LBT",
+  "first_record": "1903-01-01",
+  "lat": 34.6082,
+  "lon": -79.059,
+  "name": "Lumberton Area",
+  "replaces": [
+   [
+    "13776 1",
+    -79.059,
+    34.608
+   ]
+  ]
+ },
+ "LCHthr 9": {
+  "airport": "LAKE CHARLES REGIONAL AP",
+  "code": "LCH",
+  "first_record": "1895-01-01",
+  "lat": 30.1255,
+  "lon": -93.2277,
+  "name": "Lake Charles Area",
+  "replaces": [
+   [
+    "03937 1",
+    -93.228,
+    30.126
+   ]
+  ]
+ },
+ "LEEthr 9": {
+  "airport": "LEESBURG MUNICIPAL AP",
+  "code": "LEE",
+  "first_record": "1958-12-01",
+  "lat": 28.8214,
+  "lon": -81.8096,
+  "name": "Leesburg Area",
+  "replaces": [
+   [
+    "12819 1",
+    -81.81,
+    28.821
+   ]
+  ]
+ },
+ "LEXthr 9": {
+  "airport": "LEXINGTON BLUEGRASS AP",
+  "code": "LEX",
+  "first_record": "1872-10-11",
+  "lat": 38.0339,
+  "lon": -84.6114,
+  "name": "Lexington Area",
+  "replaces": [
+   [
+    "93820 1",
+    -84.611,
+    38.034
+   ]
+  ]
+ },
+ "LGAthr 9": {
+  "airport": "LAGUARDIA AIRPORT",
+  "code": "LGA",
+  "first_record": "1939-10-07",
+  "lat": 40.7794,
+  "lon": -73.8803,
+  "name": "New York-LGA Area",
+  "replaces": [
+   [
+    "14732 1",
+    -73.88,
+    40.779
+   ]
+  ]
+ },
+ "LGBthr 9": {
+  "airport": "LONG BEACH DAUGHERTY AP",
+  "code": "LGB",
+  "first_record": "1958-04-01",
+  "lat": 33.8118,
+  "lon": -118.1472,
+  "name": "Long Beach Area",
+  "replaces": [
+   [
+    "23129 1",
+    -118.147,
+    33.812
+   ]
+  ]
+ },
+ "LHUthr 9": {
+  "airport": "LAKE HAVASU",
+  "code": "LHU",
+  "first_record": "1968-11-09",
+  "lat": 34.45,
+  "lon": -114.3667,
+  "name": "Lake Havasu City Area",
+  "replaces": [
+   [
+    "03168 1",
+    -114.367,
+    34.45
+   ]
+  ]
+ },
+ "LITthr 9": {
+  "airport": "LITTLE ROCK AP ADAMS FIELD",
+  "code": "LIT",
+  "first_record": "1879-07-01",
+  "lat": 34.7273,
+  "lon": -92.2358,
+  "name": "Little Rock Area",
+  "replaces": [
+   [
+    "13963 1",
+    -92.236,
+    34.727
+   ]
+  ]
+ },
+ "LLJthr 9": {
+  "airport": "CHALLIS AIRPORT",
+  "code": "LLJ",
+  "first_record": "1895-01-01",
+  "lat": 44.523,
+  "lon": -114.2161,
+  "name": "Challis Area",
+  "replaces": [
+   [
+    "04114 1",
+    -114.216,
+    44.523
+   ]
+  ]
+ },
+ "LNDthr 9": {
+  "airport": "LANDER AIRPORT",
+  "code": "LND",
+  "first_record": "1891-08-01",
+  "lat": 42.8154,
+  "lon": -108.726,
+  "name": "Lander Area",
+  "replaces": [
+   [
+    "24021 1",
+    -108.726,
+    42.815
+   ]
+  ]
+ },
+ "LNKthr 9": {
+  "airport": "LINCOLN AIRPORT",
+  "code": "LNK",
+  "first_record": "1887-01-01",
+  "lat": 40.8478,
+  "lon": -96.7647,
+  "name": "Lincoln Area",
+  "replaces": [
+   [
+    "14904 1",
+    -96.767,
+    40.85
+   ],
+   [
+    "14939 1",
+    -96.765,
+    40.848
+   ]
+  ]
+ },
+ "LRDthr 9": {
+  "airport": "LAREDO INTL AP",
+  "code": "LRD",
+  "first_record": "1902-11-15",
+  "lat": 27.5333,
+  "lon": -99.4667,
+  "name": "Laredo Area",
+  "replaces": [
+   [
+    "12907 1",
+    -99.467,
+    27.533
+   ]
+  ]
+ },
+ "LSEthr 9": {
+  "airport": "LA CROSSE REGIONAL AIRPORT",
+  "code": "LSE",
+  "first_record": "1872-10-15",
+  "lat": 43.8792,
+  "lon": -91.253,
+  "name": "La Crosse Area",
+  "replaces": [
+   [
+    "14920 1",
+    -91.253,
+    43.879
+   ]
+  ]
+ },
+ "LWSthr 9": {
+  "airport": "LEWISTON AP",
+  "code": "LWS",
+  "first_record": "1881-09-01",
+  "lat": 46.3746,
+  "lon": -117.0153,
+  "name": "Lewiston Area",
+  "replaces": [
+   [
+    "24149 1",
+    -117.015,
+    46.375
+   ]
+  ]
+ },
+ "LYHthr 9": {
+  "airport": "LYNCHBURG REGIONAL AIRPORT",
+  "code": "LYH",
+  "first_record": "1893-01-01",
+  "lat": 37.3213,
+  "lon": -79.2065,
+  "name": "Lynchburg Area",
+  "replaces": [
+   [
+    "13733 1",
+    -79.206,
+    37.321
+   ]
+  ]
+ },
+ "MAEthr 9": {
+  "airport": "MADERA MUNICIPAL AP",
+  "code": "MAE",
+  "first_record": "1928-01-01",
+  "lat": 36.9851,
+  "lon": -120.1107,
+  "name": "Madera Area",
+  "replaces": [
+   [
+    "93242 1",
+    -120.111,
+    36.985
+   ]
+  ]
+ },
+ "MAFthr 9": {
+  "airport": "MIDLAND INTERNATIONAL AP",
+  "code": "MAF",
+  "first_record": "1930-06-01",
+  "lat": 31.9475,
+  "lon": -102.2086,
+  "name": "Midland-Odessa Area",
+  "replaces": [
+   [
+    "23023 1",
+    -102.209,
+    31.948
+   ]
+  ]
+ },
+ "MBGthr 9": {
+  "airport": "MOBRIDGE MUNICIPAL AP",
+  "code": "MBG",
+  "first_record": "1911-01-01",
+  "lat": 45.5496,
+  "lon": -100.4086,
+  "name": "Mobridge Area",
+  "replaces": [
+   [
+    "94052 1",
+    -100.409,
+    45.55
+   ]
+  ]
+ },
+ "MBSthr 9": {
+  "airport": "SAGINAW MBS INTL AP",
+  "code": "MBS",
+  "first_record": "1912-01-01",
+  "lat": 43.5281,
+  "lon": -84.0813,
+  "name": "Saginaw Area",
+  "replaces": [
+   [
+    "14845 1",
+    -84.081,
+    43.528
+   ]
+  ]
+ },
+ "MCEthr 9": {
+  "airport": "MERCED MUNICIPAL AP",
+  "code": "MCE",
+  "first_record": "1899-06-02",
+  "lat": 37.286,
+  "lon": -120.5179,
+  "name": "Merced Area",
+  "replaces": [
+   [
+    "23257 1",
+    -120.518,
+    37.286
+   ]
+  ]
+ },
+ "MCIthr 9": {
+  "airport": "KANSAS CITY INTL AP",
+  "code": "MCI",
+  "first_record": "1888-07-01",
+  "lat": 39.2975,
+  "lon": -94.7309,
+  "name": "Kansas City Area",
+  "replaces": [
+   [
+    "03947 1",
+    -94.731,
+    39.297
+   ]
+  ]
+ },
+ "MCKthr 9": {
+  "airport": "MCCOOK MUNICIPAL AP",
+  "code": "MCK",
+  "first_record": "1896-04-01",
+  "lat": 40.204,
+  "lon": -100.5904,
+  "name": "McCook Area",
+  "replaces": [
+   [
+    "94040 1",
+    -100.59,
+    40.204
+   ]
+  ]
+ },
+ "MCNthr 9": {
+  "airport": "MACON MIDDLE GA REGIONAL AP",
+  "code": "MCN",
+  "first_record": "1892-10-01",
+  "lat": 32.6889,
+  "lon": -83.653,
+  "name": "Macon Area",
+  "replaces": [
+   [
+    "03813 1",
+    -83.653,
+    32.689
+   ]
+  ]
+ },
+ "MCOthr 9": {
+  "airport": "ORLANDO INTL AP",
+  "code": "MCO",
+  "first_record": "1892-01-01",
+  "lat": 28.4182,
+  "lon": -81.3241,
+  "name": "Orlando Area",
+  "replaces": [
+   [
+    "12815 1",
+    -81.324,
+    28.418
+   ]
+  ]
+ },
+ "MDHthr 9": {
+  "airport": "CARBONDALE SOUTHERN ILLINOIS AP",
+  "code": "MDH",
+  "first_record": "1898-11-01",
+  "lat": 37.7833,
+  "lon": -89.2453,
+  "name": "Carbondale Area",
+  "replaces": [
+   [
+    "93810 1",
+    -89.245,
+    37.783
+   ]
+  ]
+ },
+ "MDTthr 9": {
+  "airport": "MIDDLETOWN HARRISBURG INT'L AP",
+  "code": "MDT",
+  "first_record": "1888-07-01",
+  "lat": 40.1962,
+  "lon": -76.7725,
+  "name": "Middletown-Harrisburg Area",
+  "replaces": [
+   [
+    "14711 1",
+    -76.772,
+    40.196
+   ]
+  ]
+ },
+ "MEIthr 9": {
+  "airport": "MERIDIAN KEY FIELD",
+  "code": "MEI",
+  "first_record": "1889-08-28",
+  "lat": 32.3348,
+  "lon": -88.7507,
+  "name": "Meridian Area",
+  "replaces": [
+   [
+    "13865 1",
+    -88.751,
+    32.335
+   ]
+  ]
+ },
+ "MEMthr 9": {
+  "airport": "MEMPHIS INTERNATIONAL AP",
+  "code": "MEM",
+  "first_record": "1875-01-01",
+  "lat": 35.0564,
+  "lon": -89.9864,
+  "name": "Memphis Area",
+  "replaces": [
+   [
+    "13893 1",
+    -89.986,
+    35.056
+   ]
+  ]
+ },
+ "MFDthr 9": {
+  "airport": "MANSFIELD LAHM RGNL AP",
+  "code": "MFD",
+  "first_record": "1916-12-01",
+  "lat": 40.8204,
+  "lon": -82.5177,
+  "name": "Mansfield Area",
+  "replaces": [
+   [
+    "14891 1",
+    -82.518,
+    40.82
+   ]
+  ]
+ },
+ "MFEthr 9": {
+  "airport": "MCALLEN MILLER INTL AP",
+  "code": "MFE",
+  "first_record": "1941-06-01",
+  "lat": 26.1791,
+  "lon": -98.2445,
+  "name": "McAllen Area",
+  "replaces": [
+   [
+    "12959 1",
+    -98.245,
+    26.179
+   ]
+  ]
+ },
+ "MFRthr 9": {
+  "airport": "MEDFORD INTL AP",
+  "code": "MFR",
+  "first_record": "1911-03-11",
+  "lat": 42.375,
+  "lon": -122.877,
+  "name": "Medford Area",
+  "replaces": [
+   [
+    "24225 1",
+    -122.877,
+    42.375
+   ]
+  ]
+ },
+ "MGMthr 9": {
+  "airport": "MONTGOMERY AP",
+  "code": "MGM",
+  "first_record": "1872-09-05",
+  "lat": 32.2997,
+  "lon": -86.4074,
+  "name": "Montgomery Area",
+  "replaces": [
+   [
+    "13895 1",
+    -86.407,
+    32.3
+   ]
+  ]
+ },
+ "MGWthr 9": {
+  "airport": "MORGANTOWN MUNICIPAL AIRPORT",
+  "code": "MGW",
+  "first_record": "1874-01-01",
+  "lat": 39.6498,
+  "lon": -79.9206,
+  "name": "Morgantown Area",
+  "replaces": [
+   [
+    "13736 1",
+    -79.921,
+    39.65
+   ]
+  ]
+ },
+ "MHEthr 9": {
+  "airport": "MITCHELL AP",
+  "code": "MHE",
+  "first_record": "1893-01-01",
+  "lat": 43.7743,
+  "lon": -98.0384,
+  "name": "Mitchell Area",
+  "replaces": [
+   [
+    "94950 1",
+    -98.038,
+    43.774
+   ]
+  ]
+ },
+ "MHSthr 9": {
+  "airport": "MOUNT SHASTA",
+  "code": "MHS",
+  "first_record": "1948-04-15",
+  "lat": 41.3149,
+  "lon": -122.3171,
+  "name": "Mount Shasta Area",
+  "replaces": [
+   [
+    "24215 1",
+    -122.317,
+    41.315
+   ]
+  ]
+ },
+ "MHTthr 9": {
+  "airport": "MANCHESTER AIRPORT",
+  "code": "MHT",
+  "first_record": "1885-04-01",
+  "lat": 42.9296,
+  "lon": -71.4356,
+  "name": "Manchester Area",
+  "replaces": [
+   [
+    "14710 1",
+    -71.436,
+    42.93
+   ]
+  ]
+ },
+ "MIAthr 9": {
+  "airport": "MIAMI INTERNATIONAL AP",
+  "code": "MIA",
+  "first_record": "1895-09-06",
+  "lat": 25.788,
+  "lon": -80.3169,
+  "name": "Miami Area",
+  "replaces": [
+   [
+    "12839 1",
+    -80.317,
+    25.788
+   ]
+  ]
+ },
+ "MKEthr 9": {
+  "airport": "MILWAUKEE MITCHELL AIRPORT",
+  "code": "MKE",
+  "first_record": "1871-01-01",
+  "lat": 42.9549,
+  "lon": -87.9045,
+  "name": "Milwaukee Area",
+  "replaces": [
+   [
+    "14839 1",
+    -87.904,
+    42.955
+   ]
+  ]
+ },
+ "MKGthr 9": {
+  "airport": "MUSKEGON COUNTY AP",
+  "code": "MKG",
+  "first_record": "1896-06-01",
+  "lat": 43.1711,
+  "lon": -86.2369,
+  "name": "Muskegon Area",
+  "replaces": [
+   [
+    "14840 1",
+    -86.237,
+    43.171
+   ]
+  ]
+ },
+ "MLBthr 9": {
+  "airport": "MELBOURNE INTERNATIONAL AIRPORT",
+  "code": "MLB",
+  "first_record": "1937-08-01",
+  "lat": 28.0997,
+  "lon": -80.6356,
+  "name": "Melbourne Area",
+  "replaces": [
+   [
+    "12838 1",
+    -80.636,
+    28.1
+   ]
+  ]
+ },
+ "MLIthr 9": {
+  "airport": "MOLINE QUAD CITY INTL AP",
+  "code": "MLI",
+  "first_record": "1874-01-01",
+  "lat": 41.4482,
+  "lon": -90.5237,
+  "name": "Moline Area",
+  "replaces": [
+   [
+    "14923 1",
+    -90.524,
+    41.448
+   ]
+  ]
+ },
+ "MLTthr 9": {
+  "airport": "MILLINOCKET MUNICIPAL AIRPORT",
+  "code": "MLT",
+  "first_record": "1903-02-01",
+  "lat": 45.6478,
+  "lon": -68.6924,
+  "name": "Millinocket Area",
+  "replaces": [
+   [
+    "14610 1",
+    -68.692,
+    45.648
+   ]
+  ]
+ },
+ "MLUthr 9": {
+  "airport": "MONROE REGIONAL AP",
+  "code": "MLU",
+  "first_record": "1893-08-01",
+  "lat": 32.5155,
+  "lon": -92.0299,
+  "name": "Monroe Area",
+  "replaces": [
+   [
+    "13942 1",
+    -92.03,
+    32.516
+   ]
+  ]
+ },
+ "MMVthr 9": {
+  "airport": "MCMINNVILLE MUNICIPAL AP",
+  "code": "MMV",
+  "first_record": "1894-11-01",
+  "lat": 45.1957,
+  "lon": -123.1338,
+  "name": "McMinnville Area",
+  "replaces": [
+   [
+    "94273 1",
+    -123.134,
+    45.196
+   ]
+  ]
+ },
+ "MOBthr 9": {
+  "airport": "MOBILE REGIONAL AP",
+  "code": "MOB",
+  "first_record": "1872-04-04",
+  "lat": 30.6882,
+  "lon": -88.246,
+  "name": "Mobile Area",
+  "replaces": [
+   [
+    "13894 1",
+    -88.246,
+    30.688
+   ]
+  ]
+ },
+ "MPOthr 9": {
+  "airport": "POCONO MOUNTAINS MUNICIPAL AIRPORT",
+  "code": "MPO",
+  "first_record": "1901-09-12",
+  "lat": 41.1368,
+  "lon": -75.3771,
+  "name": "Mount Pocono Area",
+  "replaces": [
+   [
+    "54789 1",
+    -75.377,
+    41.137
+   ]
+  ]
+ },
+ "MQEthr 9": {
+  "airport": "BLUE HILL ASOS",
+  "code": "MQE",
+  "first_record": "1893-01-01",
+  "lat": 42.2123,
+  "lon": -71.1137,
+  "name": "Milton Area",
+  "replaces": [
+   [
+    "64779 1",
+    -71.114,
+    42.212
+   ]
+  ]
+ },
+ "MQTthr 9": {
+  "airport": "MARQUETTE WFO",
+  "code": "MQT",
+  "first_record": "1961-10-01",
+  "lat": 46.5313,
+  "lon": -87.5491,
+  "name": "Marquette County Area",
+  "replaces": [
+   [
+    "94850 1",
+    -87.549,
+    46.531
+   ]
+  ]
+ },
+ "MRBthr 9": {
+  "airport": "MARTINSBURG EASTERN WEST VIRGINIA REGIONAL AIRPORT",
+  "code": "MRB",
+  "first_record": "1891-11-01",
+  "lat": 39.4038,
+  "lon": -77.975,
+  "name": "Martinsburg Area",
+  "replaces": [
+   [
+    "13734 1",
+    -77.975,
+    39.404
+   ]
+  ]
+ },
+ "MSLthr 9": {
+  "airport": "MUSCLE SHOALS AP",
+  "code": "MSL",
+  "first_record": "1893-01-01",
+  "lat": 34.7439,
+  "lon": -87.5997,
+  "name": "Muscle Shoals Area",
+  "replaces": [
+   [
+    "13896 1",
+    -87.6,
+    34.744
+   ]
+  ]
+ },
+ "MSNthr 9": {
+  "airport": "MADISON DANE COUNTY REGIONAL AP",
+  "code": "MSN",
+  "first_record": "1869-01-01",
+  "lat": 43.1407,
+  "lon": -89.3452,
+  "name": "Madison Area",
+  "replaces": [
+   [
+    "14837 1",
+    -89.345,
+    43.141
+   ]
+  ]
+ },
+ "MSOthr 9": {
+  "airport": "MISSOULA INTERNATIONAL AP",
+  "code": "MSO",
+  "first_record": "1893-04-05",
+  "lat": 46.9208,
+  "lon": -114.0938,
+  "name": "Missoula Area",
+  "replaces": [
+   [
+    "24153 1",
+    -114.094,
+    46.921
+   ]
+  ]
+ },
+ "MSPthr 9": {
+  "airport": "MINNEAPOLIS-ST. PAUL INTERNATIONAL AIRPORT",
+  "code": "MSP",
+  "first_record": "1872-10-01",
+  "lat": 44.8852,
+  "lon": -93.2313,
+  "name": "Minneapolis-St Paul Area",
+  "replaces": [
+   [
+    "14911 1",
+    -93.217,
+    44.883
+   ],
+   [
+    "14922 1",
+    -93.231,
+    44.885
+   ],
+   [
+    "14947 1",
+    -93.217,
+    44.883
+   ]
+  ]
+ },
+ "MSYthr 9": {
+  "airport": "NEW ORLEANS AP",
+  "code": "MSY",
+  "first_record": "1946-05-01",
+  "lat": 29.9976,
+  "lon": -90.2777,
+  "name": "New Orleans Area",
+  "replaces": [
+   [
+    "12916 1",
+    -90.278,
+    29.998
+   ]
+  ]
+ },
+ "MTHthr 9": {
+  "airport": "MARATHON AP",
+  "code": "MTH",
+  "first_record": "1950-05-27",
+  "lat": 24.7262,
+  "lon": -81.0477,
+  "name": "Marathon Area",
+  "replaces": [
+   [
+    "12896 1",
+    -81.048,
+    24.726
+   ]
+  ]
+ },
+ "MWTthr 9": {
+  "airport": "MOUNT IDA",
+  "code": "MWT",
+  "first_record": "1883-05-01",
+  "lat": 34.5467,
+  "lon": -93.578,
+  "name": "Mount Ida Area",
+  "replaces": [
+   [
+    "53921 1",
+    -93.578,
+    34.547
+   ]
+  ]
+ },
+ "MYLthr 9": {
+  "airport": "MCCALL AP",
+  "code": "MYL",
+  "first_record": "1906-03-01",
+  "lat": 44.8942,
+  "lon": -116.0998,
+  "name": "McCall Area",
+  "replaces": [
+   [
+    "94182 1",
+    -116.1,
+    44.894
+   ]
+  ]
+ },
+ "NYCthr 9": {
+  "airport": "NY CITY CENTRAL PARK",
+  "code": "NYC",
+  "first_record": "1869-01-01",
+  "lat": 40.779,
+  "lon": -73.9693,
+  "name": "New York-Central Park Area",
+  "replaces": [
+   [
+    "94706 1",
+    -74.014,
+    40.71
+   ],
+   [
+    "94728 1",
+    -73.969,
+    40.779
+   ]
+  ]
+ },
+ "OFKthr 9": {
+  "airport": "NORFOLK KARL STEFAN MEMORIAL AP",
+  "code": "OFK",
+  "first_record": "1893-02-01",
+  "lat": 41.9799,
+  "lon": -97.4335,
+  "name": "Norfolk Area",
+  "replaces": [
+   [
+    "14941 1",
+    -97.433,
+    41.98
+   ]
+  ]
+ },
+ "OKCthr 9": {
+  "airport": "OKLAHOMA CITY WILL ROGERS WORLD AP",
+  "code": "OKC",
+  "first_record": "1890-11-01",
+  "lat": 35.3884,
+  "lon": -97.6004,
+  "name": "Oklahoma City Area",
+  "replaces": [
+   [
+    "13967 1",
+    -97.6,
+    35.388
+   ]
+  ]
+ },
+ "OLMthr 9": {
+  "airport": "OLYMPIA AP",
+  "code": "OLM",
+  "first_record": "1948-01-01",
+  "lat": 46.9737,
+  "lon": -122.9049,
+  "name": "Olympia Area",
+  "replaces": [
+   [
+    "24227 1",
+    -122.905,
+    46.974
+   ]
+  ]
+ },
+ "OMAthr 9": {
+  "airport": "OMAHA EPPLEY AIRFIELD",
+  "code": "OMA",
+  "first_record": "1871-01-01",
+  "lat": 41.3119,
+  "lon": -95.9019,
+  "name": "Omaha Area",
+  "replaces": [
+   [
+    "14942 1",
+    -95.902,
+    41.312
+   ]
+  ]
+ },
+ "OMKthr 9": {
+  "airport": "OMAK",
+  "code": "OMK",
+  "first_record": "1909-11-21",
+  "lat": 48.4611,
+  "lon": -119.5209,
+  "name": "Omak Area",
+  "replaces": [
+   [
+    "94197 1",
+    -119.521,
+    48.461
+   ]
+  ]
+ },
+ "ONOthr 9": {
+  "airport": "ONTARIO",
+  "code": "ONO",
+  "first_record": "1945-07-01",
+  "lat": 44.0142,
+  "lon": -117.0081,
+  "name": "Ontario Area",
+  "replaces": [
+   [
+    "24162 1",
+    -117.008,
+    44.014
+   ]
+  ]
+ },
+ "OQTthr 9": {
+  "airport": "OAK RIDGE ASOS",
+  "code": "OQT",
+  "first_record": "1947-07-01",
+  "lat": 36.023,
+  "lon": -84.2337,
+  "name": "Oak Ridge Area",
+  "replaces": [
+   [
+    "53868 1",
+    -84.234,
+    36.023
+   ]
+  ]
+ },
+ "ORDthr 9": {
+  "airport": "CHICAGO OHARE INTL AP",
+  "code": "ORD",
+  "first_record": "1872-06-12",
+  "lat": 41.9602,
+  "lon": -87.9316,
+  "name": "Chicago Area",
+  "replaces": [
+   [
+    "94846 1",
+    -87.932,
+    41.96
+   ]
+  ]
+ },
+ "ORFthr 9": {
+  "airport": "NORFOLK INTL AP",
+  "code": "ORF",
+  "first_record": "1874-01-01",
+  "lat": 36.9037,
+  "lon": -76.1927,
+  "name": "Norfolk Area",
+  "replaces": [
+   [
+    "13737 1",
+    -76.193,
+    36.904
+   ]
+  ]
+ },
+ "ORHthr 9": {
+  "airport": "WORCESTER REGIONAL AIRPORT",
+  "code": "ORH",
+  "first_record": "1892-01-01",
+  "lat": 42.2706,
+  "lon": -71.8731,
+  "name": "Worcester Area",
+  "replaces": [
+   [
+    "94746 1",
+    -71.873,
+    42.271
+   ]
+  ]
+ },
+ "P68thr 9": {
+  "airport": "EUREKA AIRPORT",
+  "code": "P68",
+  "first_record": "1963-04-03",
+  "lat": 39.6013,
+  "lon": -116.0055,
+  "name": "Eureka Area",
+  "replaces": [
+   [
+    "03170 1",
+    -116.005,
+    39.601
+   ]
+  ]
+ },
+ "PAHthr 9": {
+  "airport": "PADUCAH BARKLEY REGIONAL AP",
+  "code": "PAH",
+  "first_record": "1937-12-01",
+  "lat": 37.0564,
+  "lon": -88.7742,
+  "name": "Paducah Area",
+  "replaces": [
+   [
+    "03816 1",
+    -88.774,
+    37.056
+   ]
+  ]
+ },
+ "PBFthr 9": {
+  "airport": "PINE BLUFF GRIDER FIELD",
+  "code": "PBF",
+  "first_record": "1884-05-14",
+  "lat": 34.1798,
+  "lon": -91.9344,
+  "name": "Pine Bluff Area",
+  "replaces": [
+   [
+    "93988 1",
+    -91.934,
+    34.18
+   ]
+  ]
+ },
+ "PBGthr 9": {
+  "airport": "PLATTSBURGH INTERNATIONAL AIRPORT",
+  "code": "PBG",
+  "first_record": "1945-11-01",
+  "lat": 44.6392,
+  "lon": -73.4631,
+  "name": "Plattsburgh Area",
+  "replaces": [
+   [
+    "64776 1",
+    -73.463,
+    44.639
+   ]
+  ]
+ },
+ "PBIthr 9": {
+  "airport": "DONALD J. TRUMP INTERNATIONAL AIRPORT",
+  "code": "PBI",
+  "first_record": "1888-04-16",
+  "lat": 26.6851,
+  "lon": -80.0992,
+  "name": "West Palm Beach Area",
+  "replaces": [
+   [
+    "12844 1",
+    -80.099,
+    26.685
+   ]
+  ]
+ },
+ "PDTthr 9": {
+  "airport": "PENDLETON E OR RGNL AP",
+  "code": "PDT",
+  "first_record": "1892-09-01",
+  "lat": 45.6975,
+  "lon": -118.8345,
+  "name": "Pendleton Area",
+  "replaces": [
+   [
+    "24155 1",
+    -118.834,
+    45.697
+   ]
+  ]
+ },
+ "PDXthr 9": {
+  "airport": "PORTLAND INTL AIRPORT",
+  "code": "PDX",
+  "first_record": "1940-10-13",
+  "lat": 45.5958,
+  "lon": -122.6092,
+  "name": "Portland Area",
+  "replaces": [
+   [
+    "24229 1",
+    -122.609,
+    45.596
+   ]
+  ]
+ },
+ "PGDthr 9": {
+  "airport": "PUNTA GORDA CHARLOTTE COUNTY AP",
+  "code": "PGD",
+  "first_record": "1914-05-01",
+  "lat": 26.9185,
+  "lon": -81.9939,
+  "name": "Punta Gorda Area",
+  "replaces": [
+   [
+    "12812 1",
+    -81.994,
+    26.918
+   ]
+  ]
+ },
+ "PHDthr 9": {
+  "airport": "NEW PHILADELPHIA CLEVER FIELD",
+  "code": "PHD",
+  "first_record": "1948-06-01",
+  "lat": 40.4703,
+  "lon": -81.4218,
+  "name": "New Philadelphia Area",
+  "replaces": [
+   [
+    "04852 1",
+    -81.422,
+    40.47
+   ]
+  ]
+ },
+ "PHLthr 9": {
+  "airport": "PHILADELPHIA INTL AP",
+  "code": "PHL",
+  "first_record": "1872-03-05",
+  "lat": 39.8733,
+  "lon": -75.2268,
+  "name": "Philadelphia Area",
+  "replaces": [
+   [
+    "13739 1",
+    -75.227,
+    39.873
+   ]
+  ]
+ },
+ "PHXthr 9": {
+  "airport": "PHOENIX AIRPORT",
+  "code": "PHX",
+  "first_record": "1895-08-06",
+  "lat": 33.4278,
+  "lon": -112.0036,
+  "name": "Phoenix Area",
+  "replaces": [
+   [
+    "23183 1",
+    -112.004,
+    33.428
+   ]
+  ]
+ },
+ "PIAthr 9": {
+  "airport": "GENERAL WAYNE A. DOWNING INTERNATIONAL AP",
+  "code": "PIA",
+  "first_record": "1883-01-01",
+  "lat": 40.6675,
+  "lon": -89.6842,
+  "name": "Peoria Area",
+  "replaces": [
+   [
+    "14842 1",
+    -89.684,
+    40.667
+   ]
+  ]
+ },
+ "PIHthr 9": {
+  "airport": "POCATELLO REGIONAL AIRPORT",
+  "code": "PIH",
+  "first_record": "1939-01-03",
+  "lat": 42.9197,
+  "lon": -112.5723,
+  "name": "Pocatello Area",
+  "replaces": [
+   [
+    "24156 1",
+    -112.572,
+    42.92
+   ]
+  ]
+ },
+ "PITthr 9": {
+  "airport": "PITTSBURGH INTERNATIONAL AIRPORT",
+  "code": "PIT",
+  "first_record": "1874-09-01",
+  "lat": 40.4846,
+  "lon": -80.2145,
+  "name": "Pittsburgh Area",
+  "replaces": [
+   [
+    "94823 1",
+    -80.214,
+    40.485
+   ]
+  ]
+ },
+ "PKBthr 9": {
+  "airport": "PARKERSBURG/MID-OHIO VALLEY REGIONAL AIRPORT",
+  "code": "PKB",
+  "first_record": "1926-01-01",
+  "lat": 39.3395,
+  "lon": -81.4438,
+  "name": "Parkersburg Area",
+  "replaces": [
+   [
+    "03804 1",
+    -81.444,
+    39.339
+   ]
+  ]
+ },
+ "PMDthr 9": {
+  "airport": "PALMDALE AP",
+  "code": "PMD",
+  "first_record": "1931-04-01",
+  "lat": 34.6294,
+  "lon": -118.0831,
+  "name": "Palmdale Area",
+  "replaces": [
+   [
+    "23182 1",
+    -118.083,
+    34.629
+   ]
+  ]
+ },
+ "PNSthr 9": {
+  "airport": "PENSACOLA REGIONAL AP",
+  "code": "PNS",
+  "first_record": "1879-11-04",
+  "lat": 30.4761,
+  "lon": -87.1857,
+  "name": "Pensacola Area",
+  "replaces": [
+   [
+    "13899 1",
+    -87.186,
+    30.476
+   ]
+  ]
+ },
+ "POFthr 9": {
+  "airport": "POPLAR BLUFF MUNICIPAL AP",
+  "code": "POF",
+  "first_record": "1893-01-01",
+  "lat": 36.7697,
+  "lon": -90.3224,
+  "name": "Poplar Bluff Area",
+  "replaces": [
+   [
+    "03975 1",
+    -90.322,
+    36.77
+   ]
+  ]
+ },
+ "POUthr 9": {
+  "airport": "POUGHKEEPSIE/HUDSON VALLEY REGIONAL AIRPORT",
+  "code": "POU",
+  "first_record": "1931-01-01",
+  "lat": 41.6257,
+  "lon": -73.8816,
+  "name": "Poughkeepsie Area",
+  "replaces": [
+   [
+    "14757 1",
+    -73.882,
+    41.626
+   ]
+  ]
+ },
+ "PSCthr 9": {
+  "airport": "PASCO TRI CITIES AIRPORT",
+  "code": "PSC",
+  "first_record": "1894-02-01",
+  "lat": 46.2695,
+  "lon": -119.1182,
+  "name": "Tri-Cities Area",
+  "replaces": [
+   [
+    "24163 1",
+    -119.118,
+    46.27
+   ]
+  ]
+ },
+ "PSPthr 9": {
+  "airport": "PALM SPRINGS ASOS",
+  "code": "PSP",
+  "first_record": "1922-03-01",
+  "lat": 33.8222,
+  "lon": -116.5043,
+  "name": "Palm Springs Area",
+  "replaces": [
+   [
+    "93138 1",
+    -116.504,
+    33.822
+   ]
+  ]
+ },
+ "PUBthr 9": {
+  "airport": "PUEBLO MEMORIAL AIRPORT",
+  "code": "PUB",
+  "first_record": "1888-06-27",
+  "lat": 38.2887,
+  "lon": -104.5057,
+  "name": "Pueblo Area",
+  "replaces": [
+   [
+    "93058 1",
+    -104.506,
+    38.289
+   ]
+  ]
+ },
+ "PUWthr 9": {
+  "airport": "PULLMAN MOSCOW REGIONAL AP",
+  "code": "PUW",
+  "first_record": "1893-05-01",
+  "lat": 46.7438,
+  "lon": -117.1158,
+  "name": "Pullman Area",
+  "replaces": [
+   [
+    "94129 1",
+    -117.116,
+    46.744
+   ]
+  ]
+ },
+ "PVDthr 9": {
+  "airport": "RHODE ISLAND T.F. GREEN INTERNATIONAL AIRPORT",
+  "code": "PVD",
+  "first_record": "1904-11-01",
+  "lat": 41.7225,
+  "lon": -71.4325,
+  "name": "Providence Area",
+  "replaces": [
+   [
+    "14765 1",
+    -71.432,
+    41.723
+   ]
+  ]
+ },
+ "PWMthr 9": {
+  "airport": "PORTLAND JETPORT",
+  "code": "PWM",
+  "first_record": "1874-04-01",
+  "lat": 43.6424,
+  "lon": -70.3044,
+  "name": "Portland Area",
+  "replaces": [
+   [
+    "14764 1",
+    -70.304,
+    43.642
+   ]
+  ]
+ },
+ "RALthr 9": {
+  "airport": "RIVERSIDE MUNICIPAL AP",
+  "code": "RAL",
+  "first_record": "1893-01-01",
+  "lat": 33.9528,
+  "lon": -117.4352,
+  "name": "Riverside Area",
+  "replaces": [
+   [
+    "03171 1",
+    -117.435,
+    33.953
+   ]
+  ]
+ },
+ "RAPthr 9": {
+  "airport": "RAPID CITY REGIONAL AP",
+  "code": "RAP",
+  "first_record": "1942-08-01",
+  "lat": 44.0458,
+  "lon": -103.0544,
+  "name": "Rapid City Area",
+  "replaces": [
+   [
+    "24090 1",
+    -103.054,
+    44.046
+   ]
+  ]
+ },
+ "RDDthr 9": {
+  "airport": "REDDING AP",
+  "code": "RDD",
+  "first_record": "1893-01-01",
+  "lat": 40.5146,
+  "lon": -122.2977,
+  "name": "Redding Area",
+  "replaces": [
+   [
+    "24257 1",
+    -122.298,
+    40.515
+   ]
+  ]
+ },
+ "RDGthr 9": {
+  "airport": "READING REGIONAL AIRPORT",
+  "code": "RDG",
+  "first_record": "1888-01-01",
+  "lat": 40.3734,
+  "lon": -75.9592,
+  "name": "Reading Area",
+  "replaces": [
+   [
+    "14712 1",
+    -75.959,
+    40.373
+   ],
+   [
+    "14767 1",
+    -75.989,
+    40.316
+   ]
+  ]
+ },
+ "RDUthr 9": {
+  "airport": "RALEIGH-DURHAM INTERNATIONAL AIRPORT",
+  "code": "RDU",
+  "first_record": "1887-01-01",
+  "lat": 35.8923,
+  "lon": -78.7819,
+  "name": "Raleigh Area",
+  "replaces": [
+   [
+    "13722 1",
+    -78.782,
+    35.892
+   ]
+  ]
+ },
+ "RFDthr 9": {
+  "airport": "ROCKFORD GREATER ROCKFORD AP",
+  "code": "RFD",
+  "first_record": "1893-01-01",
+  "lat": 42.1932,
+  "lon": -89.0934,
+  "name": "Rockford Area",
+  "replaces": [
+   [
+    "94822 1",
+    -89.093,
+    42.193
+   ]
+  ]
+ },
+ "RHIthr 9": {
+  "airport": "RHINELANDER ONEIDA COUNTY AP",
+  "code": "RHI",
+  "first_record": "1893-02-01",
+  "lat": 45.6314,
+  "lon": -89.4824,
+  "name": "Rhinelander Area",
+  "replaces": [
+   [
+    "04803 1",
+    -89.482,
+    45.631
+   ]
+  ]
+ },
+ "RICthr 9": {
+  "airport": "RICHMOND INTERNATIONAL AP",
+  "code": "RIC",
+  "first_record": "1897-01-01",
+  "lat": 37.5115,
+  "lon": -77.3234,
+  "name": "Richmond Area",
+  "replaces": [
+   [
+    "13740 1",
+    -77.323,
+    37.512
+   ]
+  ]
+ },
+ "RNKthr 9": {
+  "airport": "BLACKSBURG NWSO",
+  "code": "RNK",
+  "first_record": "1893-01-01",
+  "lat": 37.2039,
+  "lon": -80.4144,
+  "name": "Blacksburg Area",
+  "replaces": [
+   [
+    "440766 2",
+    -80.414,
+    37.204
+   ]
+  ]
+ },
+ "RNMthr 9": {
+  "airport": "RAMONA AIRPORT",
+  "code": "RNM",
+  "first_record": "1974-02-01",
+  "lat": 33.038,
+  "lon": -116.916,
+  "name": "Ramona Area",
+  "replaces": [
+   [
+    "53120 1",
+    -116.916,
+    33.038
+   ]
+  ]
+ },
+ "RNOthr 9": {
+  "airport": "RENO AIRPORT",
+  "code": "RNO",
+  "first_record": "1893-01-01",
+  "lat": 39.5077,
+  "lon": -119.7683,
+  "name": "Reno Area",
+  "replaces": [
+   [
+    "23185 1",
+    -119.768,
+    39.508
+   ]
+  ]
+ },
+ "ROAthr 9": {
+  "airport": "ROANOKE-BLACKSBURG RGNL AP",
+  "code": "ROA",
+  "first_record": "1912-01-01",
+  "lat": 37.3172,
+  "lon": -79.9737,
+  "name": "Roanoke Area",
+  "replaces": [
+   [
+    "13741 1",
+    -79.974,
+    37.317
+   ]
+  ]
+ },
+ "ROCthr 9": {
+  "airport": "FREDERICK DOUGLASS GREATER ROCHESTER INTERNATIONAL AIRPORT",
+  "code": "ROC",
+  "first_record": "1872-01-01",
+  "lat": 43.1172,
+  "lon": -77.6754,
+  "name": "Rochester Area",
+  "replaces": [
+   [
+    "14768 1",
+    -77.675,
+    43.117
+   ]
+  ]
+ },
+ "ROWthr 9": {
+  "airport": "ROSWELL INDUSTRIAL AIR PARK",
+  "code": "ROW",
+  "first_record": "1893-01-21",
+  "lat": 33.3073,
+  "lon": -104.5082,
+  "name": "Roswell Area",
+  "replaces": [
+   [
+    "23009 1",
+    -104.508,
+    33.307
+   ]
+  ]
+ },
+ "RSTthr 9": {
+  "airport": "ROCHESTER INTERNATIONAL AIRPORT",
+  "code": "RST",
+  "first_record": "1886-07-01",
+  "lat": 43.904,
+  "lon": -92.4921,
+  "name": "Rochester Area",
+  "replaces": [
+   [
+    "14925 1",
+    -92.492,
+    43.904
+   ]
+  ]
+ },
+ "RUEthr 9": {
+  "airport": "RUSSELLVILLE MUNICIPAL AP",
+  "code": "RUE",
+  "first_record": "1882-07-11",
+  "lat": 35.2573,
+  "lon": -93.095,
+  "name": "Russellville Area",
+  "replaces": [
+   [
+    "53920 1",
+    -93.095,
+    35.257
+   ]
+  ]
+ },
+ "SACthr 9": {
+  "airport": "SACRAMENTO AP ASOS",
+  "code": "SAC",
+  "first_record": "1877-07-11",
+  "lat": 38.5066,
+  "lon": -121.496,
+  "name": "Sacramento Area",
+  "replaces": [
+   [
+    "23232 1",
+    -121.496,
+    38.507
+   ]
+  ]
+ },
+ "SANthr 9": {
+  "airport": "SAN DIEGO INTERNATIONAL AP",
+  "code": "SAN",
+  "first_record": "1874-10-04",
+  "lat": 32.7336,
+  "lon": -117.1831,
+  "name": "San Diego Area",
+  "replaces": [
+   [
+    "23188 1",
+    -117.183,
+    32.734
+   ]
+  ]
+ },
+ "SATthr 9": {
+  "airport": "SAN ANTONIO INTL AP",
+  "code": "SAT",
+  "first_record": "1885-03-07",
+  "lat": 29.5443,
+  "lon": -98.4839,
+  "name": "San Antonio Area",
+  "replaces": [
+   [
+    "12921 1",
+    -98.484,
+    29.544
+   ]
+  ]
+ },
+ "SAVthr 9": {
+  "airport": "SAVANNAH/HILTON HEAD INTL AIRPORT",
+  "code": "SAV",
+  "first_record": "1874-01-01",
+  "lat": 32.1313,
+  "lon": -81.2023,
+  "name": "Savannah Area",
+  "replaces": [
+   [
+    "03822 1",
+    -81.202,
+    32.131
+   ]
+  ]
+ },
+ "SBNthr 9": {
+  "airport": "SOUTH BEND AP",
+  "code": "SBN",
+  "first_record": "1893-12-01",
+  "lat": 41.7072,
+  "lon": -86.3163,
+  "name": "South Bend Area",
+  "replaces": [
+   [
+    "14848 1",
+    -86.316,
+    41.707
+   ]
+  ]
+ },
+ "SBYthr 9": {
+  "airport": "SALISBURY-WICOMICO REGIONAL AIRPORT",
+  "code": "SBY",
+  "first_record": "1906-04-08",
+  "lat": 38.3409,
+  "lon": -75.5132,
+  "name": "Salisbury Area",
+  "replaces": [
+   [
+    "93720 1",
+    -75.513,
+    38.341
+   ]
+  ]
+ },
+ "SCKthr 9": {
+  "airport": "STOCKTON AP",
+  "code": "SCK",
+  "first_record": "1893-01-01",
+  "lat": 37.89,
+  "lon": -121.2264,
+  "name": "Stockton Area",
+  "replaces": [
+   [
+    "23237 1",
+    -121.226,
+    37.89
+   ]
+  ]
+ },
+ "SDFthr 9": {
+  "airport": "LOUISVILLE INTL AP",
+  "code": "SDF",
+  "first_record": "1872-08-01",
+  "lat": 38.1774,
+  "lon": -85.7308,
+  "name": "Louisville Area",
+  "replaces": [
+   [
+    "93821 1",
+    -85.731,
+    38.177
+   ]
+  ]
+ },
+ "SEAthr 9": {
+  "airport": "SEATTLE TACOMA AIRPORT",
+  "code": "SEA",
+  "first_record": "1945-01-01",
+  "lat": 47.4447,
+  "lon": -122.3144,
+  "name": "Seattle Tacoma Area",
+  "replaces": [
+   [
+    "24233 1",
+    -122.314,
+    47.445
+   ]
+  ]
+ },
+ "SEWthr 9": {
+  "airport": "SEATTLE SAND POINT WFO",
+  "code": "SEW",
+  "first_record": "1894-01-01",
+  "lat": 47.6872,
+  "lon": -122.2553,
+  "name": "Seattle City Area",
+  "replaces": [
+   [
+    "94290 1",
+    -122.255,
+    47.687
+   ]
+  ]
+ },
+ "SFBthr 9": {
+  "airport": "ORLANDO SANFORD AP",
+  "code": "SFB",
+  "first_record": "1948-07-01",
+  "lat": 28.7795,
+  "lon": -81.2436,
+  "name": "Sanford Area",
+  "replaces": [
+   [
+    "12854 1",
+    -81.244,
+    28.78
+   ]
+  ]
+ },
+ "SFOthr 9": {
+  "airport": "SAN FRANCISCO INTERNATIONAL AP",
+  "code": "SFO",
+  "first_record": "1945-07-01",
+  "lat": 37.6196,
+  "lon": -122.3656,
+  "name": "San Francisco Airport Area",
+  "replaces": [
+   [
+    "23234 1",
+    -122.366,
+    37.62
+   ]
+  ]
+ },
+ "SGFthr 9": {
+  "airport": "SPRINGFIELD WSO AP",
+  "code": "SGF",
+  "first_record": "1888-01-01",
+  "lat": 37.2398,
+  "lon": -93.3899,
+  "name": "Springfield Area",
+  "replaces": [
+   [
+    "13995 1",
+    -93.39,
+    37.24
+   ]
+  ]
+ },
+ "SHRthr 9": {
+  "airport": "SHERIDAN AIRPORT",
+  "code": "SHR",
+  "first_record": "1907-05-01",
+  "lat": 44.7603,
+  "lon": -106.9741,
+  "name": "Sheridan Area",
+  "replaces": [
+   [
+    "24029 1",
+    -106.974,
+    44.76
+   ]
+  ]
+ },
+ "SHVthr 9": {
+  "airport": "SHREVEPORT AP",
+  "code": "SHV",
+  "first_record": "1874-06-03",
+  "lat": 32.4473,
+  "lon": -93.8244,
+  "name": "Shreveport Area",
+  "replaces": [
+   [
+    "13957 1",
+    -93.824,
+    32.447
+   ]
+  ]
+ },
+ "SJCthr 9": {
+  "airport": "SAN JOSE",
+  "code": "SJC",
+  "first_record": "1893-01-01",
+  "lat": 37.3594,
+  "lon": -121.9244,
+  "name": "San Jose Area",
+  "replaces": [
+   [
+    "23293 1",
+    -121.924,
+    37.359
+   ]
+  ]
+ },
+ "SJTthr 9": {
+  "airport": "SAN ANGELO MATHIS FIELD AP",
+  "code": "SJT",
+  "first_record": "1907-08-01",
+  "lat": 31.3517,
+  "lon": -100.4948,
+  "name": "San Angelo Area",
+  "replaces": [
+   [
+    "23034 1",
+    -100.495,
+    31.352
+   ]
+  ]
+ },
+ "SLCthr 9": {
+  "airport": "SALT LAKE CITY INTL ARPT",
+  "code": "SLC",
+  "first_record": "1874-06-03",
+  "lat": 40.7707,
+  "lon": -111.965,
+  "name": "Salt Lake City Area",
+  "replaces": [
+   [
+    "24127 1",
+    -111.965,
+    40.771
+   ]
+  ]
+ },
+ "SLEthr 9": {
+  "airport": "SALEM AP (MCNARY FIELD)",
+  "code": "SLE",
+  "first_record": "1893-01-01",
+  "lat": 44.9049,
+  "lon": -123.001,
+  "name": "Salem Area",
+  "replaces": [
+   [
+    "24232 1",
+    -123.001,
+    44.905
+   ]
+  ]
+ },
+ "SLKthr 9": {
+  "airport": "SARANAC LAKE ADIRONDACK REGIONAL AP",
+  "code": "SLK",
+  "first_record": "1903-03-01",
+  "lat": 44.3928,
+  "lon": -74.2029,
+  "name": "Saranac Lake Area",
+  "replaces": [
+   [
+    "94740 1",
+    -74.203,
+    44.393
+   ]
+  ]
+ },
+ "SLNthr 9": {
+  "airport": "SALINA MUNICIPAL AP",
+  "code": "SLN",
+  "first_record": "1900-01-01",
+  "lat": 38.78,
+  "lon": -97.6444,
+  "name": "Salina Area",
+  "replaces": [
+   [
+    "03919 1",
+    -97.644,
+    38.78
+   ]
+  ]
+ },
+ "SMXthr 9": {
+  "airport": "SANTA MARIA PUBLIC AP",
+  "code": "SMX",
+  "first_record": "1906-01-01",
+  "lat": 34.894,
+  "lon": -120.4522,
+  "name": "Santa Maria Area",
+  "replaces": [
+   [
+    "23273 1",
+    -120.452,
+    34.894
+   ]
+  ]
+ },
+ "SNTthr 9": {
+  "airport": "STANLEY RANGER STATION",
+  "code": "SNT",
+  "first_record": "1916-06-25",
+  "lat": 44.1708,
+  "lon": -114.9269,
+  "name": "Stanley Area",
+  "replaces": [
+   [
+    "04112 1",
+    -114.927,
+    44.171
+   ]
+  ]
+ },
+ "SPIthr 9": {
+  "airport": "SPRINGFIELD ABRAHAM LINCOLN CAPITAL AP",
+  "code": "SPI",
+  "first_record": "1879-07-01",
+  "lat": 39.8453,
+  "lon": -89.684,
+  "name": "Springfield Area",
+  "replaces": [
+   [
+    "93822 1",
+    -89.684,
+    39.845
+   ]
+  ]
+ },
+ "SPSthr 9": {
+  "airport": "WICHITA FALLS MUNICIPAL AP",
+  "code": "SPS",
+  "first_record": "1908-11-01",
+  "lat": 33.9785,
+  "lon": -98.493,
+  "name": "Wichita Falls Area",
+  "replaces": [
+   [
+    "13966 1",
+    -98.493,
+    33.979
+   ]
+  ]
+ },
+ "SPWthr 9": {
+  "airport": "SPENCER MUNICIPAL AP",
+  "code": "SPW",
+  "first_record": "1895-02-01",
+  "lat": 43.1682,
+  "lon": -95.2101,
+  "name": "Spencer Area",
+  "replaces": [
+   [
+    "14972 1",
+    -95.21,
+    43.168
+   ]
+  ]
+ },
+ "SRQthr 9": {
+  "airport": "SARASOTA BRADENTON AP",
+  "code": "SRQ",
+  "first_record": "1911-01-01",
+  "lat": 27.4015,
+  "lon": -82.5586,
+  "name": "Sarasota-Bradenton Area",
+  "replaces": [
+   [
+    "12871 1",
+    -82.559,
+    27.401
+   ]
+  ]
+ },
+ "STCthr 9": {
+  "airport": "ST. CLOUD REGIONAL AIRPORT",
+  "code": "STC",
+  "first_record": "1894-03-01",
+  "lat": 45.5442,
+  "lon": -94.0516,
+  "name": "Saint Cloud Area",
+  "replaces": [
+   [
+    "14926 1",
+    -94.052,
+    45.544
+   ]
+  ]
+ },
+ "STLthr 9": {
+  "airport": "ST LOUIS LAMBERT INTL AIRPORT",
+  "code": "STL",
+  "first_record": "1874-01-01",
+  "lat": 38.7525,
+  "lon": -90.3734,
+  "name": "St Louis Area",
+  "replaces": [
+   [
+    "13994 1",
+    -90.373,
+    38.752
+   ]
+  ]
+ },
+ "SUXthr 9": {
+  "airport": "SIOUX CITY AP",
+  "code": "SUX",
+  "first_record": "1889-07-01",
+  "lat": 42.3917,
+  "lon": -96.3795,
+  "name": "Sioux City Area",
+  "replaces": [
+   [
+    "14943 1",
+    -96.379,
+    42.392
+   ]
+  ]
+ },
+ "SWOthr 9": {
+  "airport": "STILLWATER REGIONAL AP",
+  "code": "SWO",
+  "first_record": "1893-01-01",
+  "lat": 36.1624,
+  "lon": -97.0893,
+  "name": "Stillwater Area",
+  "replaces": [
+   [
+    "03965 1",
+    -97.089,
+    36.162
+   ]
+  ]
+ },
+ "SYRthr 9": {
+  "airport": "SYRACUSE HANCOCK INTL AP",
+  "code": "SYR",
+  "first_record": "1902-08-22",
+  "lat": 43.1111,
+  "lon": -76.1038,
+  "name": "Syracuse Area",
+  "replaces": [
+   [
+    "14771 1",
+    -76.104,
+    43.111
+   ]
+  ]
+ },
+ "TLHthr 9": {
+  "airport": "TALLAHASSEE REGIONAL AP",
+  "code": "TLH",
+  "first_record": "1892-05-01",
+  "lat": 30.3935,
+  "lon": -84.3514,
+  "name": "Tallahassee Area",
+  "replaces": [
+   [
+    "93805 1",
+    -84.351,
+    30.394
+   ]
+  ]
+ },
+ "TOLthr 9": {
+  "airport": "TOLEDO EXPRESS AP",
+  "code": "TOL",
+  "first_record": "1873-03-01",
+  "lat": 41.587,
+  "lon": -83.8054,
+  "name": "Toledo Area",
+  "replaces": [
+   [
+    "94830 1",
+    -83.805,
+    41.587
+   ]
+  ]
+ },
+ "TOPthr 9": {
+  "airport": "TOPEKA ASOS",
+  "code": "TOP",
+  "first_record": "1887-06-01",
+  "lat": 39.0725,
+  "lon": -95.626,
+  "name": "Topeka Area",
+  "replaces": [
+   [
+    "13996 1",
+    -95.626,
+    39.072
+   ]
+  ]
+ },
+ "TPAthr 9": {
+  "airport": "TAMPA INTL AP",
+  "code": "TPA",
+  "first_record": "1890-04-01",
+  "lat": 27.9633,
+  "lon": -82.54,
+  "name": "Tampa Area",
+  "replaces": [
+   [
+    "12842 1",
+    -82.54,
+    27.963
+   ]
+  ]
+ },
+ "TRIthr 9": {
+  "airport": "BRISTOL AP",
+  "code": "TRI",
+  "first_record": "1937-10-01",
+  "lat": 36.4796,
+  "lon": -82.3989,
+  "name": "Bristol-Johnson City Area",
+  "replaces": [
+   [
+    "13877 1",
+    -82.399,
+    36.48
+   ]
+  ]
+ },
+ "TTNthr 9": {
+  "airport": "TRENTON-MERCER AIRPORT",
+  "code": "TTN",
+  "first_record": "1865-10-01",
+  "lat": 40.2768,
+  "lon": -74.8159,
+  "name": "Trenton Area",
+  "replaces": [
+   [
+    "14792 1",
+    -74.816,
+    40.277
+   ]
+  ]
+ },
+ "TULthr 9": {
+  "airport": "TULSA INTL AIRPORT",
+  "code": "TUL",
+  "first_record": "1905-01-06",
+  "lat": 36.1985,
+  "lon": -95.8782,
+  "name": "Tulsa Area",
+  "replaces": [
+   [
+    "13968 1",
+    -95.878,
+    36.199
+   ]
+  ]
+ },
+ "TUPthr 9": {
+  "airport": "TUPELO REGIONAL AP",
+  "code": "TUP",
+  "first_record": "1930-01-01",
+  "lat": 34.2622,
+  "lon": -88.7713,
+  "name": "Tupelo Area",
+  "replaces": [
+   [
+    "93862 1",
+    -88.771,
+    34.262
+   ]
+  ]
+ },
+ "TUSthr 9": {
+  "airport": "TUCSON INTERNATIONAL AIRPORT",
+  "code": "TUS",
+  "first_record": "1894-09-01",
+  "lat": 32.1315,
+  "lon": -110.9564,
+  "name": "Tucson Area",
+  "replaces": [
+   [
+    "23160 1",
+    -110.956,
+    32.132
+   ]
+  ]
+ },
+ "TVRthr 9": {
+  "airport": "TALLULAH VICKSBURG REGIONAL AP",
+  "code": "TVR",
+  "first_record": "1948-01-01",
+  "lat": 32.3481,
+  "lon": -91.0299,
+  "name": "Tallulah-Vicksburg Area",
+  "replaces": [
+   [
+    "03996 1",
+    -91.03,
+    32.348
+   ]
+  ]
+ },
+ "TYRthr 9": {
+  "airport": "TYLER POUNDS FIELD",
+  "code": "TYR",
+  "first_record": "1883-04-01",
+  "lat": 32.3587,
+  "lon": -95.404,
+  "name": "Tyler Area",
+  "replaces": [
+   [
+    "13972 1",
+    -95.404,
+    32.359
+   ]
+  ]
+ },
+ "TYSthr 9": {
+  "airport": "KNOXVILLE AP",
+  "code": "TYS",
+  "first_record": "1871-01-01",
+  "lat": 35.818,
+  "lon": -83.9857,
+  "name": "Knoxville Area",
+  "replaces": [
+   [
+    "13891 1",
+    -83.986,
+    35.818
+   ]
+  ]
+ },
+ "UILthr 9": {
+  "airport": "QUILLAYUTE AP",
+  "code": "UIL",
+  "first_record": "1966-08-01",
+  "lat": 47.937,
+  "lon": -124.5576,
+  "name": "Quillayute Area",
+  "replaces": [
+   [
+    "94240 1",
+    -124.558,
+    47.937
+   ]
+  ]
+ },
+ "UINthr 9": {
+  "airport": "QUINCY REGIONAL AIRPORT",
+  "code": "UIN",
+  "first_record": "1901-01-01",
+  "lat": 39.9371,
+  "lon": -91.1966,
+  "name": "Quincy Area",
+  "replaces": [
+   [
+    "93989 1",
+    -91.197,
+    39.937
+   ]
+  ]
+ },
+ "UKIthr 9": {
+  "airport": "UKIAH MUNICIPAL AP",
+  "code": "UKI",
+  "first_record": "1893-01-01",
+  "lat": 39.1278,
+  "lon": -123.2001,
+  "name": "Ukiah Area",
+  "replaces": [
+   [
+    "23275 1",
+    -123.2,
+    39.128
+   ]
+  ]
+ },
+ "VCTthr 9": {
+  "airport": "VICTORIA REGIONAL AP",
+  "code": "VCT",
+  "first_record": "1902-06-05",
+  "lat": 28.8624,
+  "lon": -96.9301,
+  "name": "Victoria Area",
+  "replaces": [
+   [
+    "12912 1",
+    -96.93,
+    28.862
+   ]
+  ]
+ },
+ "VRBthr 9": {
+  "airport": "VERO BEACH INTL AP",
+  "code": "VRB",
+  "first_record": "1942-11-01",
+  "lat": 27.6553,
+  "lon": -80.4142,
+  "name": "Vero Beach Area",
+  "replaces": [
+   [
+    "12843 1",
+    -80.414,
+    27.655
+   ]
+  ]
+ },
+ "VTNthr 9": {
+  "airport": "VALENTINE MILLER FIELD AP",
+  "code": "VTN",
+  "first_record": "1889-07-01",
+  "lat": 42.8586,
+  "lon": -100.5514,
+  "name": "Valentine Area",
+  "replaces": [
+   [
+    "24032 1",
+    -100.551,
+    42.859
+   ]
+  ]
+ },
+ "VUOthr 9": {
+  "airport": "VANCOUVER PEARSON AP",
+  "code": "VUO",
+  "first_record": "1891-08-01",
+  "lat": 45.621,
+  "lon": -122.6542,
+  "name": "Vancouver Area",
+  "replaces": [
+   [
+    "94298 1",
+    -122.654,
+    45.621
+   ]
+  ]
+ },
+ "WALthr 9": {
+  "airport": "WALLOPS ISLAND NASA TEST FACILITY",
+  "code": "WAL",
+  "first_record": "1966-10-01",
+  "lat": 37.9372,
+  "lon": -75.4662,
+  "name": "Wallops Island Area",
+  "replaces": [
+   [
+    "93739 1",
+    -75.466,
+    37.937
+   ]
+  ]
+ },
+ "WJFthr 9": {
+  "airport": "LANCASTER",
+  "code": "WJF",
+  "first_record": "1945-01-01",
+  "lat": 34.7412,
+  "lon": -118.2125,
+  "name": "Lancaster Area",
+  "replaces": [
+   [
+    "03159 1",
+    -118.213,
+    34.741
+   ]
+  ]
+ },
+ "WMCthr 9": {
+  "airport": "WINNEMUCCA AIRPORT",
+  "code": "WMC",
+  "first_record": "1877-07-01",
+  "lat": 40.9018,
+  "lon": -117.8081,
+  "name": "Winnemucca Area",
+  "replaces": [
+   [
+    "24128 1",
+    -117.808,
+    40.902
+   ]
+  ]
+ },
+ "YKMthr 9": {
+  "airport": "YAKIMA AIRPORT",
+  "code": "YKM",
+  "first_record": "1946-09-06",
+  "lat": 46.564,
+  "lon": -120.5349,
+  "name": "Yakima Area",
+  "replaces": [
+   [
+    "24243 1",
+    -120.535,
+    46.564
+   ]
+  ]
+ },
+ "YNGthr 9": {
+  "airport": "YOUNGSTOWN-WARREN RGNL AP",
+  "code": "YNG",
+  "first_record": "1897-01-01",
+  "lat": 41.2548,
+  "lon": -80.6736,
+  "name": "Youngstown Area",
+  "replaces": [
+   [
+    "14852 1",
+    -80.674,
+    41.255
+   ]
+  ]
+ },
+ "YUMthr 9": {
+  "airport": "YUMA INTL AP",
+  "code": "YUM",
+  "first_record": "1878-02-09",
+  "lat": 32.6667,
+  "lon": -114.6,
+  "name": "Yuma Area",
+  "replaces": [
+   [
+    "23195 1",
+    -114.6,
+    32.667
+   ]
+  ]
+ },
+ "ZZVthr 9": {
+  "airport": "ZANESVILLE MUNICIPAL AP",
+  "code": "ZZV",
+  "first_record": "1895-06-01",
+  "lat": 39.9461,
+  "lon": -81.8932,
+  "name": "Zanesville Area",
+  "replaces": [
+   [
+    "93824 1",
+    -81.893,
+    39.946
+   ]
+  ]
+ }
+}

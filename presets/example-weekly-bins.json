@@ -1,0 +1,7 @@
+{
+  "name": "Example: weekly bins, Spectral",
+  "ramp": "Spectral",
+  "reverse": true,
+  "mode": "stepped",
+  "date_mode": "weekly"
+}
