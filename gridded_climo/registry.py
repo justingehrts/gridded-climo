@@ -36,7 +36,7 @@ class Style:
     custom_starts: str = ""  # date_mode == custom: "Oct 1, Oct 8, Oct 15, Nov 1" (bin start dates, season order)
     palette: list | None = None  # [[r,g,b,a], ...] imported palette, sampled by position across the bins
     bin_colors: dict | None = None  # {bin label: [r,g,b,a]} manual per-bin overrides (date bins)
-    legend_rows: list | None = None  # numeric custom legend: [[value, r,g,b,a], ...]; value = lower bound of its color band
+    legend_rows: list | None = None  # numeric custom legend: [[from, to, r,g,b,a], ...], see render/legend.py (old [value,r,g,b,a] rows also load)
     units_label: str = ""
 
 
