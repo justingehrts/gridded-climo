@@ -40,7 +40,12 @@ def parse_wctrp(data: bytes | str) -> tuple[list[Row], int]:
         textured += tex is not None and tex.text != "Default"
     if not rows:
         raise PaletteError("no contour entries found in this .wctrp file")
-    return normalize_legend(rows), textured
+    rows = normalize_legend(rows)
+    if rows and rows[-1][1] is not None and rows[-1][1] >= 999:       # MAX writes 999 for "no upper limit" (and -999 below)
+        rows[-1][1] = None
+    if rows and rows[0][0] is not None and rows[0][0] <= -999:
+        rows[0][0] = None
+    return rows, textured
 
 
 def parse_legend_csv(data: bytes | str) -> list[Row]:

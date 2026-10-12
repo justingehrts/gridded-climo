@@ -104,3 +104,51 @@ def test_ramp_catalog_keeps_every_name_the_metrics_and_presets_use():
     assert ramp_label("coolwarm") == "Cool-Warm" and ramp_label("viridis") == "Viridis" and ramp_label("Spectral") == "Spectral"
     labels = [lab for group in RAMP_CATEGORIES.values() for lab in group]
     assert len(labels) == len(set(labels)) == 17 and all(lab in RAMPS for lab in labels)
+
+
+# --- .wctrp export -------------------------------------------------------------------------------------------------
+from gridded_climo.render.palettes import parse_wctrp                     # noqa: E402
+from gridded_climo.render.wctrp import UNIT_IDS, fmt, wctrp_bytes         # noqa: E402
+
+MAX_SAMPLE = (
+    '<?xml version="1.0" encoding="UTF-8"?>\n<VQXML CN="classWxdContourPalette" VN="7.7.0720.0008"><contourSize>2</contourSize>\n'
+    "<unitContextId>2</unitContextId>\n<unitSetId>Display</unitSetId>\n"
+    '<contourElem0 CN="classWxdContourPaletteChild"><contourFrom>0.01</contourFrom>\n<contourTo>0.0958763</contourTo>\n'
+    "<paletteEntryAlpha>0</paletteEntryAlpha>\n<paletteEntryBlue>20</paletteEntryBlue>\n<paletteEntryGreen>255</paletteEntryGreen>\n"
+    "<paletteEntryRed>8</paletteEntryRed>\n"
+    '<textureFile CN="classWxFileMediaRef"><m_name>Default</m_name>\n<m_relativePath>Default</m_relativePath>\n<mediaRoot>0</mediaRoot>\n'
+    "<mediaType>0</mediaType>\n</textureFile>\n</contourElem0>\n"
+    '<contourElem1 CN="classWxdContourPaletteChild"><contourFrom>0.0958763</contourFrom>\n<contourTo>999</contourTo>\n'
+    "<paletteEntryAlpha>255</paletteEntryAlpha>\n<paletteEntryBlue>238</paletteEntryBlue>\n<paletteEntryGreen>104</paletteEntryGreen>\n"
+    "<paletteEntryRed>2</paletteEntryRed>\n"
+    '<textureFile CN="classWxFileMediaRef"><m_name>Default</m_name>\n<m_relativePath>Default</m_relativePath>\n<mediaRoot>0</mediaRoot>\n'
+    "<mediaType>0</mediaType>\n</textureFile>\n</contourElem1>\n</VQXML>\n"
+)
+
+
+def test_wctrp_export_matches_the_layout_of_a_real_max_file():
+    rows, _ = parse_wctrp(MAX_SAMPLE)
+    assert rows[-1][1] is None                                   # 999 means no upper limit
+    assert wctrp_bytes(rows, UNIT_IDS["Precipitation (inches)"]).decode() == MAX_SAMPLE
+
+
+def test_wctrp_number_format_and_element_order():
+    assert [fmt(v) for v in (20.0, -80.0, 0.0958763, 24.91414, 0.1 + 0.2, 1e-7, -0.0)] == ["20", "-80", "0.0958763", "24.91414", "0.3", "0.0000001", "0"]
+    rows = [[float(i), float(i + 1), i, 0, 0, 255] for i in range(12)]
+    tags = [t for t in __import__("re").findall(r"<contourElem(\d+) ", wctrp_bytes(rows).decode())]
+    assert tags == sorted(tags) and tags[:4] == ["0", "1", "10", "11"]               # lexicographic, like MAX
+    assert "<contourSize>12</contourSize>" in wctrp_bytes(rows).decode()
+
+
+def test_wctrp_gaps_become_transparent_bands_and_open_ends_use_sentinels():
+    out = wctrp_bytes([[None, 1, *RED], [3, 4, *GREEN], [4, None, *BLUE]], 11).decode()
+    back, _ = parse_wctrp(out)
+    assert back == [[None, 1.0, *RED], [1.0, 3.0, 0, 0, 0, 0], [3.0, 4.0, *GREEN], [4.0, None, *BLUE]]
+    assert "<contourFrom>-999</contourFrom>" in out and "<contourTo>999</contourTo>" in out and "<unitContextId>11</unitContextId>" in out
+    with pytest.raises(ValueError):
+        wctrp_bytes([])
+
+
+def test_wctrp_roundtrip_through_the_editor_rows():
+    rows = [[0, 0.5, 1, 2, 3, 255], [0.5, 2, 4, 5, 6, 128], [2, None, 7, 8, 9, 0]]
+    assert parse_wctrp(wctrp_bytes(rows))[0] == normalize_legend(rows)

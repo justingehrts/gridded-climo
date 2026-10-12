@@ -24,6 +24,7 @@ from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, MENU, NOHRSC_STA
 from gridded_climo.ui.preview import build_map, load_counties_geojson
 from gridded_climo.binning import MODE_LABELS, MODES
 from gridded_climo.registry import Style
+from gridded_climo.render.wctrp import UNIT_IDS, wctrp_bytes
 from gridded_climo.render import PaletteError, RAMPS, parse_legend_csv, parse_wctrp, ramp_label, style_from_json, style_to_json
 from gridded_climo.render.palettes import sample_colors
 from gridded_climo.ui.components import legend_editor, ramp_picker
@@ -506,6 +507,22 @@ if out:
                 st.session_state["legend_rows"] = edited
                 st.session_state["edit_colors_open"] = True     # the rerun below would otherwise fold the expander
                 st.rerun()
+            units = default_style.units_label
+            unit_names = list(UNIT_IDS) + ["Other…"]
+            guess = {"°F": "Temperature (°F)", "in": "Precipitation (inches)"}.get(units, "Precipitation (inches)")
+            wc1, wc2 = st.columns([3, 2], vertical_alignment="bottom")
+            unit_pick = wc1.selectbox("MAX unit for the .wctrp", unit_names, index=unit_names.index(guess), key=f"wctrp_unit_{units}",
+                                      help="Written into the file as MAX's unit id. Precipitation (inches) is 2 and Temperature (°F) is 11; "
+                                           "use Other… for another unit's id.")
+            unit_id = UNIT_IDS.get(unit_pick)
+            if unit_id is None:
+                unit_id = wc1.number_input("MAX unit id", 0, 999, 2, 1, key="wctrp_unit_other")
+            try:
+                wc2.download_button("⬇️ Download as .wctrp", wctrp_bytes(rows, unit_id), file_name=out.filename.rsplit(".", 1)[0] + ".wctrp",
+                                    mime="application/octet-stream", width="stretch",
+                                    help="A MAX color palette: one band per row, a gap becomes a transparent band, no upper limit is written as 999.")
+            except ValueError as e:
+                wc2.caption(str(e))
         else:
             st.caption("Choose a date grouping (weekly, thirds, halves or custom) to edit the color of each date bin.")
         if st.button("Reset colors"):

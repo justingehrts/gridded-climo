@@ -67,7 +67,8 @@ Pre-saved data (grid first/last dates, daily normals, per-station files) only co
 - **🎨 Edit colors** (below the map): edit R/G/B/A for each date bin, or, on numeric maps, a MAX-style color table: one row per band
   (From, To, color swatch with a color picker, Red/Green/Blue, Transparency), each color applying from its From up to its To. Leave the first
   From blank for no lower limit and the last To blank for no upper limit; values in no band are transparent. Select two rows and **Ramp RGB** (or
-  **Ramp RGB + Transparency**) to blend the rows between them, or **Generate bands** from a preset ramp. (Ported from geotiff-to-kmz.)
+  **Ramp RGB + Transparency**) to blend the rows between them, or **Generate bands** from a preset ramp. **Download as .wctrp** writes the table as a MAX palette (gaps become transparent bands, no upper limit is written as 999).
+  (Ported from geotiff-to-kmz.)
 - Styling re-renders the cached result instantly; it never re-fetches data.
 - **Map smoothing** (Options, station maps): stations are interpolated (nearest 8, distance^-3) and then blurred a little. Default 3 km keeps
   the map within about a day of each airport's own average; 0 matches every station exactly (spottier), and higher values give smoother,
