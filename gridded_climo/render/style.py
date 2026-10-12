@@ -124,7 +124,7 @@ def resolve(style: Style, tif: str | Path, ref: tuple[int, int] | None = None) -
     seed = None
     if style.mode == "stepped" and not style.palette:
         n = max(int(style.steps), 1)
-        ev = [float(v) for v in np.linspace(vmin, vmax, n + 1)]
+        ev = [float(f"{v:.6g}") for v in np.linspace(vmin, vmax, n + 1)]     # tidy numbers for the editor
         seed = [[ev[i], ev[i + 1] if i + 1 < n else None, *c] for i, c in enumerate(_ramp_colors(style, n))]
     if style.palette and style.mode == "stepped":     # imported palette recolors the automatic steps
         n = max(int(style.steps), 1)

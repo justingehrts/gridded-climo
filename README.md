@@ -61,10 +61,13 @@ Pre-saved data (grid first/last dates, daily normals, per-station files) only co
 - **Group dates into** (first/last-date maps): *Automatic* (default, equal color steps), *Weekly* (1st-6th, 7th-13th, 14th-20th, 21st-end),
   *Thirds* (early / mid / late month), *Halves* (1st-15th, 16th-end), or *Custom* (your own bin start dates, e.g. `Oct 1, Oct 8, Oct 15, Nov 1`).
   Each bin is one color and one legend entry; bins are calendar-aligned, so "first week of October" means the same thing every month.
-- **🎨 Style** (sidebar): color ramp + preview, reverse, stepped/smooth, number of steps, min/max, and import of a MAX `.wctrp` palette,
-  a CSV legend (`Value,R,G,B,Alpha`), or a JSON settings export. For date maps an imported palette supplies colors only (assigned by
+- **🎨 Style** (sidebar): color ramp (a dropdown that draws each ramp's gradient), reverse, stepped/smooth, number of steps, min/max, and import of a MAX `.wctrp` palette,
+  a CSV legend (`From,To,R,G,B,Alpha`, or the older `Value,R,G,B,Alpha`), or a JSON settings export. For date maps an imported palette supplies colors only (assigned by
   position across the bins); for numeric maps its values become the color-band thresholds.
-- **🎨 Edit colors** (below the map): edit R/G/B/A for each date bin, or the Value/R/G/B/A rows of a custom numeric legend.
+- **🎨 Edit colors** (below the map): edit R/G/B/A for each date bin, or, on numeric maps, a MAX-style color table: one row per band
+  (From, To, color swatch with a color picker, Red/Green/Blue, Transparency), each color applying from its From up to its To. Leave the first
+  From blank for no lower limit and the last To blank for no upper limit; values in no band are transparent. Select two rows and **Ramp RGB** (or
+  **Ramp RGB + Transparency**) to blend the rows between them, or **Generate bands** from a preset ramp. (Ported from geotiff-to-kmz.)
 - Styling re-renders the cached result instantly; it never re-fetches data.
 - **Map smoothing** (Options, station maps): stations are interpolated (nearest 8, distance^-3) and then blurred a little. Default 3 km keeps
   the map within about a day of each airport's own average; 0 matches every station exactly (spottier), and higher values give smoother,

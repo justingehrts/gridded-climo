@@ -8,6 +8,8 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
+
 from ..config import Settings
 from ..grid import Grid
 from ..precomputed import DATA_DIR
@@ -77,9 +79,11 @@ def render_computed(c: Computed, style: Style | None = None) -> Output:
                             label_fmt=label_formatter(c.label_kind, c.ref), ref=c.ref)
         kmz = overlay_to_kmz(ov, Path(td) / "out.kmz").read_bytes()
     r = ov.res
+    finite = c.grid.data[np.isfinite(c.grid.data)]
+    lo, hi = (float(finite.min()), float(finite.max())) if finite.size else (None, None)
     bins = list(zip(r.labels, r.colors)) if r is not None and r.labels else None
     return Output(ov.png, ov.legend_png, (ov.south, ov.west, ov.north, ov.east), kmz, c.name, c.note, c.filename, c.points,
-                  bins, None, None, getattr(r, "seed_rows", None))
+                  bins, lo, hi, getattr(r, "seed_rows", None))
 
 
 def generate(q: Query, bbox, cache_dir, data_dir=DATA_DIR, allow_live: bool = True, log=print, style: Style | None = None) -> Output:

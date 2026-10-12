@@ -91,3 +91,16 @@ def test_resolve_smooth_uses_each_rows_lower_bound(tmp_path):
     tif = _tif(tmp_path, [0.0, 10.0])
     r = resolve(Style(legend_rows=[[None, 2, *RED], [2, None, *BLUE]], mode="smooth"), tif)
     assert r.smooth and [row[0] for row in r.table] == [0.0, 2.0]                # open bottom starts at the data minimum
+
+
+def test_ramp_catalog_keeps_every_name_the_metrics_and_presets_use():
+    import yaml
+    from pathlib import Path
+    import gridded_climo
+    from gridded_climo.render import RAMP_CATEGORIES, RAMPS, ramp_label
+    cfg = yaml.safe_load((Path(gridded_climo.__file__).parent / "metrics.yaml").read_text())
+    used = {m["style"]["ramp"] for m in (cfg["metrics"] if isinstance(cfg, dict) and "metrics" in cfg else cfg.values()) if isinstance(m, dict) and "style" in m}
+    assert used and used <= set(RAMPS)
+    assert ramp_label("coolwarm") == "Cool-Warm" and ramp_label("viridis") == "Viridis" and ramp_label("Spectral") == "Spectral"
+    labels = [lab for group in RAMP_CATEGORIES.values() for lab in group]
+    assert len(labels) == len(set(labels)) == 17 and all(lab in RAMPS for lab in labels)
