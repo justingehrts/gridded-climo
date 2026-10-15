@@ -9,7 +9,8 @@ from .precomputed import DATA_DIR, has_occurrence, shipped_years
 from .regions import PRESAVED_REGION, max_live_days, presaved_bbox
 from .registry import Metric, Style
 
-WHENS = ("first", "last", "range_specific", "range_normal")
+WHENS = ("first", "last", "range_specific", "range_normal", "sun")
+SUN_ELEMENTS = {"sunrise": "Sunrise", "sunset": "Sunset", "daylen": "Length of day"}
 DERIVED_ELEMENTS = ("avgt", "hdd", "cdd", "gdd")
 RANGE_ELEMENTS = {"maxt": "High temperature", "mint": "Low temperature", "avgt": "Average temperature", "pcpn": "Precipitation",
                   "snow": "Snowfall", "hdd": "Heating degree days (base 65)", "cdd": "Cooling degree days (base 65)",
@@ -91,6 +92,17 @@ def unsupported_reason(q: Query, bbox=None) -> str | None:
     bbox = tuple(bbox) if bbox else PRESAVED_REGION
     if q.when not in WHENS:
         return f"unknown 'when': {q.when}"
+    if q.when == "sun":
+        if q.element not in SUN_ELEMENTS:
+            return f"unsupported element '{q.element}'"
+        if not q.start:
+            return "Choose a date."
+        if q.end is not None and q.end <= q.start:
+            return "The end date must be after the start date."
+        from .tz import covered
+        if not covered(bbox):
+            return "Sun maps are available for the United States and nearby areas only (local time zones are needed)."
+        return None
     if q.when in ("first", "last"):
         method = "station" if q.element == "snow" else q.method
         if method not in ("grid", "station"):
@@ -181,6 +193,11 @@ def unsupported_reason(q: Query, bbox=None) -> str | None:
 
 
 def _style(q: Query) -> Style:
+    if q.when == "sun":
+        if q.end is not None:
+            return Style(ramp="coolwarm", mode="stepped", steps=6, units_label="min")
+        return Style(ramp="YlOrBr" if q.element == "daylen" else "Spectral", reverse=q.element != "daylen", mode="stepped", steps=6,
+                     units_label="time" if q.element != "daylen" else "hours:min")
     if q.when in ("first", "last"):
         # Warmer = red. Later first-<=X and earlier last-<=X are warmer; the reverse holds for >=X.
         return Style(ramp="RdYlBu", reverse=(q.when == "first") == (q.op == "le"), mode="stepped", steps=6, units_label="date")
@@ -207,6 +224,12 @@ def _stat_prefix(q: Query) -> str:
 
 
 def describe(q: Query) -> str:
+    if q.when == "sun":
+        name = SUN_ELEMENTS[q.element]
+        d = lambda x: f"{x:%b} {x.day}, {x.year}"
+        if q.end is None:
+            return f"{name} on {d(q.start)}" if q.element != "daylen" else f"Length of Day on {d(q.start)}"
+        return f"Change in {name if q.element != 'daylen' else 'Day Length'}, {d(q.start)} to {d(q.end)}"
     el = {"mint": "Low", "maxt": "High", "pcpn": "Precipitation", "snow": "Snowfall", "avgt": "Average Temperature",
           "hdd": "Heating Degree Days", "cdd": "Cooling Degree Days", "gdd": "Growing Degree Days"}[q.element]
     if q.when in ("first", "last"):
@@ -241,6 +264,9 @@ def metric_from_query(q: Query) -> Metric:
             season=q.season or default_season(q.op, q.when, q.element),
             cross_year={"stat": q.stat, **({"p": q.percentile} if q.stat == "percentile" else {})}, style=style,
         ).validate()
+    if q.when == "sun":
+        return Metric(name=f"sun_{q.element}{'_change' if q.end else ''}", kind="sun", source="astro", element=q.element, title=title,
+                      change=q.end is not None, style=style).validate()
     if q.element == "snow":
         return Metric(name="storm_total_snow", kind="storm", source="nohrsc", element="snow", title=title, style=style).validate()
     normal = "average" if q.when == "range_normal" else ("departure" if q.departure else None)

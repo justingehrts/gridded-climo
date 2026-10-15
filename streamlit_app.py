@@ -19,7 +19,7 @@ from PIL import Image
 from streamlit_folium import st_folium
 
 from gridded_climo.config import DEFAULT_BBOX, DEFAULT_NORMAL_PERIOD
-from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, MENU, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, RANGE_ELEMENTS, RANGE_REDUCES, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
+from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, MENU, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, RANGE_ELEMENTS, RANGE_REDUCES, SUN_ELEMENTS, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
 from gridded_climo.ui.preview import build_map, load_counties_geojson
 from gridded_climo.binning import MODE_LABELS, MODES
 from gridded_climo.registry import Style
@@ -119,7 +119,9 @@ with st.sidebar:
                    "and grid first/last dates and departure maps aren't available here.")
 
     st.subheader("1 · When")
-    when_label = st.radio("When", ["Average first date", "Average last date", "Custom range"], label_visibility="collapsed")
+    when_label = st.radio("When", ["Average first date", "Average last date", "Custom range", "Sun (sunrise, sunset, day length)"],
+                          label_visibility="collapsed")
+    is_sun = when_label.startswith("Sun")
     range_mode = None
     if when_label == "Custom range":
         range_mode = st.radio("Range type", ["Specific dates", "Averaged over normal period"],
@@ -127,7 +129,15 @@ with st.sidebar:
 
     st.subheader("2 · What")
     q_kwargs: dict = {}
-    if when_label != "Custom range":
+    sun_change = False
+    if is_sun:
+        sun_labels = SUN_ELEMENTS
+        chosen_sun = st.selectbox("Variable", list(sun_labels.values()), key="sun_var")
+        q_kwargs.update(when="sun", element=next(k for k, v in sun_labels.items() if v == chosen_sun))
+        sun_change = st.radio("Show", ["Value on one date", "Change between two dates"], key="sun_mode",
+                              help="Times are local clock time on each date (daylight saving included), by the time zone at each point; "
+                                   "the map steps where a zone border is crossed.") == "Change between two dates"
+    elif when_label != "Custom range":
         var = st.selectbox("Variable", ["Temperature at or below", "Temperature at or above", "Snowfall"])
         if var == "Snowfall":
             amount = st.number_input("Daily snowfall at least (in)", 0.1, 30.0, 1.0, 0.1, format="%.1f",
@@ -183,7 +193,12 @@ with st.sidebar:
 
     st.subheader("3 · Dates")
     date_mode, custom_starts = "auto", ""
-    if when_label != "Custom range":
+    if is_sun:
+        c1, c2 = st.columns(2) if sun_change else (st.container(), None)
+        q_kwargs["start"] = c1.date_input("Start date" if sun_change else "Date", TODAY, min_value=dt.date(1900, 1, 1), max_value=dt.date(2100, 12, 31), key="sun_d1")
+        if sun_change:
+            q_kwargs["end"] = c2.date_input("End date", TODAY + dt.timedelta(days=30), min_value=dt.date(1900, 1, 1), max_value=dt.date(2100, 12, 31), key="sun_d2")
+    elif when_label != "Custom range":
         st.caption("Uses every year in the years range (see Options).")
         date_mode = st.radio("Group dates into", MODES, format_func=MODE_LABELS.get, key="style_date_mode",
                              help="Automatic: equal color steps across the data. Weekly: 1st–6th, 7th–13th, 14th–20th, 21st–end of "
@@ -222,73 +237,75 @@ with st.sidebar:
         except ValueError:
             q_kwargs["start"] = q_kwargs["end"] = None
 
-    with st.expander("Options"):
-        n0, n1 = st.columns(2)
-        label_y = "Years included: from" if when_label != "Custom range" else "Normal period: from"
-        if when_label != "Custom range":
-            ymax = last_complete_year(default_season(q_kwargs.get("op", "ge"), q_kwargs["when"], q_kwargs["element"]))
-        else:
-            ymax = last_complete_year({"start": [1, 1], "end": [12, 31]})
-        years_error = None
-        if when_label == "Custom range":      # daily normals are pre-saved for 1991-2020 only, so this stays a plain number
-            start_year = int(n0.number_input(label_y, STATION_FIRST_YEAR, ymax - 1, DEFAULT_NORMAL_PERIOD[0]))
-        else:
-            raw_start = n0.text_input(label_y, value=str(DEFAULT_NORMAL_PERIOD[0]), key="years_from",
-                                      help="A year (like 1890), or POR for the start of the period of record in the chosen area.")
-            start_year, por_info, parsed = DEFAULT_NORMAL_PERIOD[0], None, None
-            by_grid = q_kwargs.get("method") == "grid"
-            try:
-                parsed = parse_start(raw_start)
-                if parsed == "por":
-                    if by_grid:
-                        start_year = (shipped_years().get("grid") or (DEFAULT_NORMAL_PERIOD[0],))[0]   # the grid's saved data begins here
+    years_error = None
+    if not is_sun:
+        with st.expander("Options"):
+            n0, n1 = st.columns(2)
+            label_y = "Years included: from" if when_label != "Custom range" else "Normal period: from"
+            if when_label != "Custom range":
+                ymax = last_complete_year(default_season(q_kwargs.get("op", "ge"), q_kwargs["when"], q_kwargs["element"]))
+            else:
+                ymax = last_complete_year({"start": [1, 1], "end": [12, 31]})
+            years_error = None
+            if when_label == "Custom range":      # daily normals are pre-saved for 1991-2020 only, so this stays a plain number
+                start_year = int(n0.number_input(label_y, STATION_FIRST_YEAR, ymax - 1, DEFAULT_NORMAL_PERIOD[0]))
+            else:
+                raw_start = n0.text_input(label_y, value=str(DEFAULT_NORMAL_PERIOD[0]), key="years_from",
+                                          help="A year (like 1890), or POR for the start of the period of record in the chosen area.")
+                start_year, por_info, parsed = DEFAULT_NORMAL_PERIOD[0], None, None
+                by_grid = q_kwargs.get("method") == "grid"
+                try:
+                    parsed = parse_start(raw_start)
+                    if parsed == "por":
+                        if by_grid:
+                            start_year = (shipped_years().get("grid") or (DEFAULT_NORMAL_PERIOD[0],))[0]   # the grid's saved data begins here
+                        else:
+                            por_info = cached_por(tuple(bbox), q_kwargs["element"])
+                            start_year = por_info.first_year
                     else:
-                        por_info = cached_por(tuple(bbox), q_kwargs["element"])
-                        start_year = por_info.first_year
-                else:
-                    start_year = parsed
-                    if not by_grid and start_year < 1950:
-                        por_info = cached_por(tuple(bbox), q_kwargs["element"])
-                        if start_year < por_info.first_year:
-                            years_error = f"Records in this area begin in {por_info.first_year}. Use POR, or a year from {por_info.first_year} on."
-                            por_info = None
-            except PorError as e:
-                years_error = str(e)
-            except Exception as e:     # ACIS unreachable, etc.: the typed-year path doesn't need the lookup
-                years_error = f"Couldn't look up the period of record ({type(e).__name__}). Type a year instead."
-        end_year = int(n1.number_input("to", STATION_FIRST_YEAR + 1, ymax, min(DEFAULT_NORMAL_PERIOD[1], ymax)))
-        if years_error is None and start_year >= end_year:
-            years_error = f"The start year ({start_year}) must be before the end year ({end_year})."
-        normal = (start_year, end_year)
-        if when_label != "Custom range":
-            if por_info is not None:
-                st.caption(f"📅 Using {start_year}. " + por_info.describe({"mint": "low temperature", "maxt": "high temperature", "snow": "snowfall"}.get(q_kwargs["element"], "this variable")))
-            elif parsed == "por" and by_grid:
-                st.caption(f"📅 Using {start_year}, where the saved grid data begins.")
-            st.caption("For a record (earliest/latest), start at POR. Stations go back as far as the area's records (most reliable from ~1895); the Grid method has 1991 onward.")
-            if start_year < SPARSE_BEFORE:
-                st.warning(f"Before ~{SPARSE_BEFORE} only a handful of stations report in most areas, so these maps can be mostly blank or rest on very few stations.")
-        q_kwargs["normal_period"] = (int(normal[0]), int(normal[1]))
-        if when_label != "Custom range":
-            stat_label = st.selectbox("Statistic across years", ["Average date", "Median date", "Earliest on record", "Latest on record", "Percentile"])
-            stat = {"Average date": "mean", "Median date": "median", "Earliest on record": "min", "Latest on record": "max", "Percentile": "percentile"}[stat_label]
-            q_kwargs["stat"] = stat
-            if stat == "percentile":
-                q_kwargs["percentile"] = st.slider("Percentile", 1, 99, 10)
-            if stat in ("min", "max"):
-                st.caption("Each station's single earliest/latest date in the chosen years; its record year shows in the map tooltip.")
-        if when_label != "Custom range" and (q_kwargs.get("method") == "station" or q_kwargs.get("element") == "snow"):
-            q_kwargs["smooth_km"] = float(st.slider(
-                "Map smoothing (km)", 0, 15, 3,
-                help="Stations are interpolated, then lightly blurred. 0 = the map matches each station's own value exactly (but looks "
-                     "spottier); higher = smoother contours that drift from individual stations (12 km can be ~5 days off at a single airport)."))
+                        start_year = parsed
+                        if not by_grid and start_year < 1950:
+                            por_info = cached_por(tuple(bbox), q_kwargs["element"])
+                            if start_year < por_info.first_year:
+                                years_error = f"Records in this area begin in {por_info.first_year}. Use POR, or a year from {por_info.first_year} on."
+                                por_info = None
+                except PorError as e:
+                    years_error = str(e)
+                except Exception as e:     # ACIS unreachable, etc.: the typed-year path doesn't need the lookup
+                    years_error = f"Couldn't look up the period of record ({type(e).__name__}). Type a year instead."
+            end_year = int(n1.number_input("to", STATION_FIRST_YEAR + 1, ymax, min(DEFAULT_NORMAL_PERIOD[1], ymax)))
+            if years_error is None and start_year >= end_year:
+                years_error = f"The start year ({start_year}) must be before the end year ({end_year})."
+            normal = (start_year, end_year)
+            if when_label != "Custom range":
+                if por_info is not None:
+                    st.caption(f"📅 Using {start_year}. " + por_info.describe({"mint": "low temperature", "maxt": "high temperature", "snow": "snowfall"}.get(q_kwargs["element"], "this variable")))
+                elif parsed == "por" and by_grid:
+                    st.caption(f"📅 Using {start_year}, where the saved grid data begins.")
+                st.caption("For a record (earliest/latest), start at POR. Stations go back as far as the area's records (most reliable from ~1895); the Grid method has 1991 onward.")
+                if start_year < SPARSE_BEFORE:
+                    st.warning(f"Before ~{SPARSE_BEFORE} only a handful of stations report in most areas, so these maps can be mostly blank or rest on very few stations.")
+            q_kwargs["normal_period"] = (int(normal[0]), int(normal[1]))
+            if when_label != "Custom range":
+                stat_label = st.selectbox("Statistic across years", ["Average date", "Median date", "Earliest on record", "Latest on record", "Percentile"])
+                stat = {"Average date": "mean", "Median date": "median", "Earliest on record": "min", "Latest on record": "max", "Percentile": "percentile"}[stat_label]
+                q_kwargs["stat"] = stat
+                if stat == "percentile":
+                    q_kwargs["percentile"] = st.slider("Percentile", 1, 99, 10)
+                if stat in ("min", "max"):
+                    st.caption("Each station's single earliest/latest date in the chosen years; its record year shows in the map tooltip.")
+            if when_label != "Custom range" and (q_kwargs.get("method") == "station" or q_kwargs.get("element") == "snow"):
+                q_kwargs["smooth_km"] = float(st.slider(
+                    "Map smoothing (km)", 0, 15, 3,
+                    help="Stations are interpolated, then lightly blurred. 0 = the map matches each station's own value exactly (but looks "
+                         "spottier); higher = smoother contours that drift from individual stations (12 km can be ~5 days off at a single airport)."))
 
 q = Query(**{k: v for k, v in q_kwargs.items() if k in Query.__dataclass_fields__})
 if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
     reason = "Region: west must be less than east and south less than north."
 else:
     reason = unsupported_reason(q, bbox) if q.start is not None or q.when in ("first", "last") or q.element == "snow" else "Choose valid dates."
-    if q.when != "first" and q.when != "last" and (q.start is None or q.end is None):
+    if q.when not in ("first", "last", "sun") and (q.start is None or q.end is None):
         reason = "Choose valid dates."
 
 # ---------------------------------------------------------------- main panel

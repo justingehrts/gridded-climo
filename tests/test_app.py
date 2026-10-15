@@ -394,3 +394,14 @@ def test_count_days_summary_shows_threshold_field():
     assert not at.exception
     assert any(n.label.startswith("Threshold") for n in at.number_input)
     assert not any(c.label == "Show departure from normal" for c in at.checkbox)
+
+
+def test_sun_map_generates_with_clock_legend_and_change_mode():
+    at = fresh()
+    at.radio[0].set_value("Sun (sunrise, sunset, day length)").run()
+    assert not at.exception
+    assert not any(t.label == "Years included: from" for t in at.text_input)          # no years block for sun maps
+    assert "Sunrise on" in gen(at)[0]
+    next(r for r in at.radio if r.label == "Show").set_value("Change between two dates").run()
+    assert not at.exception
+    assert any(d.label == "End date" for d in at.date_input)

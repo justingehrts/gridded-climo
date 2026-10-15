@@ -51,6 +51,9 @@ def label_formatter(kind: str | None, ref: tuple[int, int] | None):
         return lambda v: (base + dt.timedelta(days=int(round(v)))).strftime("%b %-d")
     if kind == "inches":
         return lambda v: f'{v:g}"'
+    if kind in ("clock", "duration", "delta"):
+        from ..sun import LABEL_KINDS
+        return LABEL_KINDS[kind]
     return None
 
 
@@ -62,7 +65,7 @@ def compute(q: Query, bbox, cache_dir: str | Path, data_dir=DATA_DIR, allow_live
         fmt = label_formatter("date" if res.ref else "inches", res.ref) or (lambda v: f"{v:g}")
         points = {"lon": res.points["lon"].tolist(), "lat": res.points["lat"].tolist(),
                   "label": [fmt(v) for v in res.points["value"]], "name": [str(n) for n in res.points["name"]]}
-    kind = "date" if res.ref else ("inches" if res.style.units_label == "in" else None)
+    kind = res.label_kind or ("date" if res.ref else ("inches" if res.style.units_label == "in" else None))
     safe = "".join(c if c.isalnum() else "_" for c in describe(q)).strip("_").lower()
     return Computed(res.grid, res.name, res.style, res.ref, kind, res.note, points, f"{safe}.kmz")
 

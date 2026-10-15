@@ -90,3 +90,12 @@ cooling (base 65) / growing (base 50) degree days. Summaries: average, total, ma
 meeting a threshold; any other summary can also be limited to days at/above or at/below a threshold (e.g. total of highs ≥ 80°F).
 Average temperature and degree days are derived from the daily max/min grids. Thresholded summaries, day counts and the derived variables
 are specific-dates only (the shipped daily normals are averages, so there is no normal-period average or departure for them).
+
+## Sun data
+
+**When → Sun** maps sunrise, sunset or length of day on one date, or the change in each between two dates. Values are astronomical
+(NOAA/Meeus solar position, upper limb with standard refraction; within about a minute of other calculators) on a 0.05° grid, in **local clock
+time**: each point uses its own time zone (`data/tz/tzgrid.npz`, built once by `python -m gridded_climo.tz_build` with `timezonefinder`)
+and that date's daylight-saving offset, so the map steps by an hour across a zone border, and a range that spans a daylight-saving change
+includes the one-hour clock jump (the map says so). Day length has no clock component. No ACIS/NOHRSC call is needed, so any date and any
+area in the US and nearby works instantly.

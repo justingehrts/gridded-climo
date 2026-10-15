@@ -27,6 +27,7 @@ class Result:
     note: str = ""
     points: dict | None = None  # station markers for the preview (station method)
     ref: tuple[int, int] | None = None  # (month, day) of offset 0 for first/last-date maps (enables date bins)
+    label_kind: str | None = None       # "clock" | "duration" | "delta" for sun maps (how legend numbers are written)
 
 
 def _to_date(d) -> dt.date:
@@ -66,6 +67,19 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
             eff = (presaved_bbox(tuple(st.bbox)) or st.bbox) if metric.normal == "departure" else st.bbox   # normals exist for the pre-saved region only
             grid = period_summary(metric, client, eff, s, e, st.normal_period, data_dir, log)
             name += f" ({s} to {e})" + (f", vs {st.normal_period[0]}-{st.normal_period[1]} normal" if metric.normal else "")
+    elif metric.kind == "sun":
+        if not start:
+            raise ValueError("sun maps need a date")
+        from .sun import LABEL_KINDS, sun_grid, tidy_style
+        s0, e0 = _to_date(start), _to_date(end) if (metric.change and end) else None
+        grid, info = sun_grid(metric.element, st.bbox, s0, e0)
+        kind = "delta" if metric.change else ("duration" if metric.element == "daylen" else "clock")
+        label_fmt = LABEL_KINDS[kind]
+        style = tidy_style(metric.style, grid.data, symmetric=False)
+        note = "Astronomical sunrise/sunset (upper limb, standard refraction), local clock time"
+        if info["dst_shift"]:
+            note += f"; the range includes a daylight-saving clock change, so sunrise/sunset changes include a {info['dst_shift'] / 60:g}-hour jump"
+        return Result(grid, name, style, label_fmt, metric.name, note, None, None, kind)
     elif metric.kind == "storm":
         if not (start and end):
             raise ValueError("storm metrics need a start and end time")
