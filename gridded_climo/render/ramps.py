@@ -6,12 +6,24 @@ import numpy as np
 
 from ..registry import Style
 
-RAMPS = {
-    "NWS Spectral": "nipy_spectral", "RdYlBu": "RdYlBu", "YlOrRd": "YlOrRd", "Blues": "Blues",
-    "Greens": "Greens", "Magma": "magma", "Inferno": "inferno", "Cividis": "cividis",
-    "Terrain": "terrain", "Cool-Warm": "coolwarm", "coolwarm": "coolwarm", "Jet": "jet",
-    "Plasma": "plasma", "Viridis": "viridis", "Spectral": "Spectral", "YlGnBu": "YlGnBu", "Purples": "Purples",
+# Grouped the way matplotlib's own colormap reference groups them: Diverging ramps have a neutral midpoint (right for data
+# that crosses a baseline, e.g. departures), Sequential ramps only increase, Miscellaneous is everything else.
+RAMP_CATEGORIES = {
+    "Diverging": {"RdYlBu": "RdYlBu", "Cool-Warm": "coolwarm", "Spectral": "Spectral", "BrBG": "BrBG"},
+    "Perceptually Uniform Sequential": {"Viridis": "viridis", "Plasma": "plasma", "Inferno": "inferno", "Magma": "magma", "Cividis": "cividis"},
+    "Sequential": {"Blues": "Blues", "Greens": "Greens", "Purples": "Purples", "YlOrRd": "YlOrRd", "YlGnBu": "YlGnBu"},
+    "Miscellaneous": {"NWS Spectral": "nipy_spectral", "Terrain": "terrain", "Jet": "jet"},
 }
+# label -> matplotlib name, for every ramp. "coolwarm" is kept as a second name for Cool-Warm because metrics.yaml and saved
+# presets use it.
+RAMPS = {**{label: name for group in RAMP_CATEGORIES.values() for label, name in group.items()}, "coolwarm": "coolwarm"}
+
+
+def ramp_label(name: str) -> str:
+    """The dropdown label for a ramp given by label or matplotlib name (e.g. "coolwarm" -> "Cool-Warm")."""
+    if name in RAMPS and name != "coolwarm":
+        return name
+    return next((label for group in RAMP_CATEGORIES.values() for label, n in group.items() if n == RAMPS.get(name, name)), name)
 
 
 def get_cmap(style: Style):

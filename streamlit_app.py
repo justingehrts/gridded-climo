@@ -5,6 +5,7 @@ import datetime as dt
 import io
 import os
 import tempfile
+import zlib
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -23,8 +24,10 @@ from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, MENU, NOHRSC_STA
 from gridded_climo.ui.preview import build_map, load_counties_geojson
 from gridded_climo.binning import MODE_LABELS, MODES
 from gridded_climo.registry import Style
-from gridded_climo.render import PaletteError, RAMPS, parse_legend_csv, parse_wctrp, style_from_json, style_to_json
+from gridded_climo.render.wctrp import UNIT_IDS, wctrp_bytes
+from gridded_climo.render import PaletteError, RAMPS, parse_legend_csv, parse_wctrp, ramp_label, style_from_json, style_to_json
 from gridded_climo.render.palettes import sample_colors
+from gridded_climo.ui.components import legend_editor, ramp_picker
 from gridded_climo.ui.service import compute, render_computed
 from gridded_climo.acis import ACISClient
 from gridded_climo.cache import Cache
@@ -75,20 +78,34 @@ def cached_por(bbox, element: str):
 
 
 @st.cache_data(show_spinner=False)
-def ramp_strip(name: str, reverse: bool) -> Image.Image:
-    cmap = mpl.colormaps[RAMPS.get(name, name) + ("_r" if reverse else "")]
-    arr = (cmap(np.linspace(0, 1, 256))[:, :3] * 255).astype("uint8")[None, :, :].repeat(14, axis=0)
-    return Image.fromarray(arr)
-
-
-@st.cache_data(show_spinner=False)
 def counties():
     return load_counties_geojson()
 
 
 # Imported settings are applied before any widget exists in this run (Streamlit forbids changing a widget after creation).
+
+
+def set_legend_rows(rows):
+    """Replace the custom legend from Python (an import, Reset, a new map). The version bump tells the band editor to drop
+    its own copy of the table and show this one."""
+    if rows:
+        st.session_state["legend_rows"] = rows
+    else:
+        st.session_state.pop("legend_rows", None)
+    st.session_state["legend_version"] = st.session_state.get("legend_version", 0) + 1
+
+
+def forget_ramp_pick():
+    """Make the ramp dropdown forget its own last pick, so a ramp set from Python (a preset, Reset) isn't overridden."""
+    st.session_state["ramp_epoch"] = st.session_state.get("ramp_epoch", 0) + 1
+
+
 if "_pending" in st.session_state:
-    st.session_state.update(st.session_state.pop("_pending"))
+    pending = st.session_state.pop("_pending")
+    st.session_state.update(pending)
+    if "legend_rows" in pending:
+        set_legend_rows(pending["legend_rows"])
+    forget_ramp_pick()
 
 # ---------------------------------------------------------------- selectors
 years_error = None      # set by the Options panel when the years can't be used; shown in the main panel and disables Generate
@@ -317,8 +334,9 @@ go = st.sidebar.button("Generate map", type="primary", disabled=bool(reason), wi
 if go:
     key = (q, tuple(bbox))
     if st.session_state.get("active") != key:   # a new map starts from clean styling
-        for k in ("bin_colors", "palette", "legend_rows"):
+        for k in ("bin_colors", "palette"):
             st.session_state.pop(k, None)
+        set_legend_rows(None)
     with st.status("Building map…", expanded=True) as status:
         try:
             st.write("Fetching / reading data…")
@@ -357,16 +375,28 @@ with st.sidebar.expander("🎨 Style"):
             else:
                 rows = parse_wctrp(data)[0] if up.name.lower().endswith(".wctrp") else parse_legend_csv(data)
                 if is_date_map:   # dates aren't palette values, so only the colors carry over (by position across the bins)
-                    st.session_state["palette"] = [r[1:5] for r in rows]
+                    st.session_state["palette"] = [r[2:6] for r in rows]
                 else:
-                    st.session_state["legend_rows"] = rows
+                    set_legend_rows(rows)
             st.rerun()
         except (PaletteError, ValueError) as e:
             st.error(str(e))
-    ramp_choice = st.selectbox("Color ramp", ["Map default"] + sorted(RAMPS), key="style_ramp")
+    # The dropdown shows the ramp exactly as it will be applied, so it reads the other style widgets' current values
+    # (Streamlit has already updated them for this run, even though they are created below).
+    explicit_ramp = st.session_state.get("style_ramp")
+    flip = st.session_state.get("style_flip", False)
+    mode_now = st.session_state.get("style_mode", "Map default")
+    shown_stepped = default_style.mode == "stepped" if mode_now == "Map default" else mode_now == "Stepped"
+    picked = ramp_picker(
+        "Color ramp", key=f"ramp_picker_{st.session_state.get('ramp_epoch', 0)}",
+        selected=ramp_label(explicit_ramp or default_style.ramp),
+        mode="Stepped" if shown_stepped else "Smooth Gradient", steps=st.session_state.get("style_steps", default_style.steps),
+        reverse=flip if explicit_ramp else (default_style.reverse != flip),
+    )
+    if picked:        # rerun so the dropdown (already drawn this run) and the rest of the page see the new ramp
+        st.session_state["style_ramp"] = picked
+        st.rerun()
     flip = st.checkbox("Reverse colors", key="style_flip")
-    shown = default_style.ramp if ramp_choice == "Map default" else ramp_choice
-    st.image(ramp_strip(shown, (flip if ramp_choice != "Map default" else (default_style.reverse != flip))), width="stretch")
     mode_choice = st.radio("Shading", ["Map default", "Stepped", "Smooth"], horizontal=True, key="style_mode")
     steps = st.slider("Number of steps (automatic grouping)", 3, 20, int(default_style.steps), key="style_steps")
     if not is_date_map:
@@ -377,12 +407,14 @@ with st.sidebar.expander("🎨 Style"):
         vmin = vmax = None
     if st.button("Reset all style choices"):
         for k in ("style_ramp", "style_flip", "style_mode", "style_steps", "style_vmin", "style_vmax", "style_date_mode",
-                  "palette", "bin_colors", "legend_rows", "_imported"):
+                  "palette", "bin_colors", "_imported"):
             st.session_state.pop(k, None)
+        set_legend_rows(None)
+        forget_ramp_pick()
         st.rerun()
 
 style = build_style(
-    default_style, ramp=None if ramp_choice == "Map default" else ramp_choice, flip=flip,
+    default_style, ramp=explicit_ramp or None, flip=flip,
     mode=None if mode_choice == "Map default" else mode_choice.lower(), steps=steps if steps != default_style.steps else None,
     vmin=vmin, vmax=vmax, date_mode=date_mode if is_date_map else "auto", custom_starts=custom_starts,
     palette=st.session_state.get("palette"), bin_colors=st.session_state.get("bin_colors"),
@@ -426,7 +458,7 @@ if out:
     if out.legend_png:
         st.image(out.legend_png, caption="Legend (also included in the KMZ)")
 
-    with st.expander("🎨 Edit colors"):
+    with st.expander("🎨 Edit colors", expanded=st.session_state.get("edit_colors_open", False)):
         if out.bins and style.date_mode != "auto":      # one editable color per date bin
             df = pd.DataFrame([{"Bin": lab, "R": c[0], "G": c[1], "B": c[2], "A": c[3]} for lab, c in out.bins])
             with st.form("bin_color_form"):
@@ -442,23 +474,78 @@ if out:
                         new[lab] = cur
                 st.session_state["bin_colors"] = new
                 st.rerun()
-        elif not is_date_map and (style.legend_rows or out.seed_rows):    # numeric maps: value = lower bound of its band
+        elif not is_date_map and (style.legend_rows or out.seed_rows):    # numeric maps: bands "from this value up to To"
             rows = style.legend_rows or out.seed_rows
-            df = pd.DataFrame([{"Value": r[0], "R": r[1], "G": r[2], "B": r[3], "A": r[4] if len(r) > 4 else 255} for r in rows])
-            with st.form("legend_form"):
-                edited = st.data_editor(df, num_rows="dynamic", hide_index=True, width="stretch", key="legend_editor")
-                apply_leg = st.form_submit_button("Apply as custom legend")
-            st.caption("Value = the lower bound of that color band, in the map's units. A = opacity (0 = transparent).")
-            if apply_leg:
-                clean = edited.dropna(subset=["Value"]).sort_values("Value")
-                st.session_state["legend_rows"] = [[float(r.Value), int(r.R), int(r.G), int(r.B), int(r.A if r.A == r.A else 255)]
-                                                   for r in clean.itertuples()]
+            lo, hi = out.data_min, out.data_max
+            with st.expander("🎨 Generate bands from a preset ramp"):
+                gcols = st.columns([3, 1])
+                with gcols[0]:
+                    gen_pick = ramp_picker(
+                        "Ramp", key="gen_ramp", selected=st.session_state.get("gen_ramp_label", "RdYlBu"),
+                        mode="Smooth Gradient", steps=10, reverse=st.session_state.get("gen_reverse", False))
+                    if gen_pick:
+                        st.session_state["gen_ramp_label"] = gen_pick
+                        st.rerun()
+                gen_reverse = gcols[1].checkbox("Reverse", key="gen_reverse")
+                gen_by = st.radio("Make bands", ["By number of bands", "By band width"], horizontal=True, key="gen_by")
+                a, b, c = st.columns(3)
+                gen_start = a.number_input("Start", value=float(f"{lo:.6g}") if lo is not None else 0.0, format="%g", key=f"gen_start_{zlib.crc32(repr(active).encode())}")
+                gen_end = b.number_input("End", value=float(f"{hi:.6g}") if hi is not None else 10.0, format="%g", key=f"gen_end_{zlib.crc32(repr(active).encode())}")
+                if gen_by == "By number of bands":
+                    gen_count, gen_width = c.number_input("Number of bands", 2, 300, 10, 1, key="gen_count"), None
+                else:
+                    gen_width = c.number_input("Band width", min_value=1e-6, value=float(f"{(gen_end - gen_start) / 10:.2g}") or 1.0, format="%g", key=f"gen_width_{zlib.crc32(repr(active).encode())}")
+                gen_open_bottom = st.checkbox("Bottom band has no lower limit", key="gen_open_bottom")
+                gen_open_top = st.checkbox("Top band has no upper limit", value=True, key="gen_open_top")
+                if st.button("Generate bands"):
+                    if gen_end <= gen_start:
+                        st.error("End must be greater than Start.")
+                    else:
+                        n = int(gen_count) if gen_width is None else int(np.ceil((gen_end - gen_start) / gen_width - 1e-9))
+                        edges = np.linspace(gen_start, gen_end, n + 1) if gen_width is None else gen_start + gen_width * np.arange(n + 1)
+                        if n > 300:
+                            st.error(f"That would make {n} bands; the limit is 300. Use a wider band width.")
+                        else:
+                            cmap = mpl.colormaps[RAMPS[st.session_state.get("gen_ramp_label", "RdYlBu")] + ("_r" if gen_reverse else "")]
+                            new_rows = []
+                            for i in range(n):
+                                r_, g_, b_ = (int(x * 255) for x in cmap(i / (n - 1) if n > 1 else 0.5)[:3])
+                                new_rows.append([None if (i == 0 and gen_open_bottom) else float(f"{edges[i]:.8g}"),
+                                                 None if (i == n - 1 and gen_open_top) else float(f"{edges[i + 1]:.8g}"), r_, g_, b_, 255])
+                            set_legend_rows(new_rows)
+                            st.rerun()
+            st.caption("Each row colors values from its **From** up to (not including) its **To**; leave the last To blank for no upper "
+                       "limit, or the first From blank for no lower limit. Values outside every row are transparent. Smooth shading "
+                       "blends from each row's From color, ignoring To.")
+            if not style.legend_rows:     # the editor reloads whenever the automatic steps (ramp, steps, range) change
+                st.session_state["seed_sig"] = hash(json.dumps(out.seed_rows))
+            edited = legend_editor(rows, version=f"{st.session_state.get('legend_version', 0)}:{st.session_state.get('seed_sig', 0)}")
+            if edited is not None:
+                st.session_state["legend_rows"] = edited
+                st.session_state["edit_colors_open"] = True     # the rerun below would otherwise fold the expander
                 st.rerun()
+            units = default_style.units_label
+            unit_names = list(UNIT_IDS) + ["Other…"]
+            guess = {"°F": "Temperature (°F)", "in": "Precipitation (inches)"}.get(units, "Precipitation (inches)")
+            wc1, wc2 = st.columns([3, 2], vertical_alignment="bottom")
+            unit_pick = wc1.selectbox("MAX unit for the .wctrp", unit_names, index=unit_names.index(guess), key=f"wctrp_unit_{units}",
+                                      help="Written into the file as MAX's unit id. Precipitation (inches) is 2 and Temperature (°F) is 11; "
+                                           "use Other… for another unit's id.")
+            unit_id = UNIT_IDS.get(unit_pick)
+            if unit_id is None:
+                unit_id = wc1.number_input("MAX unit id", 0, 999, 2, 1, key="wctrp_unit_other")
+            try:
+                wc2.download_button("⬇️ Download as .wctrp", wctrp_bytes(rows, unit_id), file_name=out.filename.rsplit(".", 1)[0] + ".wctrp",
+                                    mime="application/octet-stream", width="stretch",
+                                    help="A MAX color palette: one band per row, a gap becomes a transparent band, no upper limit is written as 999.")
+            except ValueError as e:
+                wc2.caption(str(e))
         else:
             st.caption("Choose a date grouping (weekly, thirds, halves or custom) to edit the color of each date bin.")
         if st.button("Reset colors"):
-            for k in ("bin_colors", "palette", "legend_rows"):
+            for k in ("bin_colors", "palette"):
                 st.session_state.pop(k, None)
+            set_legend_rows(None)
             st.rerun()
 elif not reason and not computed:
     st.markdown("### Pick a map in the sidebar, then **Generate map**.")

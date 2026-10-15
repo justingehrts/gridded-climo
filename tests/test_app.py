@@ -173,7 +173,7 @@ def test_ramp_mode_range_controls_apply_to_a_numeric_map():
     _var(at).select("Precipitation").run()
     at.button[0].click().run()
     assert not at.exception and not at.error
-    at.selectbox(key="style_ramp").select("Magma").run()
+    at.session_state["style_ramp"] = "Magma"; at.run()
     at.checkbox(key="style_flip").set_value(True).run()
     at.radio(key="style_mode").set_value("Smooth").run()
     at.number_input(key="style_vmin").set_value(0.0).run()
@@ -191,7 +191,7 @@ def test_apply_example_preset_sets_only_what_it_contains():
     at.selectbox(key="style_preset").select("Example: weekly bins, Spectral").run()
     next(b for b in at.button if b.label == "Apply preset").click().run()
     assert not at.exception and not at.error
-    assert at.radio(key="style_date_mode").value == "weekly" and at.selectbox(key="style_ramp").value == "Spectral"
+    assert at.radio(key="style_date_mode").value == "weekly" and at.session_state["style_ramp"] == "Spectral"
     assert at.checkbox(key="style_flip").value is True
     assert at.slider(key="style_steps").value == steps_before           # the preset didn't mention steps
     labels = [b.label for b in at.get("download_button")]
