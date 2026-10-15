@@ -61,10 +61,14 @@ Pre-saved data (grid first/last dates, daily normals, per-station files) only co
 - **Group dates into** (first/last-date maps): *Automatic* (default, equal color steps), *Weekly* (1st-6th, 7th-13th, 14th-20th, 21st-end),
   *Thirds* (early / mid / late month), *Halves* (1st-15th, 16th-end), or *Custom* (your own bin start dates, e.g. `Oct 1, Oct 8, Oct 15, Nov 1`).
   Each bin is one color and one legend entry; bins are calendar-aligned, so "first week of October" means the same thing every month.
-- **🎨 Style** (sidebar): color ramp + preview, reverse, stepped/smooth, number of steps, min/max, and import of a MAX `.wctrp` palette,
-  a CSV legend (`Value,R,G,B,Alpha`), or a JSON settings export. For date maps an imported palette supplies colors only (assigned by
+- **🎨 Style** (sidebar): color ramp (a dropdown that draws each ramp's gradient), reverse, stepped/smooth, number of steps, min/max, and import of a MAX `.wctrp` palette,
+  a CSV legend (`From,To,R,G,B,Alpha`, or the older `Value,R,G,B,Alpha`), or a JSON settings export. For date maps an imported palette supplies colors only (assigned by
   position across the bins); for numeric maps its values become the color-band thresholds.
-- **🎨 Edit colors** (below the map): edit R/G/B/A for each date bin, or the Value/R/G/B/A rows of a custom numeric legend.
+- **🎨 Edit colors** (below the map): edit R/G/B/A for each date bin, or, on numeric maps, a MAX-style color table: one row per band
+  (From, To, color swatch with a color picker, Red/Green/Blue, Transparency), each color applying from its From up to its To. Leave the first
+  From blank for no lower limit and the last To blank for no upper limit; values in no band are transparent. Select two rows and **Ramp RGB** (or
+  **Ramp RGB + Transparency**) to blend the rows between them, or **Generate bands** from a preset ramp. **Download as .wctrp** writes the table as a MAX palette (gaps become transparent bands, no upper limit is written as 999).
+  (Ported from geotiff-to-kmz.)
 - Styling re-renders the cached result instantly; it never re-fetches data.
 - **Map smoothing** (Options, station maps): stations are interpolated (nearest 8, distance^-3) and then blurred a little. Default 3 km keeps
   the map within about a day of each airport's own average; 0 matches every station exactly (spottier), and higher values give smoother,
@@ -90,3 +94,12 @@ cooling (base 65) / growing (base 50) degree days. Summaries: average, total, ma
 meeting a threshold; any other summary can also be limited to days at/above or at/below a threshold (e.g. total of highs ≥ 80°F).
 Average temperature and degree days are derived from the daily max/min grids. Thresholded summaries, day counts and the derived variables
 are specific-dates only (the shipped daily normals are averages, so there is no normal-period average or departure for them).
+
+## Sun data
+
+**When → Sun** maps sunrise, sunset or length of day on one date, or the change in each between two dates. Values are astronomical
+(NOAA/Meeus solar position, upper limb with standard refraction; within about a minute of other calculators) on a 0.05° grid, in **local clock
+time**: each point uses its own time zone (`data/tz/tzgrid.npz`, built once by `python -m gridded_climo.tz_build` with `timezonefinder`)
+and that date's daylight-saving offset, so the map steps by an hour across a zone border, and a range that spans a daylight-saving change
+includes the one-hour clock jump (the map says so). Day length has no clock component. No ACIS/NOHRSC call is needed, so any date and any
+area in the US and nearby works instantly.

@@ -5,6 +5,7 @@ import datetime as dt
 import io
 import os
 import tempfile
+import zlib
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -19,12 +20,14 @@ from PIL import Image
 from streamlit_folium import st_folium
 
 from gridded_climo.config import DEFAULT_BBOX, DEFAULT_NORMAL_PERIOD
-from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, MENU, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, RANGE_ELEMENTS, RANGE_REDUCES, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
+from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, MENU, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, RANGE_ELEMENTS, RANGE_REDUCES, SUN_ELEMENTS, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
 from gridded_climo.ui.preview import build_map, load_counties_geojson
 from gridded_climo.binning import MODE_LABELS, MODES
 from gridded_climo.registry import Style
-from gridded_climo.render import PaletteError, RAMPS, parse_legend_csv, parse_wctrp, style_from_json, style_to_json
+from gridded_climo.render.wctrp import UNIT_IDS, wctrp_bytes
+from gridded_climo.render import PaletteError, RAMPS, parse_legend_csv, parse_wctrp, ramp_label, style_from_json, style_to_json
 from gridded_climo.render.palettes import sample_colors
+from gridded_climo.ui.components import legend_editor, ramp_picker
 from gridded_climo.ui.service import compute, render_computed
 from gridded_climo.acis import ACISClient
 from gridded_climo.cache import Cache
@@ -75,20 +78,34 @@ def cached_por(bbox, element: str):
 
 
 @st.cache_data(show_spinner=False)
-def ramp_strip(name: str, reverse: bool) -> Image.Image:
-    cmap = mpl.colormaps[RAMPS.get(name, name) + ("_r" if reverse else "")]
-    arr = (cmap(np.linspace(0, 1, 256))[:, :3] * 255).astype("uint8")[None, :, :].repeat(14, axis=0)
-    return Image.fromarray(arr)
-
-
-@st.cache_data(show_spinner=False)
 def counties():
     return load_counties_geojson()
 
 
 # Imported settings are applied before any widget exists in this run (Streamlit forbids changing a widget after creation).
+
+
+def set_legend_rows(rows):
+    """Replace the custom legend from Python (an import, Reset, a new map). The version bump tells the band editor to drop
+    its own copy of the table and show this one."""
+    if rows:
+        st.session_state["legend_rows"] = rows
+    else:
+        st.session_state.pop("legend_rows", None)
+    st.session_state["legend_version"] = st.session_state.get("legend_version", 0) + 1
+
+
+def forget_ramp_pick():
+    """Make the ramp dropdown forget its own last pick, so a ramp set from Python (a preset, Reset) isn't overridden."""
+    st.session_state["ramp_epoch"] = st.session_state.get("ramp_epoch", 0) + 1
+
+
 if "_pending" in st.session_state:
-    st.session_state.update(st.session_state.pop("_pending"))
+    pending = st.session_state.pop("_pending")
+    st.session_state.update(pending)
+    if "legend_rows" in pending:
+        set_legend_rows(pending["legend_rows"])
+    forget_ramp_pick()
 
 # ---------------------------------------------------------------- selectors
 years_error = None      # set by the Options panel when the years can't be used; shown in the main panel and disables Generate
@@ -119,7 +136,9 @@ with st.sidebar:
                    "and grid first/last dates and departure maps aren't available here.")
 
     st.subheader("1 · When")
-    when_label = st.radio("When", ["Average first date", "Average last date", "Custom range"], label_visibility="collapsed")
+    when_label = st.radio("When", ["Average first date", "Average last date", "Custom range", "Sun (sunrise, sunset, day length)"],
+                          label_visibility="collapsed")
+    is_sun = when_label.startswith("Sun")
     range_mode = None
     if when_label == "Custom range":
         range_mode = st.radio("Range type", ["Specific dates", "Averaged over normal period"],
@@ -127,7 +146,15 @@ with st.sidebar:
 
     st.subheader("2 · What")
     q_kwargs: dict = {}
-    if when_label != "Custom range":
+    sun_change = False
+    if is_sun:
+        sun_labels = SUN_ELEMENTS
+        chosen_sun = st.selectbox("Variable", list(sun_labels.values()), key="sun_var")
+        q_kwargs.update(when="sun", element=next(k for k, v in sun_labels.items() if v == chosen_sun))
+        sun_change = st.radio("Show", ["Value on one date", "Change between two dates"], key="sun_mode",
+                              help="Times are local clock time on each date (daylight saving included), by the time zone at each point; "
+                                   "the map steps where a zone border is crossed.") == "Change between two dates"
+    elif when_label != "Custom range":
         var = st.selectbox("Variable", ["Temperature at or below", "Temperature at or above", "Snowfall"])
         if var == "Snowfall":
             amount = st.number_input("Daily snowfall at least (in)", 0.1, 30.0, 1.0, 0.1, format="%.1f",
@@ -183,7 +210,12 @@ with st.sidebar:
 
     st.subheader("3 · Dates")
     date_mode, custom_starts = "auto", ""
-    if when_label != "Custom range":
+    if is_sun:
+        c1, c2 = st.columns(2) if sun_change else (st.container(), None)
+        q_kwargs["start"] = c1.date_input("Start date" if sun_change else "Date", TODAY, min_value=dt.date(1900, 1, 1), max_value=dt.date(2100, 12, 31), key="sun_d1")
+        if sun_change:
+            q_kwargs["end"] = c2.date_input("End date", TODAY + dt.timedelta(days=30), min_value=dt.date(1900, 1, 1), max_value=dt.date(2100, 12, 31), key="sun_d2")
+    elif when_label != "Custom range":
         st.caption("Uses every year in the years range (see Options).")
         date_mode = st.radio("Group dates into", MODES, format_func=MODE_LABELS.get, key="style_date_mode",
                              help="Automatic: equal color steps across the data. Weekly: 1st–6th, 7th–13th, 14th–20th, 21st–end of "
@@ -222,73 +254,75 @@ with st.sidebar:
         except ValueError:
             q_kwargs["start"] = q_kwargs["end"] = None
 
-    with st.expander("Options"):
-        n0, n1 = st.columns(2)
-        label_y = "Years included: from" if when_label != "Custom range" else "Normal period: from"
-        if when_label != "Custom range":
-            ymax = last_complete_year(default_season(q_kwargs.get("op", "ge"), q_kwargs["when"], q_kwargs["element"]))
-        else:
-            ymax = last_complete_year({"start": [1, 1], "end": [12, 31]})
-        years_error = None
-        if when_label == "Custom range":      # daily normals are pre-saved for 1991-2020 only, so this stays a plain number
-            start_year = int(n0.number_input(label_y, STATION_FIRST_YEAR, ymax - 1, DEFAULT_NORMAL_PERIOD[0]))
-        else:
-            raw_start = n0.text_input(label_y, value=str(DEFAULT_NORMAL_PERIOD[0]), key="years_from",
-                                      help="A year (like 1890), or POR for the start of the period of record in the chosen area.")
-            start_year, por_info, parsed = DEFAULT_NORMAL_PERIOD[0], None, None
-            by_grid = q_kwargs.get("method") == "grid"
-            try:
-                parsed = parse_start(raw_start)
-                if parsed == "por":
-                    if by_grid:
-                        start_year = (shipped_years().get("grid") or (DEFAULT_NORMAL_PERIOD[0],))[0]   # the grid's saved data begins here
+    years_error = None
+    if not is_sun:
+        with st.expander("Options"):
+            n0, n1 = st.columns(2)
+            label_y = "Years included: from" if when_label != "Custom range" else "Normal period: from"
+            if when_label != "Custom range":
+                ymax = last_complete_year(default_season(q_kwargs.get("op", "ge"), q_kwargs["when"], q_kwargs["element"]))
+            else:
+                ymax = last_complete_year({"start": [1, 1], "end": [12, 31]})
+            years_error = None
+            if when_label == "Custom range":      # daily normals are pre-saved for 1991-2020 only, so this stays a plain number
+                start_year = int(n0.number_input(label_y, STATION_FIRST_YEAR, ymax - 1, DEFAULT_NORMAL_PERIOD[0]))
+            else:
+                raw_start = n0.text_input(label_y, value=str(DEFAULT_NORMAL_PERIOD[0]), key="years_from",
+                                          help="A year (like 1890), or POR for the start of the period of record in the chosen area.")
+                start_year, por_info, parsed = DEFAULT_NORMAL_PERIOD[0], None, None
+                by_grid = q_kwargs.get("method") == "grid"
+                try:
+                    parsed = parse_start(raw_start)
+                    if parsed == "por":
+                        if by_grid:
+                            start_year = (shipped_years().get("grid") or (DEFAULT_NORMAL_PERIOD[0],))[0]   # the grid's saved data begins here
+                        else:
+                            por_info = cached_por(tuple(bbox), q_kwargs["element"])
+                            start_year = por_info.first_year
                     else:
-                        por_info = cached_por(tuple(bbox), q_kwargs["element"])
-                        start_year = por_info.first_year
-                else:
-                    start_year = parsed
-                    if not by_grid and start_year < 1950:
-                        por_info = cached_por(tuple(bbox), q_kwargs["element"])
-                        if start_year < por_info.first_year:
-                            years_error = f"Records in this area begin in {por_info.first_year}. Use POR, or a year from {por_info.first_year} on."
-                            por_info = None
-            except PorError as e:
-                years_error = str(e)
-            except Exception as e:     # ACIS unreachable, etc.: the typed-year path doesn't need the lookup
-                years_error = f"Couldn't look up the period of record ({type(e).__name__}). Type a year instead."
-        end_year = int(n1.number_input("to", STATION_FIRST_YEAR + 1, ymax, min(DEFAULT_NORMAL_PERIOD[1], ymax)))
-        if years_error is None and start_year >= end_year:
-            years_error = f"The start year ({start_year}) must be before the end year ({end_year})."
-        normal = (start_year, end_year)
-        if when_label != "Custom range":
-            if por_info is not None:
-                st.caption(f"📅 Using {start_year}. " + por_info.describe({"mint": "low temperature", "maxt": "high temperature", "snow": "snowfall"}.get(q_kwargs["element"], "this variable")))
-            elif parsed == "por" and by_grid:
-                st.caption(f"📅 Using {start_year}, where the saved grid data begins.")
-            st.caption("For a record (earliest/latest), start at POR. Stations go back as far as the area's records (most reliable from ~1895); the Grid method has 1991 onward.")
-            if start_year < SPARSE_BEFORE:
-                st.warning(f"Before ~{SPARSE_BEFORE} only a handful of stations report in most areas, so these maps can be mostly blank or rest on very few stations.")
-        q_kwargs["normal_period"] = (int(normal[0]), int(normal[1]))
-        if when_label != "Custom range":
-            stat_label = st.selectbox("Statistic across years", ["Average date", "Median date", "Earliest on record", "Latest on record", "Percentile"])
-            stat = {"Average date": "mean", "Median date": "median", "Earliest on record": "min", "Latest on record": "max", "Percentile": "percentile"}[stat_label]
-            q_kwargs["stat"] = stat
-            if stat == "percentile":
-                q_kwargs["percentile"] = st.slider("Percentile", 1, 99, 10)
-            if stat in ("min", "max"):
-                st.caption("Each station's single earliest/latest date in the chosen years; its record year shows in the map tooltip.")
-        if when_label != "Custom range" and (q_kwargs.get("method") == "station" or q_kwargs.get("element") == "snow"):
-            q_kwargs["smooth_km"] = float(st.slider(
-                "Map smoothing (km)", 0, 15, 3,
-                help="Stations are interpolated, then lightly blurred. 0 = the map matches each station's own value exactly (but looks "
-                     "spottier); higher = smoother contours that drift from individual stations (12 km can be ~5 days off at a single airport)."))
+                        start_year = parsed
+                        if not by_grid and start_year < 1950:
+                            por_info = cached_por(tuple(bbox), q_kwargs["element"])
+                            if start_year < por_info.first_year:
+                                years_error = f"Records in this area begin in {por_info.first_year}. Use POR, or a year from {por_info.first_year} on."
+                                por_info = None
+                except PorError as e:
+                    years_error = str(e)
+                except Exception as e:     # ACIS unreachable, etc.: the typed-year path doesn't need the lookup
+                    years_error = f"Couldn't look up the period of record ({type(e).__name__}). Type a year instead."
+            end_year = int(n1.number_input("to", STATION_FIRST_YEAR + 1, ymax, min(DEFAULT_NORMAL_PERIOD[1], ymax)))
+            if years_error is None and start_year >= end_year:
+                years_error = f"The start year ({start_year}) must be before the end year ({end_year})."
+            normal = (start_year, end_year)
+            if when_label != "Custom range":
+                if por_info is not None:
+                    st.caption(f"📅 Using {start_year}. " + por_info.describe({"mint": "low temperature", "maxt": "high temperature", "snow": "snowfall"}.get(q_kwargs["element"], "this variable")))
+                elif parsed == "por" and by_grid:
+                    st.caption(f"📅 Using {start_year}, where the saved grid data begins.")
+                st.caption("For a record (earliest/latest), start at POR. Stations go back as far as the area's records (most reliable from ~1895); the Grid method has 1991 onward.")
+                if start_year < SPARSE_BEFORE:
+                    st.warning(f"Before ~{SPARSE_BEFORE} only a handful of stations report in most areas, so these maps can be mostly blank or rest on very few stations.")
+            q_kwargs["normal_period"] = (int(normal[0]), int(normal[1]))
+            if when_label != "Custom range":
+                stat_label = st.selectbox("Statistic across years", ["Average date", "Median date", "Earliest on record", "Latest on record", "Percentile"])
+                stat = {"Average date": "mean", "Median date": "median", "Earliest on record": "min", "Latest on record": "max", "Percentile": "percentile"}[stat_label]
+                q_kwargs["stat"] = stat
+                if stat == "percentile":
+                    q_kwargs["percentile"] = st.slider("Percentile", 1, 99, 10)
+                if stat in ("min", "max"):
+                    st.caption("Each station's single earliest/latest date in the chosen years; its record year shows in the map tooltip.")
+            if when_label != "Custom range" and (q_kwargs.get("method") == "station" or q_kwargs.get("element") == "snow"):
+                q_kwargs["smooth_km"] = float(st.slider(
+                    "Map smoothing (km)", 0, 15, 3,
+                    help="Stations are interpolated, then lightly blurred. 0 = the map matches each station's own value exactly (but looks "
+                         "spottier); higher = smoother contours that drift from individual stations (12 km can be ~5 days off at a single airport)."))
 
 q = Query(**{k: v for k, v in q_kwargs.items() if k in Query.__dataclass_fields__})
 if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
     reason = "Region: west must be less than east and south less than north."
 else:
     reason = unsupported_reason(q, bbox) if q.start is not None or q.when in ("first", "last") or q.element == "snow" else "Choose valid dates."
-    if q.when != "first" and q.when != "last" and (q.start is None or q.end is None):
+    if q.when not in ("first", "last", "sun") and (q.start is None or q.end is None):
         reason = "Choose valid dates."
 
 # ---------------------------------------------------------------- main panel
@@ -300,8 +334,9 @@ go = st.sidebar.button("Generate map", type="primary", disabled=bool(reason), wi
 if go:
     key = (q, tuple(bbox))
     if st.session_state.get("active") != key:   # a new map starts from clean styling
-        for k in ("bin_colors", "palette", "legend_rows"):
+        for k in ("bin_colors", "palette"):
             st.session_state.pop(k, None)
+        set_legend_rows(None)
     with st.status("Building map…", expanded=True) as status:
         try:
             st.write("Fetching / reading data…")
@@ -340,16 +375,28 @@ with st.sidebar.expander("🎨 Style"):
             else:
                 rows = parse_wctrp(data)[0] if up.name.lower().endswith(".wctrp") else parse_legend_csv(data)
                 if is_date_map:   # dates aren't palette values, so only the colors carry over (by position across the bins)
-                    st.session_state["palette"] = [r[1:5] for r in rows]
+                    st.session_state["palette"] = [r[2:6] for r in rows]
                 else:
-                    st.session_state["legend_rows"] = rows
+                    set_legend_rows(rows)
             st.rerun()
         except (PaletteError, ValueError) as e:
             st.error(str(e))
-    ramp_choice = st.selectbox("Color ramp", ["Map default"] + sorted(RAMPS), key="style_ramp")
+    # The dropdown shows the ramp exactly as it will be applied, so it reads the other style widgets' current values
+    # (Streamlit has already updated them for this run, even though they are created below).
+    explicit_ramp = st.session_state.get("style_ramp")
+    flip = st.session_state.get("style_flip", False)
+    mode_now = st.session_state.get("style_mode", "Map default")
+    shown_stepped = default_style.mode == "stepped" if mode_now == "Map default" else mode_now == "Stepped"
+    picked = ramp_picker(
+        "Color ramp", key=f"ramp_picker_{st.session_state.get('ramp_epoch', 0)}",
+        selected=ramp_label(explicit_ramp or default_style.ramp),
+        mode="Stepped" if shown_stepped else "Smooth Gradient", steps=st.session_state.get("style_steps", default_style.steps),
+        reverse=flip if explicit_ramp else (default_style.reverse != flip),
+    )
+    if picked:        # rerun so the dropdown (already drawn this run) and the rest of the page see the new ramp
+        st.session_state["style_ramp"] = picked
+        st.rerun()
     flip = st.checkbox("Reverse colors", key="style_flip")
-    shown = default_style.ramp if ramp_choice == "Map default" else ramp_choice
-    st.image(ramp_strip(shown, (flip if ramp_choice != "Map default" else (default_style.reverse != flip))), width="stretch")
     mode_choice = st.radio("Shading", ["Map default", "Stepped", "Smooth"], horizontal=True, key="style_mode")
     steps = st.slider("Number of steps (automatic grouping)", 3, 20, int(default_style.steps), key="style_steps")
     if not is_date_map:
@@ -360,12 +407,14 @@ with st.sidebar.expander("🎨 Style"):
         vmin = vmax = None
     if st.button("Reset all style choices"):
         for k in ("style_ramp", "style_flip", "style_mode", "style_steps", "style_vmin", "style_vmax", "style_date_mode",
-                  "palette", "bin_colors", "legend_rows", "_imported"):
+                  "palette", "bin_colors", "_imported"):
             st.session_state.pop(k, None)
+        set_legend_rows(None)
+        forget_ramp_pick()
         st.rerun()
 
 style = build_style(
-    default_style, ramp=None if ramp_choice == "Map default" else ramp_choice, flip=flip,
+    default_style, ramp=explicit_ramp or None, flip=flip,
     mode=None if mode_choice == "Map default" else mode_choice.lower(), steps=steps if steps != default_style.steps else None,
     vmin=vmin, vmax=vmax, date_mode=date_mode if is_date_map else "auto", custom_starts=custom_starts,
     palette=st.session_state.get("palette"), bin_colors=st.session_state.get("bin_colors"),
@@ -409,7 +458,7 @@ if out:
     if out.legend_png:
         st.image(out.legend_png, caption="Legend (also included in the KMZ)")
 
-    with st.expander("🎨 Edit colors"):
+    with st.expander("🎨 Edit colors", expanded=st.session_state.get("edit_colors_open", False)):
         if out.bins and style.date_mode != "auto":      # one editable color per date bin
             df = pd.DataFrame([{"Bin": lab, "R": c[0], "G": c[1], "B": c[2], "A": c[3]} for lab, c in out.bins])
             with st.form("bin_color_form"):
@@ -425,23 +474,78 @@ if out:
                         new[lab] = cur
                 st.session_state["bin_colors"] = new
                 st.rerun()
-        elif not is_date_map and (style.legend_rows or out.seed_rows):    # numeric maps: value = lower bound of its band
+        elif not is_date_map and (style.legend_rows or out.seed_rows):    # numeric maps: bands "from this value up to To"
             rows = style.legend_rows or out.seed_rows
-            df = pd.DataFrame([{"Value": r[0], "R": r[1], "G": r[2], "B": r[3], "A": r[4] if len(r) > 4 else 255} for r in rows])
-            with st.form("legend_form"):
-                edited = st.data_editor(df, num_rows="dynamic", hide_index=True, width="stretch", key="legend_editor")
-                apply_leg = st.form_submit_button("Apply as custom legend")
-            st.caption("Value = the lower bound of that color band, in the map's units. A = opacity (0 = transparent).")
-            if apply_leg:
-                clean = edited.dropna(subset=["Value"]).sort_values("Value")
-                st.session_state["legend_rows"] = [[float(r.Value), int(r.R), int(r.G), int(r.B), int(r.A if r.A == r.A else 255)]
-                                                   for r in clean.itertuples()]
+            lo, hi = out.data_min, out.data_max
+            with st.expander("🎨 Generate bands from a preset ramp"):
+                gcols = st.columns([3, 1])
+                with gcols[0]:
+                    gen_pick = ramp_picker(
+                        "Ramp", key="gen_ramp", selected=st.session_state.get("gen_ramp_label", "RdYlBu"),
+                        mode="Smooth Gradient", steps=10, reverse=st.session_state.get("gen_reverse", False))
+                    if gen_pick:
+                        st.session_state["gen_ramp_label"] = gen_pick
+                        st.rerun()
+                gen_reverse = gcols[1].checkbox("Reverse", key="gen_reverse")
+                gen_by = st.radio("Make bands", ["By number of bands", "By band width"], horizontal=True, key="gen_by")
+                a, b, c = st.columns(3)
+                gen_start = a.number_input("Start", value=float(f"{lo:.6g}") if lo is not None else 0.0, format="%g", key=f"gen_start_{zlib.crc32(repr(active).encode())}")
+                gen_end = b.number_input("End", value=float(f"{hi:.6g}") if hi is not None else 10.0, format="%g", key=f"gen_end_{zlib.crc32(repr(active).encode())}")
+                if gen_by == "By number of bands":
+                    gen_count, gen_width = c.number_input("Number of bands", 2, 300, 10, 1, key="gen_count"), None
+                else:
+                    gen_width = c.number_input("Band width", min_value=1e-6, value=float(f"{(gen_end - gen_start) / 10:.2g}") or 1.0, format="%g", key=f"gen_width_{zlib.crc32(repr(active).encode())}")
+                gen_open_bottom = st.checkbox("Bottom band has no lower limit", key="gen_open_bottom")
+                gen_open_top = st.checkbox("Top band has no upper limit", value=True, key="gen_open_top")
+                if st.button("Generate bands"):
+                    if gen_end <= gen_start:
+                        st.error("End must be greater than Start.")
+                    else:
+                        n = int(gen_count) if gen_width is None else int(np.ceil((gen_end - gen_start) / gen_width - 1e-9))
+                        edges = np.linspace(gen_start, gen_end, n + 1) if gen_width is None else gen_start + gen_width * np.arange(n + 1)
+                        if n > 300:
+                            st.error(f"That would make {n} bands; the limit is 300. Use a wider band width.")
+                        else:
+                            cmap = mpl.colormaps[RAMPS[st.session_state.get("gen_ramp_label", "RdYlBu")] + ("_r" if gen_reverse else "")]
+                            new_rows = []
+                            for i in range(n):
+                                r_, g_, b_ = (int(x * 255) for x in cmap(i / (n - 1) if n > 1 else 0.5)[:3])
+                                new_rows.append([None if (i == 0 and gen_open_bottom) else float(f"{edges[i]:.8g}"),
+                                                 None if (i == n - 1 and gen_open_top) else float(f"{edges[i + 1]:.8g}"), r_, g_, b_, 255])
+                            set_legend_rows(new_rows)
+                            st.rerun()
+            st.caption("Each row colors values from its **From** up to (not including) its **To**; leave the last To blank for no upper "
+                       "limit, or the first From blank for no lower limit. Values outside every row are transparent. Smooth shading "
+                       "blends from each row's From color, ignoring To.")
+            if not style.legend_rows:     # the editor reloads whenever the automatic steps (ramp, steps, range) change
+                st.session_state["seed_sig"] = hash(json.dumps(out.seed_rows))
+            edited = legend_editor(rows, version=f"{st.session_state.get('legend_version', 0)}:{st.session_state.get('seed_sig', 0)}")
+            if edited is not None:
+                st.session_state["legend_rows"] = edited
+                st.session_state["edit_colors_open"] = True     # the rerun below would otherwise fold the expander
                 st.rerun()
+            units = default_style.units_label
+            unit_names = list(UNIT_IDS) + ["Other…"]
+            guess = {"°F": "Temperature (°F)", "in": "Precipitation (inches)"}.get(units, "Precipitation (inches)")
+            wc1, wc2 = st.columns([3, 2], vertical_alignment="bottom")
+            unit_pick = wc1.selectbox("MAX unit for the .wctrp", unit_names, index=unit_names.index(guess), key=f"wctrp_unit_{units}",
+                                      help="Written into the file as MAX's unit id. Precipitation (inches) is 2 and Temperature (°F) is 11; "
+                                           "use Other… for another unit's id.")
+            unit_id = UNIT_IDS.get(unit_pick)
+            if unit_id is None:
+                unit_id = wc1.number_input("MAX unit id", 0, 999, 2, 1, key="wctrp_unit_other")
+            try:
+                wc2.download_button("⬇️ Download as .wctrp", wctrp_bytes(rows, unit_id), file_name=out.filename.rsplit(".", 1)[0] + ".wctrp",
+                                    mime="application/octet-stream", width="stretch",
+                                    help="A MAX color palette: one band per row, a gap becomes a transparent band, no upper limit is written as 999.")
+            except ValueError as e:
+                wc2.caption(str(e))
         else:
             st.caption("Choose a date grouping (weekly, thirds, halves or custom) to edit the color of each date bin.")
         if st.button("Reset colors"):
-            for k in ("bin_colors", "palette", "legend_rows"):
+            for k in ("bin_colors", "palette"):
                 st.session_state.pop(k, None)
+            set_legend_rows(None)
             st.rerun()
 elif not reason and not computed:
     st.markdown("### Pick a map in the sidebar, then **Generate map**.")

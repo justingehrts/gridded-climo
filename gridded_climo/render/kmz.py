@@ -41,7 +41,11 @@ def _legend_png(style: Style, res: Resolved, title: str, fmt: Callable[[float], 
     cmap = get_cmap(style).resampled(n) if style.mode == "stepped" else get_cmap(style)
     ax.imshow(np.linspace(0, 1, 256)[None, :], aspect="auto", cmap=cmap, extent=[res.vmin, res.vmax, 0, 1])
     ax.set_yticks([])
-    ticks = np.linspace(res.vmin, res.vmax, 5)
+    if style.mode == "stepped" and n >= 2:        # label the band edges (thinned so labels don't collide)
+        ticks = np.linspace(res.vmin, res.vmax, n + 1)
+        ticks = ticks[:: int(np.ceil((n + 1) / 7))] if n + 1 > 7 else ticks
+    else:
+        ticks = np.linspace(res.vmin, res.vmax, 5)
     ax.set_xticks(ticks, [fmt(t) for t in ticks], fontsize=7)
     ax.set_title(title, fontsize=8)
     buf = io.BytesIO()

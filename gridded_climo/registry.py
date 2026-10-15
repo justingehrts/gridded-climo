@@ -7,14 +7,15 @@ from typing import Any
 
 import yaml
 
-KINDS = {"climatology", "period", "storm"}
-ELEMENTS = {"mint", "maxt", "pcpn", "snow", "snwd", "avgt", "hdd", "cdd", "gdd"}
+KINDS = {"climatology", "period", "storm", "sun"}
+ELEMENTS = {"mint", "maxt", "pcpn", "snow", "snwd", "avgt", "hdd", "cdd", "gdd", "sunrise", "sunset", "daylen"}
+SUN_ELEMENTS = {"sunrise", "sunset", "daylen"}
 DERIVED = {"avgt", "hdd", "cdd", "gdd"}   # computed from daily max/min grids
 OPS = {"le", "lt", "ge", "gt"}
 DIRECTIONS = {"first", "last"}
 STATS = {"mean", "median", "percentile", "min", "max"}  # min/max = earliest/latest date on record
 PERIOD_REDUCES = {"sum", "mean", "max", "min", "count", "pct"}   # count/pct = number / percent of days meeting `threshold`
-SOURCES = {"acis_grid1", "acis_stn", "nohrsc"}
+SOURCES = {"acis_grid1", "acis_stn", "nohrsc", "astro"}
 
 
 class RegistryError(ValueError):
@@ -36,7 +37,7 @@ class Style:
     custom_starts: str = ""  # date_mode == custom: "Oct 1, Oct 8, Oct 15, Nov 1" (bin start dates, season order)
     palette: list | None = None  # [[r,g,b,a], ...] imported palette, sampled by position across the bins
     bin_colors: dict | None = None  # {bin label: [r,g,b,a]} manual per-bin overrides (date bins)
-    legend_rows: list | None = None  # numeric custom legend: [[value, r,g,b,a], ...]; value = lower bound of its color band
+    legend_rows: list | None = None  # numeric custom legend: [[from, to, r,g,b,a], ...], see render/legend.py (old [value,r,g,b,a] rows also load)
     units_label: str = ""
 
 
@@ -55,6 +56,7 @@ class Metric:
     min_years_frac: float = 0.5
     # period
     reduce: str | None = None
+    change: bool = False  # sun: change between the two dates instead of the value on one date
     normal: str | None = None  # None | "departure"
     style: Style = field(default_factory=Style)
 
@@ -66,8 +68,8 @@ class Metric:
             bad(f"kind must be one of {sorted(KINDS)}")
         if self.source not in SOURCES:
             bad(f"source must be one of {sorted(SOURCES)}")
-        if self.kind in ("climatology", "period") and self.element not in ELEMENTS:
-            bad(f"element must be one of {sorted(ELEMENTS)}")
+        if self.kind in ("climatology", "period") and self.element not in ELEMENTS - SUN_ELEMENTS:
+            bad(f"element must be one of {sorted(ELEMENTS - SUN_ELEMENTS)}")
         if self.kind == "climatology":
             if not self.threshold or self.threshold.get("op") not in OPS or "value" not in self.threshold:
                 bad("threshold needs {op: le|lt|ge|gt, value: <number>}")
@@ -79,6 +81,8 @@ class Metric:
                 bad(f"cross_year.stat must be one of {sorted(STATS)}")
             if self.cross_year["stat"] == "percentile" and not 0 <= self.cross_year.get("p", -1) <= 100:
                 bad("cross_year.p (0-100) required for percentile")
+        if self.kind == "sun" and self.element not in SUN_ELEMENTS:
+            bad(f"sun maps need element one of {sorted(SUN_ELEMENTS)}")
         if self.kind == "period":
             if self.reduce not in PERIOD_REDUCES:
                 bad(f"reduce must be one of {sorted(PERIOD_REDUCES)}")

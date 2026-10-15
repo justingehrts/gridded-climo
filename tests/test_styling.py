@@ -90,7 +90,7 @@ WCTRP = """<?xml version="1.0"?><palette>
 
 def test_wctrp_sorted_numerically_not_lexicographically():
     rows, textured = parse_wctrp(WCTRP)
-    assert rows == [[2.0, 0, 0, 255, 200], [10.0, 255, 0, 0, 255]] and textured == 1
+    assert rows == [[2.0, 10.0, 0, 0, 255, 200], [10.0, None, 255, 0, 0, 255]] and textured == 1
     with pytest.raises(PaletteError, match="no contour"):
         parse_wctrp("<palette/>")
     with pytest.raises(PaletteError, match="XML"):
@@ -98,8 +98,10 @@ def test_wctrp_sorted_numerically_not_lexicographically():
 
 
 def test_csv_import_and_validation():
-    assert parse_legend_csv("value,R,g,B\n5,1,2,3\n1,4,5,6") == [[1.0, 4, 5, 6, 255], [5.0, 1, 2, 3, 255]]
-    assert parse_legend_csv(b"\xef\xbb\xbfValue,R,G,B,Alpha\n0,0,0,0,0\n")[0][4] == 0          # BOM + alpha
+    assert parse_legend_csv("value,R,g,B\n5,1,2,3\n1,4,5,6") == [[1.0, 5.0, 4, 5, 6, 255], [5.0, None, 1, 2, 3, 255]]
+    assert parse_legend_csv(b"\xef\xbb\xbfValue,R,G,B,Alpha\n0,0,0,0,0\n")[0][5] == 0          # BOM + alpha
+    # From/To form: a gap is allowed, and a blank first From means "no lower limit"
+    assert parse_legend_csv("From,To,R,G,B\n,1,9,9,9\n3,4,1,2,3\n") == [[None, 1.0, 9, 9, 9, 255], [3.0, 4.0, 1, 2, 3, 255]]
     for bad in ("a,b\n1,2", "Value,R,G,B\n1,300,0,0", "Value,R,G,B\nx,1,2,3", "Value,R,G,B\n"):
         with pytest.raises(PaletteError):
             parse_legend_csv(bad)
@@ -163,4 +165,4 @@ def test_resolve_numeric_custom_legend(tmp_path):
     with pytest.raises(ValueError, match="at least two"):
         resolve(Style(legend_rows=[[0, 1, 2, 3, 255]]), tif)
     seed = resolve(Style(steps=4), tif).seed_rows
-    assert len(seed) == 4 and all(len(row) == 5 for row in seed) and seed[0][0] < seed[-1][0]
+    assert len(seed) == 4 and all(len(row) == 6 for row in seed) and seed[0][0] < seed[-1][0] and seed[-1][1] is None
