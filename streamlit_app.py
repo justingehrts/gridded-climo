@@ -124,7 +124,7 @@ with st.sidebar:
         w0, s0, e0, n0_ = CONUS_BOUNDS
         d0 = DEFAULT_BBOX
         west = c1.number_input("West", w0, e0, d0[0], 0.1); east = c2.number_input("East", w0, e0, d0[2], 0.1)
-        south = c1.number_input("South", s0, n0_, d0[1], 0.1); north = c2.number_input("North", s0, n0_, d0[3], 0.1)
+        north = c1.number_input("North", s0, n0_, d0[3], 0.1); south = c2.number_input("South", s0, n0_, d0[1], 0.1)
         bbox = (west, south, east, north)
     else:
         code = STATE_CODES[area_name]
