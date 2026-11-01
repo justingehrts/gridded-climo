@@ -58,6 +58,7 @@ def color_table(style: Style, vmin: float, vmax: float) -> list[tuple[float, int
         kept = [r for r in rows if r[0] >= hb]
         if not kept:
             raise ValueError(f"hide_below={hb} is above the whole color range")
-        first = kept[0]
-        rows = [(hb - eps, 0, 0, 0, 0), (max(hb, first[0]) if first[0] > hb else hb, *first[1:])] + [r for r in kept if r[0] > hb]
+        below = [r for r in rows if r[0] <= hb]
+        color_at_hb = (below[-1] if below else kept[0])[1:]     # the band hb falls in keeps its own color down to hb
+        rows = [(hb - eps, 0, 0, 0, 0), (hb, *color_at_hb)] + [r for r in kept if r[0] > hb]
     return rows

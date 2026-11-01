@@ -103,3 +103,11 @@ time**: each point uses its own time zone (`data/tz/tzgrid.npz`, built once by `
 and that date's daylight-saving offset, so the map steps by an hour across a zone border, and a range that spans a daylight-saving change
 includes the one-hour clock jump (the map says so). Day length has no clock component. No ACIS/NOHRSC call is needed, so any date and any
 area in the US and nearby works instantly.
+
+## Average monthly / seasonal snowfall
+
+**Custom range → Averaged over normal period → Snowfall** maps NCEI's official 1991–2020 monthly snowfall normals (what NWS publishes;
+Columbus November = 1.2") summed over the chosen months: any single month, Dec–Feb, Oct–Apr, the Jul–Jun season, or any month range.
+Station normals come from ACIS in one request and are interpolated like the other station maps. The Ohio-centered region ships
+them (`data/normals/snow_monthly_1991-2020.npz`, rebuilt with `gridded-climo precompute --snow-normals`); other areas fetch live (~5–10 s).
+Whole months and the 1991–2020 period only, since those are what the official normals cover.

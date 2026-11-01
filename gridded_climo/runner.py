@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable
 
 from .acis import ACISClient
@@ -57,7 +57,20 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
         if not (start and end):
             raise ValueError("period metrics need a start and end")
         s, e = _to_date(start), _to_date(end)
-        if metric.normal == "average":
+        if metric.normal == "average" and metric.element == "snow":
+            from .products.snow_normals import snow_normal_window
+            from .snow_normals import window_months
+            grid, info = snow_normal_window(st.bbox, window_months(s.month, e.month), client, data_dir, smooth_km)
+            name += " (1991-2020 normal)"
+            points = info["points"]
+            label_fmt = lambda v: f'{round(v, 2):g}"'
+            from .sun import tidy_style
+            metric = replace(metric, style=tidy_style(metric.style, grid.data, symmetric=False, floor0=True,
+                                                      nice=(0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50)))
+            note = (f"NCEI 1991-2020 snowfall normals at {len(points['value'])} stations, interpolated (IDW + {info['smooth_km']:g} km "
+                    f"smoothing, up to {info['reach_km']:.0f} km from a station); "
+                    + ("pre-saved data" if info["data_source"] == "shipped" else "fetched live from ACIS"))
+        elif metric.normal == "average":
             grid, info = normal_window_average(metric, st.bbox, (s.month, s.day), (e.month, e.day), st.normal_period, data_dir)
             name += f" ({s:%b %-d}–{e:%b %-d}, {info['years'][0]}-{info['years'][1]} average)"
         else:

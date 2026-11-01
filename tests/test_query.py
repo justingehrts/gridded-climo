@@ -27,7 +27,7 @@ def test_unsupported_states_have_reasons():
     for v in (91, 120):                                                    # the grid only has its pre-saved set
         assert "only has pre-saved" in unsupported_reason(Query(when="first", element="maxt", op="ge", value=v))
     assert unsupported_reason(Query(when="first", element="maxt", op="ge", value=91, method="station")) is None   # stations: any
-    assert "coming soon" in unsupported_reason(Query(when="range_normal", element="snow", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31)))
+    assert unsupported_reason(Query(when="range_normal", element="snow", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31))) is None
     assert "mean and total" in unsupported_reason(Query(when="range_normal", element="maxt", reduce="max", start=dt.date(2001, 1, 1), end=dt.date(2001, 1, 9)))
     assert "mean and total" in unsupported_reason(Query(when="range_specific", element="maxt", reduce="min", departure=True, start=dt.date(2024, 1, 1), end=dt.date(2024, 1, 9)))
     assert "one year" in unsupported_reason(Query(when="range_specific", element="pcpn", reduce="sum", start=dt.date(2020, 1, 1), end=dt.date(2022, 1, 1)))

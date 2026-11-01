@@ -175,3 +175,12 @@ def run_add_threaded(client, bbox, elements=("mint", "maxt", "snow"), data_dir=D
             for direction in ("first", "last"):
                 for t in thresholds:
                     add_threaded_to_file(client, bbox, el, op, t, direction, default_season(op, direction, el), data_dir, log)
+
+
+def run_snow_normals(client, bbox, data_dir=DATA_DIR, log=print, margin_deg: float = 1.0):
+    """Ship NCEI 1991-2020 monthly snowfall normals for the stations in (and just around) `bbox`."""
+    from .snow_normals import fetch_snow_normals, save_shipped
+    w, s, e, n = bbox
+    z = fetch_snow_normals(client, (w - margin_deg, s - margin_deg, e + margin_deg, n + margin_deg))
+    p = save_shipped(z, data_dir)
+    log(f"{p.name}: {len(z['sids'])} stations")

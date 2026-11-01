@@ -21,7 +21,7 @@ def fresh(timeout=180):
 
 
 def gen(at):
-    at.button[0].click().run()
+    next(b for b in at.button if b.label == "Generate map").click().run()
     assert not at.exception and not at.error, [str(e.value) for e in list(at.exception) + list(at.error)]
     assert "⬇️ Download KMZ" in [b.label for b in at.get("download_button")]
     return [s.value for s in at.subheader]
@@ -57,13 +57,19 @@ def test_normal_average_window_wraps_year():
     assert "average" in gen(at)[0].lower()
 
 
-def test_snow_normal_average_is_disabled_with_reason():
+def test_snow_normal_average_november_from_shipped_normals():
     at = fresh()
     at.radio[0].set_value("Custom range").run()
     at.radio[1].set_value("Averaged over normal period").run()
     _var(at).select("Snowfall").run()
-    assert any("coming soon" in i.value for i in at.info)
-    assert at.button[0].disabled
+    assert at.selectbox(key="snow_norm_pick").value == "November"
+    assert "Average November Snowfall" in gen(at)[0]
+    at.selectbox(key="snow_norm_pick").select("Winter (Dec–Feb)").run()
+    assert "Average Dec–Feb Snowfall" in gen(at)[0]
+    at.selectbox(key="snow_norm_pick").select("Choose months…").run()
+    at.selectbox(key="snow_norm_m1").select(10).run()
+    at.selectbox(key="snow_norm_m2").select(4).run()
+    assert "Average Oct–Apr Snowfall" in gen(at)[0]
 
 
 @live
