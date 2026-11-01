@@ -1,6 +1,7 @@
 """Gridded Climo — broadcast climate maps. Run: streamlit run streamlit_app.py"""
 from __future__ import annotations
 
+import calendar
 import datetime as dt
 import io
 import os
@@ -54,6 +55,7 @@ DEFAULT_AREA = "Columbus-centered default (pre-saved)"
 STATE_CODES = state_names()                       # {"Ohio": "OH", ...}
 AREAS = [DEFAULT_AREA] + list(STATE_CODES) + ["Custom…"]
 TODAY = dt.date.today()
+MONTHS_FULL = [calendar.month_name[m] for m in range(1, 13)]
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 st.set_page_config(page_title="Gridded Climo", page_icon="🗺️", layout="wide")
@@ -243,6 +245,20 @@ with st.sidebar:
                                                     help="Observed snowfall from NWS local storm reports, shown as dots on the map.")}
         st.caption(f"UTC window: **{q_kwargs['start']:%b %-d %HZ} → {q_kwargs['end']:%b %-d %HZ}**. NOHRSC analyses are 00Z/12Z "
                    "(season totals) or 6-hourly; times snap to the nearest available.")
+    elif el == "snow":  # averaged over normal period, snowfall: official monthly normals, whole months
+        picks = {MONTHS_FULL[m - 1]: (m, m) for m in (10, 11, 12, 1, 2, 3, 4)}
+        picks.update({"Winter (Dec–Feb)": (12, 2), "Oct–Apr": (10, 4), "Season total (Jul–Jun)": (7, 6), "Choose months…": None})
+        pick = st.selectbox("Months", list(picks), index=1, key="snow_norm_pick")
+        if picks[pick] is None:
+            c1, c2 = st.columns(2)
+            sm = c1.selectbox("From month", range(1, 13), index=10, format_func=lambda m: MONTHS[m - 1], key="snow_norm_m1")
+            em = c2.selectbox("To month", range(1, 13), index=1, format_func=lambda m: MONTHS[m - 1], key="snow_norm_m2")
+        else:
+            sm, em = picks[pick]
+        q_kwargs["start"], q_kwargs["end"] = dt.date(2001, sm, 1), dt.date(2001, em, calendar.monthrange(2001, em)[1])
+        q_kwargs["normal_period"] = DEFAULT_NORMAL_PERIOD
+        st.caption("NCEI's official 1991–2020 monthly snowfall normals at each station (the numbers NWS publishes), summed over the "
+                   "chosen months and interpolated to a map.")
     else:  # averaged over normal period: month/day window
         c1, c2 = st.columns(2)
         sm = c1.selectbox("From month", range(1, 13), index=11, format_func=lambda m: MONTHS[m - 1])
@@ -255,7 +271,11 @@ with st.sidebar:
             q_kwargs["start"] = q_kwargs["end"] = None
 
     years_error = None
-    if not is_sun:
+    snow_normals = when_label == "Custom range" and range_mode != "Specific dates" and q_kwargs.get("element") == "snow"
+    if snow_normals:
+        q_kwargs["smooth_km"] = float(st.slider("Map smoothing (km)", 0, 15, 3, key="snow_norm_smooth",
+                                                help="Stations are interpolated, then lightly blurred. 0 = the map matches each station's value exactly."))
+    if not is_sun and not snow_normals:
         with st.expander("Options"):
             n0, n1 = st.columns(2)
             label_y = "Years included: from" if when_label != "Custom range" else "Normal period: from"

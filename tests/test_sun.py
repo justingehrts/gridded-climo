@@ -60,7 +60,7 @@ def test_tidy_style_edges_are_round():
     data = np.linspace(413.0, 478.0, 200).astype("float32")
     s = tidy_style(Style(steps=6), data, symmetric=False)
     step = (s.vmax - s.vmin) / s.steps
-    assert s.steps == 6 and s.vmin % step == 0 and step in (5, 10, 15) and s.vmin <= 413 and s.vmax >= 478
+    assert 3 <= s.steps <= 6 and s.vmin % step == 0 and step in (5, 10, 15) and s.vmin <= 413 and s.vmax >= 478
 
 
 def test_query_and_metric():

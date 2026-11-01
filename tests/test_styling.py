@@ -166,3 +166,10 @@ def test_resolve_numeric_custom_legend(tmp_path):
         resolve(Style(legend_rows=[[0, 1, 2, 3, 255]]), tif)
     seed = resolve(Style(steps=4), tif).seed_rows
     assert len(seed) == 4 and all(len(row) == 6 for row in seed) and seed[0][0] < seed[-1][0] and seed[-1][1] is None
+
+
+def test_hide_below_keeps_first_band_color_down_to_the_cutoff():
+    """Regression: values between hide_below and the first band edge used to fade from transparent black (dark smudges)."""
+    from gridded_climo.render.ramps import color_table
+    t = color_table(Style(ramp="Blues", steps=6, hide_below=0.1), 0, 12)
+    assert t[0][4] == 0 and t[1][0] == 0.1 and t[1][1:] == t[2][1:] and t[1][4] == 255

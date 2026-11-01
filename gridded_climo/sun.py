@@ -109,7 +109,7 @@ LABEL_KINDS = {"clock": fmt_clock, "duration": fmt_duration, "delta": fmt_delta}
 _NICE = (1, 2, 5, 10, 15, 20, 30, 60, 120, 180, 360)
 
 
-def tidy_style(style, data: np.ndarray, symmetric: bool):
+def tidy_style(style, data: np.ndarray, symmetric: bool, nice=_NICE, floor0: bool = False):
     """Copy of `style` with min/max/steps set so band edges fall on round minute values (5, 10, 15, 30, 60 ...)."""
     from dataclasses import replace
     v = data[np.isfinite(data)]
@@ -121,11 +121,15 @@ def tidy_style(style, data: np.ndarray, symmetric: bool):
         lo = -hi
     n = max(int(style.steps), 2)
     span = max(hi - lo, 1.0)
-    step = next((x for x in _NICE if np.floor(hi / x) - np.floor(lo / x) + 1 <= n), _NICE[-1])    # smallest round step that fits in n bands
+    if floor0:
+        lo = max(lo, 0.0)
+    bands = lambda x: max(int(np.ceil(hi / x) - np.floor(lo / x)), 1)
+    step = next((x for x in nice if bands(x) <= n), nice[-1])    # smallest round step that fits in n bands
     if symmetric:
         vmax = np.ceil(max(abs(lo), abs(hi)) / step) * step
         vmin = -vmax
     else:
-        vmin = np.floor(lo / step) * step                           # exactly n bands, so the style's own step count still applies
+        vmin = np.floor(lo / step) * step                           # just enough round-valued bands to cover the data (at most n)
+        n = bands(step)
         vmax = vmin + n * step
     return replace(style, vmin=float(vmin), vmax=float(vmax), steps=n)

@@ -1,6 +1,7 @@
 """A UI-level request (When x What x options) -> registry Metric. Shared by the CLI and Streamlit."""
 from __future__ import annotations
 
+import calendar
 import datetime as dt
 import os
 from dataclasses import dataclass, field
@@ -146,7 +147,13 @@ def unsupported_reason(q: Query, bbox=None) -> str | None:
         return None
     if q.element == "snow":
         if q.when == "range_normal":
-            return "Snowfall averaged over a normal period is coming soon (needs the station path)."
+            if tuple(q.normal_period) != NORMALS_PERIOD:
+                return f"Snowfall normals are NCEI's official {NORMALS_PERIOD[0]}-{NORMALS_PERIOD[1]} values; use that period."
+            if not (q.start and q.end):
+                return "Choose a start and end month."
+            if q.start.day != 1 or q.end.day != calendar.monthrange(2001, q.end.month)[1]:
+                return "Average snowfall uses whole months (official monthly normals)."
+            return None
         if q.departure:
             return "Snowfall departure from normal is coming soon."
         if not (q.start and q.end):
@@ -240,6 +247,9 @@ def describe(q: Query) -> str:
         return title + (" on Record" if q.stat in ("min", "max") else "")
     kind = {"mean": "Average", "sum": "Total", "max": "Maximum", "min": "Minimum"}.get(q.reduce)
     if q.element == "snow":
+        if q.when == "range_normal" and q.start and q.end:
+            from .snow_normals import window_label
+            return f"Average {window_label(q.start.month, q.end.month)} Snowfall"
         return "Snowfall Total"
     unit = "in" if q.element == "pcpn" else "°F"
     if q.value is not None and q.op:
@@ -267,6 +277,9 @@ def metric_from_query(q: Query) -> Metric:
     if q.when == "sun":
         return Metric(name=f"sun_{q.element}{'_change' if q.end else ''}", kind="sun", source="astro", element=q.element, title=title,
                       change=q.end is not None, style=style).validate()
+    if q.element == "snow" and q.when == "range_normal":
+        return Metric(name="snow_normal_window", kind="period", source="acis_stn", element="snow", title=title, reduce="sum",
+                      normal="average", style=Style(**{**style.__dict__, "vmin": None, "vmax": None})).validate()
     if q.element == "snow":
         return Metric(name="storm_total_snow", kind="storm", source="nohrsc", element="snow", title=title, style=style).validate()
     normal = "average" if q.when == "range_normal" else ("departure" if q.departure else None)
