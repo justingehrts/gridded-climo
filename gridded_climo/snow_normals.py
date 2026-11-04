@@ -76,3 +76,41 @@ def window_sum(z: dict, months: list[int]) -> tuple[np.ndarray, np.ndarray]:
     v = z["monthly"][:, [m - 1 for m in months]]
     keep = np.isfinite(v).all(axis=1)
     return v[keep].sum(axis=1), keep
+
+
+# --- departure from normal over specific dates ------------------------------------------------------------------------
+def _sum_cell(c):
+    """smry cell ['14.1', missing_days] -> (value or nan, missing_days)."""
+    if not isinstance(c, list):
+        return float("nan"), 10**6
+    return _num(c[0]), int(c[1])
+
+
+def parse_departure(out: dict, n_days: int, max_missing_frac: float) -> dict:
+    keep = []
+    for r in out.get("data", []):
+        m = r.get("meta") or {}
+        if not m.get("ll") or len(r.get("smry", [])) < 2:
+            continue
+        (obs, miss), (norm, _) = (_sum_cell(c) for c in r["smry"][:2])
+        if np.isfinite(obs) and np.isfinite(norm) and miss <= max_missing_frac * n_days:
+            keep.append((m["ll"][0], m["ll"][1], m.get("name", ""), obs, norm, round(obs - norm, 2), miss))
+    cols = list(zip(*keep)) if keep else [[]] * 7
+    return {"lon": np.array(cols[0], "float32"), "lat": np.array(cols[1], "float32"), "name": np.array(cols[2], dtype=str),
+            "obs": np.array(cols[3], "float32"), "normal": np.array(cols[4], "float32"),
+            "departure": np.array(cols[5], "float32"), "missing": np.array(cols[6], "int32")}
+
+
+def fetch_snow_departure(client, bbox, start, end, max_missing_frac: float = 0.10) -> dict:
+    """Observed snowfall, its 1991-2020 normal and the departure, summed over [start, end] at every station (ACIS daily normals)."""
+    import datetime as dt
+    sm = {"reduce": "sum", "add": "mcnt"}
+    params = {"bbox": ",".join(f"{v:g}" for v in bbox), "sdate": start.isoformat(), "edate": end.isoformat(),
+              # departure = obs - normal here; asking ACIS for it too made the request ~3x slower
+              "elems": [{"name": "snow", "smry": sm, "smry_only": 1}, {"name": "snow", "normal": "1", "smry": sm, "smry_only": 1}],
+              "meta": ["name", "ll"]}
+    n_days = (end - start).days + 1
+    fetch = lambda: parse_departure(client.post("MultiStnData", params), n_days, max_missing_frac)
+    complete = end < dt.date.today() - dt.timedelta(days=5)
+    cache = getattr(client, "cache", None)
+    return cache.get_or_compute("acis_snow_departure_v2", params, fetch) if (cache and complete) else fetch()

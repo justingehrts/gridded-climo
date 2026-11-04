@@ -21,9 +21,21 @@ Metrics live in `gridded_climo/metrics.yaml` (see `registry.py` for the schema).
 ```
 streamlit run streamlit_app.py      # needs data/ (see below) and the GDAL CLI
 ```
-Pick **When** (average first / last date, or custom range), **What** (temperature at/below or at/above X, snowfall, precip…),
-then **Generate map** for a preview and KMZ download. First/last dates for temperature can use either the **grid** (ACIS Grid 1,
-scanned cell by cell) or **stations** (each station's own average date, interpolated; snowfall is stations-only).
+The sidebar has three tabs:
+- **Map**: the Area, a **Variable** (Temperature, Precipitation, Sun), a **Map type** and that type's short form. The summary
+  ("Will make …") and **Generate map** come after the form and stick to the bottom of the sidebar on long forms; **Recent maps** below
+  them re-make an earlier map in one click.
+  - Temperature: *Cold & warm dates* (first/last date the low or high is at or below / at or above X), *Totals & averages*,
+    *Normal for dates*, *Vs normal*.
+  - Precipitation: Rain (*Totals*, *Normal for dates*, *Vs normal*) and Snow (*Snowfall dates*, *Normal snowfall*, *Storm total*,
+    *Snowfall vs normal*).
+  - Sun: sunrise, sunset and day length.
+- **Look**: preset, color ramp, reverse, shading, steps, min/max, date grouping (date maps), import, reset. Changes apply right away.
+- **Export**: Download KMZ, save the look as a preset, and **save or load a whole map** (area, map type, every setting and the look).
+
+The main panel starts with a gallery of every map type. After Generate it shows the map with **Map / Image / Band colors** views.
+Cold & warm dates can use **stations** (each station's own date, interpolated; the default) or the **grid** (ACIS Grid 1, scanned
+cell by cell), under Advanced; snowfall is stations-only.
 
 The app reads precomputed data shipped in `data/` (Streamlit Community Cloud can't afford multi-decade pulls):
 ```
@@ -35,7 +47,7 @@ The grid command is resumable (raw ACIS pulls are cached). Stations accept any t
 Deploying to Streamlit Community Cloud: `requirements.txt` + `packages.txt` (installs `gdal-bin`) are included.
 
 ### Start year and POR
-On first/last-date maps, **Years included: from** takes a year (like `1890`) or **`POR`**, the start of the period of record: the earliest year any station
+On date maps, **Years from** takes a year (like `1890`) or **`POR`**, the start of the period of record: the earliest year any station
 in the chosen area reports that variable (looked up from ACIS, kept for a day). The app also shows how many stations that start has, since the
 earliest years rest on very few. For the Grid method, POR means 1991, where the saved grid data begins. Years before the area's record are
 rejected with the real start year. The command line takes `--normal-period por-2020`.
@@ -61,20 +73,20 @@ Pre-saved data (grid first/last dates, daily normals, per-station files) only co
 - **Group dates into** (first/last-date maps): *Automatic* (default, equal color steps), *Weekly* (1st-6th, 7th-13th, 14th-20th, 21st-end),
   *Thirds* (early / mid / late month), *Halves* (1st-15th, 16th-end), or *Custom* (your own bin start dates, e.g. `Oct 1, Oct 8, Oct 15, Nov 1`).
   Each bin is one color and one legend entry; bins are calendar-aligned, so "first week of October" means the same thing every month.
-- **🎨 Style** (sidebar): color ramp (a dropdown that draws each ramp's gradient), reverse, stepped/smooth, number of steps, min/max, and import of a MAX `.wctrp` palette,
+- **Look** tab: color ramp (a dropdown that draws each ramp's gradient), reverse, stepped/smooth, number of steps, min/max, and import of a MAX `.wctrp` palette,
   a CSV legend (`From,To,R,G,B,Alpha`, or the older `Value,R,G,B,Alpha`), or a JSON settings export. For date maps an imported palette supplies colors only (assigned by
   position across the bins); for numeric maps its values become the color-band thresholds.
-- **🎨 Edit colors** (below the map): edit R/G/B/A for each date bin, or, on numeric maps, a MAX-style color table: one row per band
+- **Band colors** view (next to Map / Image): edit R/G/B/A for each date bin, or, on numeric maps, a MAX-style color table: one row per band
   (From, To, color swatch with a color picker, Red/Green/Blue, Transparency), each color applying from its From up to its To. Leave the first
   From blank for no lower limit and the last To blank for no upper limit; values in no band are transparent. Select two rows and **Ramp RGB** (or
   **Ramp RGB + Transparency**) to blend the rows between them, or **Generate bands** from a preset ramp. **Download as .wctrp** writes the table as a MAX palette (gaps become transparent bands, no upper limit is written as 999).
   (Ported from geotiff-to-kmz.)
 - Styling re-renders the cached result instantly; it never re-fetches data.
-- **Map smoothing** (Options, station maps): stations are interpolated (nearest 8, distance^-3) and then blurred a little. Default 3 km keeps
+- **Map smoothing** (Advanced, station maps): stations are interpolated (nearest 8, distance^-3) and then blurred a little. Default 3 km keeps
   the map within about a day of each airport's own average; 0 matches every station exactly (spottier), and higher values give smoother,
   blurrier contours that can drift several days from a single station.
-- **Presets** are plain JSON files (the same format as a settings export) in `presets/`. Pick one under 🎨 Style → *Preset* → *Apply preset*;
-  only the settings a preset contains are changed. To create one, restyle a map, open *Save this look as a preset*, name it, download the file,
+- **Presets** are plain JSON files (the same format as a settings export) in `presets/`. Pick one under Look → *Preset* → *Apply preset*;
+  only the settings a preset contains are changed. To create one, restyle a map, open Export → *Save look as preset*, name it, download the file,
   put it in `presets/`, and commit (Community Cloud's disk is temporary, so the app can't store presets itself). Presets hold the look only,
   never the data or the threshold, and a preset's numeric legend is ignored on date maps.
 
@@ -97,7 +109,7 @@ are specific-dates only (the shipped daily normals are averages, so there is no 
 
 ## Sun data
 
-**When → Sun** maps sunrise, sunset or length of day on one date, or the change in each between two dates. Values are astronomical
+**Variable → Sun** maps sunrise, sunset or length of day on one date, or the change in each between two dates. Values are astronomical
 (NOAA/Meeus solar position, upper limb with standard refraction; within about a minute of other calculators) on a 0.05° grid, in **local clock
 time**: each point uses its own time zone (`data/tz/tzgrid.npz`, built once by `python -m gridded_climo.tz_build` with `timezonefinder`)
 and that date's daylight-saving offset, so the map steps by an hour across a zone border, and a range that spans a daylight-saving change
@@ -106,8 +118,15 @@ area in the US and nearby works instantly.
 
 ## Average monthly / seasonal snowfall
 
-**Custom range → Averaged over normal period → Snowfall** maps NCEI's official 1991–2020 monthly snowfall normals (what NWS publishes;
+**Precipitation → Normal snowfall** maps NCEI's official 1991–2020 monthly snowfall normals (what NWS publishes;
 Columbus November = 1.2") summed over the chosen months: any single month, Dec–Feb, Oct–Apr, the Jul–Jun season, or any month range.
 Station normals come from ACIS in one request and are interpolated like the other station maps. The Ohio-centered region ships
 them (`data/normals/snow_monthly_1991-2020.npz`, rebuilt with `gridded-climo precompute --snow-normals`); other areas fetch live (~5–10 s).
 Whole months and the 1991–2020 period only, since those are what the official normals cover.
+
+## Snowfall departure from normal
+
+**Precipitation → Snowfall vs normal** maps observed station snowfall minus the NCEI 1991–2020
+normal for the same days (ACIS daily normals, so any date range works; CMH Jan–Feb 2025 = 14.1" vs 17.1" normal, −3.0"). Station days
+end around 7 AM, so the inputs are dates rather than NOHRSC hours, and any year with station data works. Stations missing more than
+10% of the days are left out; the rest are interpolated like the other station maps. Fetched live (~20–60 s for the Ohio region, depending on ACIS load).

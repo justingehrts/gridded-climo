@@ -114,7 +114,7 @@ def test_grid_cross_year_min_max():
 def test_titles_name_the_statistic():
     from gridded_climo.query import describe
     assert describe(Query(when="first", element="snow", op="ge", value=1.0, stat="min")) == 'Earliest First Snowfall of 1" or More on Record'
-    assert describe(Query(when="last", element="mint", op="le", value=32, stat="max")).startswith("Latest Last Low Temperature")
+    assert describe(Query(when="last", element="mint", op="le", value=32, stat="max")).startswith("Latest Last Low of 32°F or Colder")
     assert describe(Query(when="first", element="mint", op="le", value=32, stat="percentile", percentile=10)).startswith("10th Percentile Date of First")
     assert describe(Query(when="first", element="mint", op="le", value=32)).startswith("Average Date of First")
 

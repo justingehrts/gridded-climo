@@ -70,6 +70,18 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
             note = (f"NCEI 1991-2020 snowfall normals at {len(points['value'])} stations, interpolated (IDW + {info['smooth_km']:g} km "
                     f"smoothing, up to {info['reach_km']:.0f} km from a station); "
                     + ("pre-saved data" if info["data_source"] == "shipped" else "fetched live from ACIS"))
+        elif metric.normal == "departure" and metric.element == "snow":
+            from .products.snow_normals import snow_departure_map
+            from .sun import tidy_style
+            grid, info = snow_departure_map(st.bbox, s, e, client, smooth_km)
+            name += f" ({s} to {e}, vs 1991-2020 normal)"
+            points = info["points"]
+            label_fmt = lambda v: f'{round(v, 2):+g}"' if round(v, 2) else '0"'
+            metric = replace(metric, style=tidy_style(metric.style, grid.data, symmetric=True,
+                                                      nice=(0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50)))
+            note = (f"Observed snowfall minus the 1991-2020 normal (ACIS daily normals) at {len(points['value'])} stations, interpolated "
+                    f"(IDW + {info['smooth_km']:g} km smoothing, up to {info['reach_km']:.0f} km from a station); station days end in the "
+                    "morning, so a date's snow is mostly the 24 h before ~7 AM; fetched live from ACIS")
         elif metric.normal == "average":
             grid, info = normal_window_average(metric, st.bbox, (s.month, s.day), (e.month, e.day), st.normal_period, data_dir)
             name += f" ({s:%b %-d}–{e:%b %-d}, {info['years'][0]}-{info['years'][1]} average)"

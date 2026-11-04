@@ -52,3 +52,56 @@ def test_map_values_hug_station_normals():
     r = int((grid.north - pts["lat"][i]) / grid.dy); c = int((pts["lon"][i] - grid.west) / grid.dx)
     assert abs(grid.data[r, c] - 1.2) < 0.3
     assert np.nanmax(grid.data) > 5            # lake-effect belt in NE Ohio / NW PA gets much more November snow
+
+
+# --- departure from normal ---------------------------------------------------------------------------------------------
+from gridded_climo.snow_normals import fetch_snow_departure, parse_departure
+
+
+def _dep_response():
+    row = lambda name, ll, obs, miss, norm, dep: {"meta": {"name": name, "sids": [name], "ll": ll}, "smry": [[obs, miss], [norm, 0], [dep, miss]]}
+    return {"data": [row("CMH", [-82.88, 39.99], "14.1", 0, "17.1", "-3.0"), row("TRACE", [-83.5, 40.5], "T", 0, "0.4", "-0.4"),
+                     row("GAPPY", [-84.0, 40.0], "2.0", 20, "10.0", "-8.0"), row("NOOBS", [-82.0, 39.5], "M", 59, "9.0", "M")]}
+
+
+def test_parse_departure_filters_missing_and_reads_trace():
+    z = parse_departure(_dep_response(), n_days=59, max_missing_frac=0.10)
+    assert list(z["name"]) == ["CMH", "TRACE"]                      # GAPPY misses 20 of 59 days, NOOBS has no data
+    assert z["departure"].tolist() == pytest.approx([-3.0, -0.4]) and z["obs"][1] == 0.0
+
+
+class FakeACIS:
+    cache = None
+
+    def __init__(self):
+        self.params = None
+
+    def post(self, endpoint, params):
+        self.params = params
+        return _dep_response()
+
+
+def test_fetch_departure_request_shape():
+    c = FakeACIS()
+    fetch_snow_departure(c, (-84, 39, -82, 41), dt.date(2025, 1, 1), dt.date(2025, 2, 28))
+    e = c.params["elems"]
+    assert [x.get("normal") for x in e] == [None, "1"] and all(x["smry_only"] == 1 for x in e)
+    assert c.params["sdate"] == "2025-01-01" and c.params["edate"] == "2025-02-28"
+
+
+def test_departure_query_rules():
+    base = dict(when="range_specific", element="snow", departure=True)
+    q = Query(**base, start=dt.date(2025, 1, 1), end=dt.date(2025, 2, 28))
+    assert unsupported_reason(q) is None and describe(q) == "Snowfall Departure from Normal"
+    assert metric_from_query(q).normal == "departure"
+    assert unsupported_reason(Query(**base))                                                       # dates required
+    assert unsupported_reason(Query(**base, start=dt.date(2024, 1, 1), end=dt.date(2025, 2, 28)))   # > 1 year
+    assert unsupported_reason(Query(**base, start=dt.date(2025, 2, 1), end=dt.date(2025, 1, 1)))    # reversed
+    assert unsupported_reason(Query(**base, start=dt.date(1960, 1, 1), end=dt.date(1960, 2, 1))) is None   # any year with station data
+
+
+def test_departure_map_from_fake_client():
+    from gridded_climo.products.snow_normals import snow_departure_map
+    grid, info = snow_departure_map((-84, 39.5, -82, 41), dt.date(2025, 1, 1), dt.date(2025, 2, 28), FakeACIS(), smooth_km=0)
+    assert len(info["points"]["value"]) == 2 and np.nanmin(grid.data) == pytest.approx(-3.0, abs=0.01)
+    assert '14.1" vs 17.1" normal' in info["points"]["name"][0]

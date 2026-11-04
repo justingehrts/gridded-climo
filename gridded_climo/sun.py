@@ -117,7 +117,7 @@ def tidy_style(style, data: np.ndarray, symmetric: bool, nice=_NICE, floor0: boo
         return style
     lo, hi = (float(np.percentile(v, 2)), float(np.percentile(v, 98))) if v.size > 20 else (float(v.min()), float(v.max()))
     if symmetric:
-        hi = max(abs(lo), abs(hi), 1.0)
+        hi = max(abs(lo), abs(hi), nice[0])
         lo = -hi
     n = max(int(style.steps), 2)
     span = max(hi - lo, 1.0)
@@ -128,6 +128,7 @@ def tidy_style(style, data: np.ndarray, symmetric: bool, nice=_NICE, floor0: boo
     if symmetric:
         vmax = np.ceil(max(abs(lo), abs(hi)) / step) * step
         vmin = -vmax
+        n = int(round((vmax - vmin) / step))                       # 0 stays a band edge
     else:
         vmin = np.floor(lo / step) * step                           # just enough round-valued bands to cover the data (at most n)
         n = bands(step)

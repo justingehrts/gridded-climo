@@ -38,6 +38,9 @@ from gridded_climo.precomputed import shipped_years
 from gridded_climo.presets import list_presets, preset_slug
 from gridded_climo.regions import CONUS_BOUNDS, buffer_deg, buffered_bbox, presaved_bbox, state_names, states
 from gridded_climo.ui.style_build import build_style, pending_from_json
+from gridded_climo.ui import forms
+from gridded_climo.ui.maptypes import BY_ID, DEFAULT_TYPE, VARIABLES, first_type, source_note, swatch_css, types_for
+from gridded_climo.query import describe
 
 def _writable_cache_dir() -> Path:
     """Preferred cache dir if we can write there, else a temp dir (hosted filesystems may be read-only)."""
@@ -109,14 +112,59 @@ if "_pending" in st.session_state:
         set_legend_rows(pending["legend_rows"])
     forget_ramp_pick()
 
-# ---------------------------------------------------------------- selectors
-years_error = None      # set by the Options panel when the years can't be used; shown in the main panel and disables Generate
+
+# ---------------------------------------------------------------- layout helpers
+st.html("""<style>
+/* Summary + Generate stick to the bottom of the sidebar on long forms. Streamlit wraps the keyed container in a box of the
+   same size, so the wrapper is what sticks (sticky can't leave its parent). */
+div:has(> .st-key-gen_dock) { position: sticky; bottom: 0; z-index: 5; }
+.st-key-gen_dock { background: var(--secondary-background-color, #f0f2f6); padding: .5rem 0 .75rem;
+  border-top: 1px solid rgba(128,128,128,.25); box-shadow: 0 -6px 12px -10px rgba(0,0,0,.35); }
+.gc-swatch { height: 10px; border-radius: 3px; margin-bottom: 2px; }
+section[data-testid="stSidebar"] { min-width: 340px; }
+</style>""")
+
+st.session_state.setdefault("f_var", "temperature")
+st.session_state.setdefault("f_type", DEFAULT_TYPE)
+st.session_state.setdefault("main_view", "Map")
+if BY_ID.get(st.session_state["f_type"]) is None:
+    st.session_state["f_type"] = DEFAULT_TYPE
+
+
+def _on_var():
+    if BY_ID[st.session_state["f_type"]].variable != st.session_state["f_var"]:
+        st.session_state["f_type"] = first_type(st.session_state["f_var"])
+
+
+def _pick_type(type_id: str):
+    st.session_state["f_type"] = type_id
+    st.session_state["f_var"] = BY_ID[type_id].variable
+
+
+def _on_type_pill(pkey: str):
+    picked = st.session_state.get(pkey)
+    if picked:
+        st.session_state["f_type"] = picked
+    else:                       # clicking the chosen pill again would clear it; keep the current type selected
+        st.session_state[pkey] = st.session_state["f_type"]
+
+
+def _restore(snap: dict):
+    st.session_state["_pending"] = dict(snap)
+
+
+def _show_band_colors():
+    st.session_state["main_view"] = "Band colors"
+
+
+# ---------------------------------------------------------------- sidebar: Map tab
 with st.sidebar:
     st.title("🗺️ Gridded Climo")
-    st.caption("Broadcast climate maps · ACIS Grid 1 · NOHRSC snowfall")
+    st.caption("Broadcast climate maps · ACIS · NOHRSC")
+    tab_map, tab_look, tab_export = st.tabs(["Map", "Look", "Export"])
 
-    st.subheader("Area")
-    area_name = st.selectbox("Area", AREAS, key="area", label_visibility="collapsed",
+with tab_map:
+    area_name = st.selectbox("Area", AREAS, key="area",
                              help="Pick a state (shown with a buffer so neighbors and surroundings are included) or draw your own box. "
                                   "Ohio and the Columbus default use pre-saved data; other areas are fetched live from ACIS.")
     if area_name == DEFAULT_AREA:
@@ -125,8 +173,8 @@ with st.sidebar:
         c1, c2 = st.columns(2)
         w0, s0, e0, n0_ = CONUS_BOUNDS
         d0 = DEFAULT_BBOX
-        west = c1.number_input("West", w0, e0, d0[0], 0.1); east = c2.number_input("East", w0, e0, d0[2], 0.1)
-        north = c1.number_input("North", s0, n0_, d0[3], 0.1); south = c2.number_input("South", s0, n0_, d0[1], 0.1)
+        west = c1.number_input("West", w0, e0, d0[0], 0.1, key="area_w"); east = c2.number_input("East", w0, e0, d0[2], 0.1, key="area_e")
+        north = c1.number_input("North", s0, n0_, d0[3], 0.1, key="area_n"); south = c2.number_input("South", s0, n0_, d0[1], 0.1, key="area_s")
         bbox = (west, south, east, north)
     else:
         code = STATE_CODES[area_name]
@@ -137,220 +185,46 @@ with st.sidebar:
         st.caption("📡 Outside the pre-saved region: station maps and date ranges are fetched live from ACIS (can take longer), "
                    "and grid first/last dates and departure maps aren't available here.")
 
-    st.subheader("1 · When")
-    when_label = st.radio("When", ["Average first date", "Average last date", "Custom range", "Sun (sunrise, sunset, day length)"],
-                          label_visibility="collapsed")
-    is_sun = when_label.startswith("Sun")
-    range_mode = None
-    if when_label == "Custom range":
-        range_mode = st.radio("Range type", ["Specific dates", "Averaged over normal period"],
-                              help="Specific dates = one real period. Averaged = the same calendar dates averaged over every year in the normal period.")
+    st.segmented_control("Variable", list(VARIABLES), format_func=VARIABLES.get, required=True, key="f_var", on_change=_on_var,
+                         width="stretch")
+    type_id = st.session_state["f_type"]
+    choices = types_for(st.session_state["f_var"])
+    if len(choices) > 1:
+        groups = list(dict.fromkeys(t.group for t in choices))
+        for group in groups:
+            ids = [t.id for t in choices if t.group == group]
+            pkey = f"mt_{st.session_state['f_var']}_{group or 'all'}"
+            st.session_state[pkey] = type_id if type_id in ids else None      # one map type is chosen across all groups
+            st.pills(group or "Map type", ids, format_func=lambda i: BY_ID[i].name, key=pkey, on_change=_on_type_pill, args=(pkey,),
+                     label_visibility="visible")
+    st.markdown(f"#### {BY_ID[type_id].name}")
+    st.caption(BY_ID[type_id].blurb)
 
-    st.subheader("2 · What")
-    q_kwargs: dict = {}
-    sun_change = False
-    if is_sun:
-        sun_labels = SUN_ELEMENTS
-        chosen_sun = st.selectbox("Variable", list(sun_labels.values()), key="sun_var")
-        q_kwargs.update(when="sun", element=next(k for k, v in sun_labels.items() if v == chosen_sun))
-        sun_change = st.radio("Show", ["Value on one date", "Change between two dates"], key="sun_mode",
-                              help="Times are local clock time on each date (daylight saving included), by the time zone at each point; "
-                                   "the map steps where a zone border is crossed.") == "Change between two dates"
-    elif when_label != "Custom range":
-        var = st.selectbox("Variable", ["Temperature at or below", "Temperature at or above", "Snowfall"])
-        if var == "Snowfall":
-            amount = st.number_input("Daily snowfall at least (in)", 0.1, 30.0, 1.0, 0.1, format="%.1f",
-                                     help="Pre-saved: " + ", ".join(f"{v:g}" for v in STATION_MENU[("snow", "ge")]) + ". Other amounts are fetched live from ACIS (about 1-2 minutes: snow comes from thousands of stations).")
-            q_kwargs.update(element="snow", op="ge", value=float(amount), method="station")
-            st.caption("Snowfall has no ACIS grid, so this uses station observations interpolated to a map.")
-        else:
-            op = "le" if var.endswith("below") else "ge"
-            el_label = st.radio("Which temperature?", list(TEMP_ELEMENTS.values()), index=0 if op == "le" else 1, horizontal=True)
-            el = next(k for k, v in TEMP_ELEMENTS.items() if v == el_label)
-            method_label = st.radio(
-                "Method", ["Stations (interpolated)", "Grid (ACIS Grid 1)"],
-                help="Stations: each station's own date (what the ACIS website shows), interpolated — official values at the dots, any "
-                     "threshold, any years back to 1900. Grid: NRCC's 5 km daily temperature grid scanned cell by cell — smooth, every "
-                     "cell has a value, but only the pre-saved thresholds and 1991+ years. They agree within ~2 days for typical "
-                     "freeze thresholds; warm thresholds (90°F+) can differ more.")
-            by_station = method_label.startswith("Stations")
-            glo, ghi = GRID_RANGES[(el, op)]
-            lo, hi = (-60, 140) if by_station else (glo, ghi)
-            value = st.number_input(
-                "Threshold (°F)", min_value=lo, max_value=hi, value=min(max(DEFAULT_THRESHOLD[(el, op)], lo), hi), step=1,
-                key=f"thr_{el}_{op}_{'stn' if by_station else 'grid'}",
-                help=(("Whole degrees. Pre-saved (instant): " + ", ".join(f"{v:g}" for v in STATION_MENU[(el, op)])
-                       + ". Any other value is fetched live from ACIS (~15-30 s).") if by_station else
-                      "Whole degrees. The grid method only has these pre-saved: " + ", ".join(str(v) for v in MENU[(el, op)])
-                      + ". Use Stations for any other value."))
-            q_kwargs.update(element=el, op=op, value=float(value), method="station" if by_station else "grid")
-        q_kwargs["when"] = "first" if when_label == "Average first date" else "last"
-    else:
-        specific = range_mode == "Specific dates"
-        labels = {k: v for k, v in RANGE_ELEMENTS.items() if specific or k in ("maxt", "mint", "pcpn", "snow")}
-        chosen = st.selectbox("Variable", list(labels.values()), key=f"range_var_{'s' if specific else 'n'}")
-        el = next(k for k, v in labels.items() if v == chosen)
-        q_kwargs["element"] = el
-        if el != "snow":
-            default = "sum" if el in ("pcpn", "hdd", "cdd", "gdd") else "mean"
-            opts = list(RANGE_REDUCES) if specific else ["mean", "sum", "max", "min"]
-            q_kwargs["reduce"] = st.selectbox("Summary", opts, index=opts.index(default), format_func=RANGE_REDUCES.get, key="range_reduce")
-            counting = q_kwargs["reduce"] in ("count", "pct")
-            if specific and (counting or st.checkbox("Only include days meeting a threshold", key="range_filter",
-                                                     help="For example, a total of daily highs only on days at or above 80°F.")):
-                is_in = el == "pcpn"
-                c1, c2 = st.columns(2)
-                rel = c1.selectbox("Days where value is", ["at or above", "at or below"], key="range_op")
-                thr = c2.number_input("Threshold (in)" if is_in else "Threshold (°F)" if el in ("maxt", "mint", "avgt") else "Threshold",
-                                      value=0.01 if is_in else 80.0 if el == "maxt" else 32.0 if el == "mint" else 65.0 if el == "avgt" else 10.0,
-                                      step=0.01 if is_in else 1.0, format="%.2f" if is_in else "%.0f", key=f"range_thr_{el}")
-                q_kwargs.update(op="ge" if rel == "at or above" else "le", value=float(thr))
-        q_kwargs["when"] = "range_specific" if range_mode == "Specific dates" else "range_normal"
-        if range_mode == "Specific dates" and el in ("maxt", "mint", "pcpn") and q_kwargs.get("value") is None \
-                and q_kwargs.get("reduce") in ("mean", "sum"):
-            q_kwargs["departure"] = st.checkbox("Show departure from normal", help="Value minus the daily normals for the same days.")
-
-    st.subheader("3 · Dates")
-    date_mode, custom_starts = "auto", ""
-    if is_sun:
-        c1, c2 = st.columns(2) if sun_change else (st.container(), None)
-        q_kwargs["start"] = c1.date_input("Start date" if sun_change else "Date", TODAY, min_value=dt.date(1900, 1, 1), max_value=dt.date(2100, 12, 31), key="sun_d1")
-        if sun_change:
-            q_kwargs["end"] = c2.date_input("End date", TODAY + dt.timedelta(days=30), min_value=dt.date(1900, 1, 1), max_value=dt.date(2100, 12, 31), key="sun_d2")
-    elif when_label != "Custom range":
-        st.caption("Uses every year in the years range (see Options).")
-        date_mode = st.radio("Group dates into", MODES, format_func=MODE_LABELS.get, key="style_date_mode",
-                             help="Automatic: equal color steps across the data. Weekly: 1st–6th, 7th–13th, 14th–20th, 21st–end of "
-                                  "month. Thirds: early / mid / late month. Halves: 1st–15th and 16th–end. Custom: your own bin start dates.")
-        if date_mode == "custom":
-            custom_starts = st.text_input("Bin start dates (in season order)", "Oct 1, Oct 8, Oct 15, Oct 22, Nov 1", key="style_custom_starts",
-                                          help="Each bin runs from its start date to the day before the next one. Data before the first date "
-                                               "gets a 'Before…' bin; data after the last start extends the last bin.")
-    elif range_mode == "Specific dates" and el != "snow":
-        d1, d2 = st.columns(2)
-        first_of_month = TODAY.replace(day=1) - dt.timedelta(days=1)
-        q_kwargs["start"] = d1.date_input("Start", first_of_month.replace(day=1), min_value=dt.date(1950, 1, 1), max_value=TODAY)
-        q_kwargs["end"] = d2.date_input("End", first_of_month, min_value=dt.date(1950, 1, 1), max_value=TODAY)
-    elif range_mode == "Specific dates":  # snowfall / NOHRSC: date + hour, Eastern or UTC
-        tz = st.radio("Enter times as", ["Eastern (auto EST/EDT)", "UTC"], horizontal=True)
-        zone = ZoneInfo("America/New_York") if tz.startswith("Eastern") else ZoneInfo("UTC")
-        c1, c2 = st.columns(2)
-        sd = c1.date_input("Start date", TODAY - dt.timedelta(days=3), min_value=NOHRSC_START.date(), max_value=TODAY)
-        sh = c1.selectbox("Start hour", range(24), index=7, format_func=lambda h: f"{h:02d}:00")
-        ed = c2.date_input("End date", TODAY - dt.timedelta(days=1), min_value=NOHRSC_START.date(), max_value=TODAY)
-        eh = c2.selectbox("End hour", range(24), index=7, format_func=lambda h: f"{h:02d}:00")
-        to_utc = lambda d, h: dt.datetime.combine(d, dt.time(h), tzinfo=zone).astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
-        q_kwargs["start"], q_kwargs["end"] = to_utc(sd, sh), to_utc(ed, eh)
-        q_kwargs["extra"] = {"reports": st.checkbox("Overlay NWS snow reports (IEM)", value=True,
-                                                    help="Observed snowfall from NWS local storm reports, shown as dots on the map.")}
-        st.caption(f"UTC window: **{q_kwargs['start']:%b %-d %HZ} → {q_kwargs['end']:%b %-d %HZ}**. NOHRSC analyses are 00Z/12Z "
-                   "(season totals) or 6-hourly; times snap to the nearest available.")
-    elif el == "snow":  # averaged over normal period, snowfall: official monthly normals, whole months
-        picks = {MONTHS_FULL[m - 1]: (m, m) for m in (10, 11, 12, 1, 2, 3, 4)}
-        picks.update({"Winter (Dec–Feb)": (12, 2), "Oct–Apr": (10, 4), "Season total (Jul–Jun)": (7, 6), "Choose months…": None})
-        pick = st.selectbox("Months", list(picks), index=1, key="snow_norm_pick")
-        if picks[pick] is None:
-            c1, c2 = st.columns(2)
-            sm = c1.selectbox("From month", range(1, 13), index=10, format_func=lambda m: MONTHS[m - 1], key="snow_norm_m1")
-            em = c2.selectbox("To month", range(1, 13), index=1, format_func=lambda m: MONTHS[m - 1], key="snow_norm_m2")
-        else:
-            sm, em = picks[pick]
-        q_kwargs["start"], q_kwargs["end"] = dt.date(2001, sm, 1), dt.date(2001, em, calendar.monthrange(2001, em)[1])
-        q_kwargs["normal_period"] = DEFAULT_NORMAL_PERIOD
-        st.caption("NCEI's official 1991–2020 monthly snowfall normals at each station (the numbers NWS publishes), summed over the "
-                   "chosen months and interpolated to a map.")
-    else:  # averaged over normal period: month/day window
-        c1, c2 = st.columns(2)
-        sm = c1.selectbox("From month", range(1, 13), index=11, format_func=lambda m: MONTHS[m - 1])
-        sdy = c1.number_input("From day", 1, 31, 1)
-        em = c2.selectbox("To month", range(1, 13), index=1, format_func=lambda m: MONTHS[m - 1])
-        edy = c2.number_input("To day", 1, 31, 28)
-        try:
-            q_kwargs["start"], q_kwargs["end"] = dt.date(2001, sm, int(sdy)), dt.date(2001, em, int(edy))
-        except ValueError:
-            q_kwargs["start"] = q_kwargs["end"] = None
-
-    years_error = None
-    snow_normals = when_label == "Custom range" and range_mode != "Specific dates" and q_kwargs.get("element") == "snow"
-    if snow_normals:
-        q_kwargs["smooth_km"] = float(st.slider("Map smoothing (km)", 0, 15, 3, key="snow_norm_smooth",
-                                                help="Stations are interpolated, then lightly blurred. 0 = the map matches each station's value exactly."))
-    if not is_sun and not snow_normals:
-        with st.expander("Options"):
-            n0, n1 = st.columns(2)
-            label_y = "Years included: from" if when_label != "Custom range" else "Normal period: from"
-            if when_label != "Custom range":
-                ymax = last_complete_year(default_season(q_kwargs.get("op", "ge"), q_kwargs["when"], q_kwargs["element"]))
-            else:
-                ymax = last_complete_year({"start": [1, 1], "end": [12, 31]})
-            years_error = None
-            if when_label == "Custom range":      # daily normals are pre-saved for 1991-2020 only, so this stays a plain number
-                start_year = int(n0.number_input(label_y, STATION_FIRST_YEAR, ymax - 1, DEFAULT_NORMAL_PERIOD[0]))
-            else:
-                raw_start = n0.text_input(label_y, value=str(DEFAULT_NORMAL_PERIOD[0]), key="years_from",
-                                          help="A year (like 1890), or POR for the start of the period of record in the chosen area.")
-                start_year, por_info, parsed = DEFAULT_NORMAL_PERIOD[0], None, None
-                by_grid = q_kwargs.get("method") == "grid"
-                try:
-                    parsed = parse_start(raw_start)
-                    if parsed == "por":
-                        if by_grid:
-                            start_year = (shipped_years().get("grid") or (DEFAULT_NORMAL_PERIOD[0],))[0]   # the grid's saved data begins here
-                        else:
-                            por_info = cached_por(tuple(bbox), q_kwargs["element"])
-                            start_year = por_info.first_year
-                    else:
-                        start_year = parsed
-                        if not by_grid and start_year < 1950:
-                            por_info = cached_por(tuple(bbox), q_kwargs["element"])
-                            if start_year < por_info.first_year:
-                                years_error = f"Records in this area begin in {por_info.first_year}. Use POR, or a year from {por_info.first_year} on."
-                                por_info = None
-                except PorError as e:
-                    years_error = str(e)
-                except Exception as e:     # ACIS unreachable, etc.: the typed-year path doesn't need the lookup
-                    years_error = f"Couldn't look up the period of record ({type(e).__name__}). Type a year instead."
-            end_year = int(n1.number_input("to", STATION_FIRST_YEAR + 1, ymax, min(DEFAULT_NORMAL_PERIOD[1], ymax)))
-            if years_error is None and start_year >= end_year:
-                years_error = f"The start year ({start_year}) must be before the end year ({end_year})."
-            normal = (start_year, end_year)
-            if when_label != "Custom range":
-                if por_info is not None:
-                    st.caption(f"📅 Using {start_year}. " + por_info.describe({"mint": "low temperature", "maxt": "high temperature", "snow": "snowfall"}.get(q_kwargs["element"], "this variable")))
-                elif parsed == "por" and by_grid:
-                    st.caption(f"📅 Using {start_year}, where the saved grid data begins.")
-                st.caption("For a record (earliest/latest), start at POR. Stations go back as far as the area's records (most reliable from ~1895); the Grid method has 1991 onward.")
-                if start_year < SPARSE_BEFORE:
-                    st.warning(f"Before ~{SPARSE_BEFORE} only a handful of stations report in most areas, so these maps can be mostly blank or rest on very few stations.")
-            q_kwargs["normal_period"] = (int(normal[0]), int(normal[1]))
-            if when_label != "Custom range":
-                stat_label = st.selectbox("Statistic across years", ["Average date", "Median date", "Earliest on record", "Latest on record", "Percentile"])
-                stat = {"Average date": "mean", "Median date": "median", "Earliest on record": "min", "Latest on record": "max", "Percentile": "percentile"}[stat_label]
-                q_kwargs["stat"] = stat
-                if stat == "percentile":
-                    q_kwargs["percentile"] = st.slider("Percentile", 1, 99, 10)
-                if stat in ("min", "max"):
-                    st.caption("Each station's single earliest/latest date in the chosen years; its record year shows in the map tooltip.")
-            if when_label != "Custom range" and (q_kwargs.get("method") == "station" or q_kwargs.get("element") == "snow"):
-                q_kwargs["smooth_km"] = float(st.slider(
-                    "Map smoothing (km)", 0, 15, 3,
-                    help="Stations are interpolated, then lightly blurred. 0 = the map matches each station's own value exactly (but looks "
-                         "spottier); higher = smoother contours that drift from individual stations (12 km can be ~5 days off at a single airport)."))
-
-q = Query(**{k: v for k, v in q_kwargs.items() if k in Query.__dataclass_fields__})
-if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
-    reason = "Region: west must be less than east and south less than north."
-else:
-    reason = unsupported_reason(q, bbox) if q.start is not None or q.when in ("first", "last") or q.element == "snow" else "Choose valid dates."
-    if q.when not in ("first", "last", "sun") and (q.start is None or q.end is None):
+    res = forms.render_form(type_id, forms.Ctx(tuple(bbox), cached_por, TODAY))
+    q = Query(**{k: v for k, v in res.q.items() if k in Query.__dataclass_fields__})
+    if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
+        reason = "Area: west must be less than east, and south less than north."
+    elif res.error:
+        reason = res.error
+    elif q.when not in ("first", "last", "sun") and (q.start is None or q.end is None):
         reason = "Choose valid dates."
+    else:
+        reason = unsupported_reason(q, bbox)
+    try:
+        will_make = describe(q)
+    except Exception:
+        will_make = BY_ID[type_id].name
 
-# ---------------------------------------------------------------- main panel
-if years_error and not reason:
-    reason = years_error
-if reason:
-    st.info(reason, icon="ℹ️")
-go = st.sidebar.button("Generate map", type="primary", disabled=bool(reason), width="stretch")
+    with st.container(key="gen_dock"):
+        with st.container(border=True, gap="small"):
+            st.markdown(f"<small>Will make</small><br>**{will_make}**", unsafe_allow_html=True)
+            st.caption(f"{area_name.replace(' (pre-saved)', '')} · {source_note(type_id, res.q.get('method'), presaved_bbox(tuple(bbox)) is not None)}")
+            if reason:
+                st.info(reason, icon="ℹ️")
+        go = st.button("Generate map", type="primary", disabled=bool(reason), width="stretch")
+    recent_box = st.container()
+
+# ---------------------------------------------------------------- generate
 if go:
     key = (q, tuple(bbox))
     if st.session_state.get("active") != key:   # a new map starts from clean styling
@@ -362,19 +236,34 @@ if go:
             st.write("Fetching / reading data…")
             cached_compute(q, tuple(bbox), allow_live())
             st.session_state["active"] = key
+            st.session_state["main_view"] = "Map"
+            title = describe(q)
+            recent = [r for r in st.session_state.get("recent", []) if r["title"] != title or r["area"] != area_name]
+            st.session_state["recent"] = [{"title": title, "area": area_name, "snap": forms.snapshot(st.session_state)}] + recent[:4]
             status.update(label="Done", state="complete", expanded=False)
         except Exception as e:  # show a readable message instead of a stack trace on air
             st.session_state.pop("active", None)
             status.update(label="Failed", state="error")
             st.error(f"{type(e).__name__}: {e}")
 
+with recent_box:
+    if st.session_state.get("recent"):
+        st.markdown("**Recent maps**")
+        for i, r in enumerate(st.session_state["recent"]):
+            st.button(f"↺ {r['title']}" + ("" if r["area"] == DEFAULT_AREA else f" · {r['area']}"), key=f"recent_{i}",
+                      on_click=_restore, args=(r["snap"],), width="stretch")
+    else:
+        st.caption("Maps you generate appear here, so you can re-make one in a click.")
+
 active = st.session_state.get("active")
 computed = cached_compute(active[0], active[1], allow_live()) if active else None
 default_style = computed.style if computed else Style()
 is_date_map = bool(computed and computed.ref)
 
-# ---- style panel (sidebar)
-with st.sidebar.expander("🎨 Style"):
+# ---------------------------------------------------------------- sidebar: Look tab
+date_mode, custom_starts = "auto", ""
+with tab_look:
+    st.caption("Changes apply to the current map right away.")
     presets = list_presets()
     chosen = st.selectbox("Preset", ["(none)"] + list(presets), key="style_preset")
     if st.button("Apply preset", disabled=chosen == "(none)", width="stretch",
@@ -382,25 +271,7 @@ with st.sidebar.expander("🎨 Style"):
         st.session_state["_pending"] = pending_from_json(presets[chosen].read_bytes(), RAMPS)
         st.rerun()
     if not presets:
-        st.caption("No presets yet. Save one below and add the file to the repo's `presets/` folder.")
-    up = st.file_uploader("Import palette / settings", type=["wctrp", "csv", "json"], key="style_upload",
-                          help=".wctrp (MAX palette) or CSV (Value,R,G,B,Alpha) set the colors; JSON restores a full settings export.")
-    if up is not None and st.session_state.get("_imported") != (up.name, up.size):
-        st.session_state["_imported"] = (up.name, up.size)
-        try:
-            data = up.getvalue()
-            if up.name.lower().endswith(".json"):
-                # widgets already exist this run, so hand the values to the top of the next run (see _pending above)
-                st.session_state["_pending"] = pending_from_json(data, RAMPS)
-            else:
-                rows = parse_wctrp(data)[0] if up.name.lower().endswith(".wctrp") else parse_legend_csv(data)
-                if is_date_map:   # dates aren't palette values, so only the colors carry over (by position across the bins)
-                    st.session_state["palette"] = [r[2:6] for r in rows]
-                else:
-                    set_legend_rows(rows)
-            st.rerun()
-        except (PaletteError, ValueError) as e:
-            st.error(str(e))
+        st.caption("No presets yet. Save one from the Export tab and add the file to the repo's `presets/` folder.")
     # The dropdown shows the ramp exactly as it will be applied, so it reads the other style widgets' current values
     # (Streamlit has already updated them for this run, even though they are created below).
     explicit_ramp = st.session_state.get("style_ramp")
@@ -425,7 +296,34 @@ with st.sidebar.expander("🎨 Style"):
         vmax = c2.number_input("Max value", value=None, placeholder="auto", key="style_vmax")
     else:
         vmin = vmax = None
-    if st.button("Reset all style choices"):
+        date_mode = st.radio("Group dates into", MODES, format_func=MODE_LABELS.get, key="style_date_mode",
+                             help="Automatic: equal color steps across the data. Weekly: 1st–6th, 7th–13th, 14th–20th, 21st–end of "
+                                  "month. Thirds: early / mid / late month. Halves: 1st–15th and 16th–end. Custom: your own bin start dates.")
+        if date_mode == "custom":
+            custom_starts = st.text_input("Bin start dates (in season order)", "Oct 1, Oct 8, Oct 15, Oct 22, Nov 1", key="style_custom_starts",
+                                          help="Each bin runs from its start date to the day before the next one. Data before the first date "
+                                               "gets a 'Before…' bin; data after the last start extends the last bin.")
+    st.button("Edit individual band colors →", on_click=_show_band_colors, disabled=computed is None, width="stretch",
+              help="Opens the band color table (with Ramp RGB to blend between two rows) next to the map.")
+    up = st.file_uploader("Import palette / settings", type=["wctrp", "csv", "json"], key="style_upload",
+                          help=".wctrp (MAX palette) or CSV (Value,R,G,B,Alpha) set the colors; JSON restores a full settings export.")
+    if up is not None and st.session_state.get("_imported") != (up.name, up.size):
+        st.session_state["_imported"] = (up.name, up.size)
+        try:
+            data = up.getvalue()
+            if up.name.lower().endswith(".json"):
+                # widgets already exist this run, so hand the values to the top of the next run (see _pending above)
+                st.session_state["_pending"] = pending_from_json(data, RAMPS)
+            else:
+                rows = parse_wctrp(data)[0] if up.name.lower().endswith(".wctrp") else parse_legend_csv(data)
+                if is_date_map:   # dates aren't palette values, so only the colors carry over (by position across the bins)
+                    st.session_state["palette"] = [r[2:6] for r in rows]
+                else:
+                    set_legend_rows(rows)
+            st.rerun()
+        except (PaletteError, ValueError) as e:
+            st.error(str(e))
+    if st.button("Reset all style choices", width="stretch"):
         for k in ("style_ramp", "style_flip", "style_mode", "style_steps", "style_vmin", "style_vmax", "style_date_mode",
                   "palette", "bin_colors", "_imported"):
             st.session_state.pop(k, None)
@@ -450,13 +348,14 @@ if computed:
     except Exception as e:
         st.error(f"{type(e).__name__}: {e}")
 
-if out:
-    st.subheader(out.name)
-    if out.note:
-        st.caption(out.note)
-    dl1, dl2 = st.columns([1, 1])
-    dl1.download_button("⬇️ Download KMZ", out.kmz, file_name=out.filename, mime="application/vnd.google-earth.kmz", type="primary")
-    with dl2.popover("Save this look as a preset"):
+# ---------------------------------------------------------------- sidebar: Export tab
+with tab_export:
+    if out:
+        st.download_button("⬇️ Download KMZ", out.kmz, file_name=out.filename, mime="application/vnd.google-earth.kmz", type="primary",
+                           width="stretch")
+    else:
+        st.caption("Generate a map to download its KMZ.")
+    with st.expander("Save look as preset"):
         pname = st.text_input("Preset name", placeholder="e.g. On-air look", key="preset_name")
         try:
             slug = preset_slug(pname) if pname else None
@@ -466,10 +365,37 @@ if out:
                            mime="application/json", disabled=not slug, key="preset_dl")
         st.caption(f"To make it appear in everyone's Preset list, save the file as `presets/{slug or 'name'}.json` in the repo and commit it. "
                    "Presets store the look only (ramp, grouping, colors), never the data or the threshold.")
-    tab_map, tab_img = st.tabs(["Map", "Image"])
-    with tab_map:
+    with st.expander("Save or load a whole map"):
+        saved = {"kind": "gridded-climo-map", "version": 1, "title": will_make,
+                 "widgets": forms.to_jsonable(forms.snapshot(st.session_state)), "look": json.loads(style_to_json(style, None))}
+        fname = "".join(ch if ch.isalnum() else "_" for ch in will_make).strip("_").lower()[:60] or "map"
+        st.download_button("Save whole map (settings + look)", json.dumps(saved, indent=1), file_name=f"{fname}.map.json",
+                           mime="application/json", key="map_dl", width="stretch")
+        mup = st.file_uploader("Load a saved map", type=["json"], key="map_upload")
+        if mup is not None and st.session_state.get("_map_loaded") != (mup.name, mup.size):
+            st.session_state["_map_loaded"] = (mup.name, mup.size)
+            try:
+                d = json.loads(mup.getvalue())
+                if not isinstance(d, dict) or d.get("kind") != "gridded-climo-map":
+                    raise ValueError("That file isn't a saved map (use Look → Import for palettes and presets).")
+                pending = forms.from_jsonable(d.get("widgets") or {})
+                if d.get("look"):
+                    pending.update(pending_from_json(json.dumps(d["look"]), RAMPS))
+                st.session_state["_pending"] = pending
+                st.rerun()
+            except (ValueError, TypeError) as e:
+                st.error(str(e))
+        st.caption("A saved map keeps the area, map type, every setting and the look, so a routine map comes back in one step.")
+
+# ---------------------------------------------------------------- main panel
+if out:
+    st.subheader(out.name)
+    if out.note:
+        st.caption(out.note)
+    view = st.segmented_control("View", ["Map", "Image", "Band colors"], required=True, key="main_view", label_visibility="collapsed")
+    if view == "Map":
         st_folium(build_map(out.png, out.bounds, counties(), out.points), use_container_width=True, height=560, returned_objects=[])
-    with tab_img:  # dependency-free preview: works even if the map CDN / tile servers are unreachable
+    elif view == "Image":  # dependency-free preview: works even if the map CDN / tile servers are unreachable
         overlay = Image.open(io.BytesIO(out.png)).convert("RGBA")
         canvas = Image.new("RGBA", overlay.size, (225, 225, 225, 255))
         canvas.alpha_composite(overlay)
@@ -477,8 +403,7 @@ if out:
                  caption="Rendered overlay on neutral gray (transparent areas = no data)", width="stretch")
     if out.legend_png:
         st.image(out.legend_png, caption="Legend (also included in the KMZ)")
-
-    with st.expander("🎨 Edit colors", expanded=st.session_state.get("edit_colors_open", False)):
+    if view == "Band colors":
         if out.bins and style.date_mode != "auto":      # one editable color per date bin
             df = pd.DataFrame([{"Bin": lab, "R": c[0], "G": c[1], "B": c[2], "A": c[3]} for lab, c in out.bins])
             with st.form("bin_color_form"):
@@ -567,5 +492,16 @@ if out:
                 st.session_state.pop(k, None)
             set_legend_rows(None)
             st.rerun()
-elif not reason and not computed:
-    st.markdown("### Pick a map in the sidebar, then **Generate map**.")
+elif not computed:
+    st.markdown("### What would you like to map?")
+    st.caption("Pick a map type here or in the sidebar, fill in its settings, then press **Generate map**.")
+    for var, label in VARIABLES.items():
+        st.markdown(f"#### {label}")
+        cols = st.columns(3)
+        for i, t in enumerate(types_for(var)):
+            with cols[i % 3].container(border=True):
+                st.html(f'<div class="gc-swatch" style="background:{swatch_css(t.ramp)}"></div>')
+                st.markdown(f"**{t.name}**" + (f" · {t.group}" if t.group else ""))
+                st.caption(t.blurb)
+                st.button("Selected" if t.id == st.session_state["f_type"] else "Use this", key=f"g_{t.id}", on_click=_pick_type,
+                          args=(t.id,), type="primary" if t.id == st.session_state["f_type"] else "secondary")

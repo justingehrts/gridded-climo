@@ -24,3 +24,20 @@ def snow_normal_window(bbox, months: list[int], client=None, data_dir=DATA_DIR, 
     grid = smooth(idw(lon, lat, val, grid_for_bbox(bbox, adaptive_cell_deg(bbox)), k=8, power=3.0, max_km=reach), smooth_km)
     points = {"lon": lon, "lat": lat, "value": val, "name": z["name"][keep]}
     return grid, {"data_source": src, "reach_km": reach, "smooth_km": smooth_km, "points": points}
+
+
+def snow_departure_map(bbox, start, end, client, smooth_km: float = 3.0, margin_deg: float = 1.0):
+    """Observed minus 1991-2020 normal snowfall over [start, end], station by station, interpolated."""
+    import numpy as np
+    from ..snow_normals import fetch_snow_departure
+    if client is None:
+        raise RuntimeError("live ACIS access is disabled")
+    w, s, e, n = bbox
+    z = fetch_snow_departure(client, (w - margin_deg, s - margin_deg, e + margin_deg, n + margin_deg), start, end)
+    if len(z["departure"]) == 0:
+        raise ValueError("no stations reported snowfall for enough of these dates")
+    lon, lat, dep = z["lon"], z["lat"], z["departure"]
+    reach = adaptive_max_km(lon, lat)
+    grid = smooth(idw(lon, lat, dep, grid_for_bbox(bbox, adaptive_cell_deg(bbox)), k=8, power=3.0, max_km=reach), smooth_km)
+    names = np.array([f'{nm} ({o:g}" vs {m:g}" normal)' for nm, o, m in zip(z["name"], np.round(z["obs"], 1), np.round(z["normal"], 1))])
+    return grid, {"reach_km": reach, "smooth_km": smooth_km, "points": {"lon": lon, "lat": lat, "value": dep, "name": names}}
