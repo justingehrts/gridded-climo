@@ -209,6 +209,9 @@ with st.sidebar:
         if range_mode == "Specific dates" and el in ("maxt", "mint", "pcpn") and q_kwargs.get("value") is None \
                 and q_kwargs.get("reduce") in ("mean", "sum"):
             q_kwargs["departure"] = st.checkbox("Show departure from normal", help="Value minus the daily normals for the same days.")
+        elif range_mode == "Specific dates" and el == "snow":
+            q_kwargs["departure"] = st.checkbox("Show departure from normal", key="snow_departure",
+                                                help="Observed station snowfall minus the 1991–2020 normal for the same days.")
 
     st.subheader("3 · Dates")
     date_mode, custom_starts = "auto", ""
@@ -231,6 +234,14 @@ with st.sidebar:
         first_of_month = TODAY.replace(day=1) - dt.timedelta(days=1)
         q_kwargs["start"] = d1.date_input("Start", first_of_month.replace(day=1), min_value=dt.date(1950, 1, 1), max_value=TODAY)
         q_kwargs["end"] = d2.date_input("End", first_of_month, min_value=dt.date(1950, 1, 1), max_value=TODAY)
+    elif range_mode == "Specific dates" and q_kwargs.get("departure"):  # snowfall departure: station days
+        c1, c2 = st.columns(2)
+        first_of_month = TODAY.replace(day=1) - dt.timedelta(days=1)
+        q_kwargs["start"] = c1.date_input("Start", first_of_month.replace(day=1), min_value=dt.date(1900, 1, 1), max_value=TODAY, key="snow_dep_d1")
+        q_kwargs["end"] = c2.date_input("End", first_of_month, min_value=dt.date(1900, 1, 1), max_value=TODAY, key="snow_dep_d2")
+        q_kwargs["normal_period"] = DEFAULT_NORMAL_PERIOD
+        st.caption("Station snowfall (each day ends around 7 AM) minus NCEI's 1991–2020 normal for the same days, fetched live from "
+                   "ACIS (~20–60 s) and interpolated. Stations missing more than 10% of the days are left out.")
     elif range_mode == "Specific dates":  # snowfall / NOHRSC: date + hour, Eastern or UTC
         tz = st.radio("Enter times as", ["Eastern (auto EST/EDT)", "UTC"], horizontal=True)
         zone = ZoneInfo("America/New_York") if tz.startswith("Eastern") else ZoneInfo("UTC")
@@ -271,7 +282,7 @@ with st.sidebar:
             q_kwargs["start"] = q_kwargs["end"] = None
 
     years_error = None
-    snow_normals = when_label == "Custom range" and range_mode != "Specific dates" and q_kwargs.get("element") == "snow"
+    snow_normals = when_label == "Custom range" and q_kwargs.get("element") == "snow" and (range_mode != "Specific dates" or q_kwargs.get("departure"))
     if snow_normals:
         q_kwargs["smooth_km"] = float(st.slider("Map smoothing (km)", 0, 15, 3, key="snow_norm_smooth",
                                                 help="Stations are interpolated, then lightly blurred. 0 = the map matches each station's value exactly."))

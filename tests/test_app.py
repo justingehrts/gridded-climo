@@ -411,3 +411,19 @@ def test_sun_map_generates_with_clock_legend_and_change_mode():
     next(r for r in at.radio if r.label == "Show").set_value("Change between two dates").run()
     assert not at.exception
     assert any(d.label == "End date" for d in at.date_input)
+
+
+def test_snow_departure_uses_date_inputs_and_generates(monkeypatch):
+    import numpy as np
+    from gridded_climo import snow_normals
+    fake = {"lon": np.array([-83.0, -82.5, -82.0, -84.0], "float32"), "lat": np.array([40.0, 39.5, 41.0, 39.0], "float32"),
+            "name": np.array(["A", "B", "C", "D"]), "obs": np.array([5, 9, 20, 1], "float32"),
+            "normal": np.array([8, 8, 15, 4], "float32"), "departure": np.array([-3, 1, 5, -3], "float32"), "missing": np.zeros(4, "int32")}
+    monkeypatch.setattr(snow_normals, "fetch_snow_departure", lambda *a, **k: fake)
+    at = fresh()
+    at.radio[0].set_value("Custom range").run()
+    _var(at).select("Snowfall").run()
+    at.checkbox(key="snow_departure").set_value(True).run()
+    assert not any(s.label == "Start hour" for s in at.selectbox)                # station days, not NOHRSC hours
+    assert any(d.label == "Start" for d in at.date_input)
+    assert "Snowfall Departure from Normal" in gen(at)[0]

@@ -111,3 +111,10 @@ Columbus November = 1.2") summed over the chosen months: any single month, Dec�
 Station normals come from ACIS in one request and are interpolated like the other station maps. The Ohio-centered region ships
 them (`data/normals/snow_monthly_1991-2020.npz`, rebuilt with `gridded-climo precompute --snow-normals`); other areas fetch live (~5–10 s).
 Whole months and the 1991–2020 period only, since those are what the official normals cover.
+
+## Snowfall departure from normal
+
+**Custom range → Specific dates → Snowfall → Show departure from normal** maps observed station snowfall minus the NCEI 1991–2020
+normal for the same days (ACIS daily normals, so any date range works; CMH Jan–Feb 2025 = 14.1" vs 17.1" normal, −3.0"). Station days
+end around 7 AM, so the inputs are dates rather than NOHRSC hours, and any year with station data works. Stations missing more than
+10% of the days are left out; the rest are interpolated like the other station maps. Fetched live (~20–60 s for the Ohio region, depending on ACIS load).

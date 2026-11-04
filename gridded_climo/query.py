@@ -155,7 +155,15 @@ def unsupported_reason(q: Query, bbox=None) -> str | None:
                 return "Average snowfall uses whole months (official monthly normals)."
             return None
         if q.departure:
-            return "Snowfall departure from normal is coming soon."
+            if tuple(q.normal_period) != NORMALS_PERIOD:
+                return f"Snowfall departures use NCEI's official {NORMALS_PERIOD[0]}-{NORMALS_PERIOD[1]} normals; use that period."
+            if not (q.start and q.end):
+                return "Choose a start and end date."
+            if q.end < q.start:
+                return "The end date is before the start date."
+            if (q.end - q.start).days > 366:
+                return "Choose a range of one year or less."
+            return None
         if not (q.start and q.end):
             return "Choose a start and end time."
         if isinstance(q.start, dt.datetime) and q.start < NOHRSC_START:
@@ -208,6 +216,8 @@ def _style(q: Query) -> Style:
     if q.when in ("first", "last"):
         # Warmer = red. Later first-<=X and earlier last-<=X are warmer; the reverse holds for >=X.
         return Style(ramp="RdYlBu", reverse=(q.when == "first") == (q.op == "le"), mode="stepped", steps=6, units_label="date")
+    if q.element == "snow" and q.departure:
+        return Style(ramp="RdBu", mode="stepped", steps=8, symmetric=True, units_label="in")     # blue = more snow than normal
     if q.element == "snow":
         return Style(ramp="Blues", mode="stepped", steps=10, vmin=0.5, vmax=24, hide_below=0.1, units_label="in")
     if q.reduce == "count" and q.when != "first":
@@ -250,6 +260,8 @@ def describe(q: Query) -> str:
         if q.when == "range_normal" and q.start and q.end:
             from .snow_normals import window_label
             return f"Average {window_label(q.start.month, q.end.month)} Snowfall"
+        if q.departure:
+            return "Snowfall Departure from Normal"
         return "Snowfall Total"
     unit = "in" if q.element == "pcpn" else "°F"
     if q.value is not None and q.op:
@@ -280,6 +292,9 @@ def metric_from_query(q: Query) -> Metric:
     if q.element == "snow" and q.when == "range_normal":
         return Metric(name="snow_normal_window", kind="period", source="acis_stn", element="snow", title=title, reduce="sum",
                       normal="average", style=Style(**{**style.__dict__, "vmin": None, "vmax": None})).validate()
+    if q.element == "snow" and q.departure:
+        return Metric(name="snow_departure", kind="period", source="acis_stn", element="snow", title=title, reduce="sum",
+                      normal="departure", style=style).validate()
     if q.element == "snow":
         return Metric(name="storm_total_snow", kind="storm", source="nohrsc", element="snow", title=title, style=style).validate()
     normal = "average" if q.when == "range_normal" else ("departure" if q.departure else None)
