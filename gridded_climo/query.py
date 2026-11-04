@@ -250,9 +250,8 @@ def describe(q: Query) -> str:
     el = {"mint": "Low", "maxt": "High", "pcpn": "Precipitation", "snow": "Snowfall", "avgt": "Average Temperature",
           "hdd": "Heating Degree Days", "cdd": "Cooling Degree Days", "gdd": "Growing Degree Days"}[q.element]
     if q.when in ("first", "last"):
-        rel = "at or below" if q.op == "le" else "at or above"
         what = (f"Snowfall of {q.value:g}\" or More" if q.element == "snow"
-                else f"{el} Temperature {rel} {q.value:g}°F")
+                else f"{el} of {q.value:g}°F or {'Colder' if q.op == 'le' else 'Warmer'}")
         title = f"{_stat_prefix(q)} {q.when.title()} {what}"
         return title + (" on Record" if q.stat in ("min", "max") else "")
     kind = {"mean": "Average", "sum": "Total", "max": "Maximum", "min": "Minimum"}.get(q.reduce)

@@ -41,7 +41,7 @@ def test_range_metrics():
     assert (m.kind, m.normal, m.style.symmetric) == ("period", "departure", True)
     assert metric_from_query(Query(when="range_normal", element="pcpn", reduce="sum", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31))).normal == "average"
     assert metric_from_query(Query(when="range_specific", element="snow", start=dt.datetime(2024, 1, 5), end=dt.datetime(2024, 1, 7))).kind == "storm"
-    assert describe(Query(when="last", element="maxt", op="ge", value=90)) == "Average Date of Last High Temperature at or above 90°F"
+    assert describe(Query(when="last", element="maxt", op="ge", value=90)) == "Average Date of Last High of 90°F or Warmer"
 
 
 def test_station_method_and_snow_routing():
