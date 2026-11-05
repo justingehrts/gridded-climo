@@ -261,7 +261,19 @@ default_style = computed.style if computed else Style()
 is_date_map = bool(computed and computed.ref)
 
 # ---------------------------------------------------------------- sidebar: Look tab
-date_mode, custom_starts = "auto", ""
+def date_grouping_controls():
+    """'Group dates into' + custom bin starts. Rendered in one place per run (the Band colors view when it is open, otherwise
+    the Look tab); both read and write the same widget keys, so build_style below just reads session state."""
+    st.radio("Group dates into", MODES, format_func=MODE_LABELS.get, key="style_date_mode",
+             help="Automatic: equal color steps across the data. Weekly: 1st–6th, 7th–13th, 14th–20th, 21st–end of "
+                  "month. Thirds: early / mid / late month. Halves: 1st–15th and 16th–end. Custom: your own bin start dates.")
+    if st.session_state.get("style_date_mode") == "custom":
+        st.text_input("Bin start dates (in season order)", "Oct 1, Oct 8, Oct 15, Oct 22, Nov 1", key="style_custom_starts",
+                      help="Each bin runs from its start date to the day before the next one. Data before the first date "
+                           "gets a 'Before…' bin; data after the last start extends the last bin.")
+
+
+band_view_open = bool(computed) and st.session_state.get("main_view") == "Band colors"
 with tab_look:
     st.caption("Changes apply to the current map right away.")
     presets = list_presets()
@@ -296,13 +308,10 @@ with tab_look:
         vmax = c2.number_input("Max value", value=None, placeholder="auto", key="style_vmax")
     else:
         vmin = vmax = None
-        date_mode = st.radio("Group dates into", MODES, format_func=MODE_LABELS.get, key="style_date_mode",
-                             help="Automatic: equal color steps across the data. Weekly: 1st–6th, 7th–13th, 14th–20th, 21st–end of "
-                                  "month. Thirds: early / mid / late month. Halves: 1st–15th and 16th–end. Custom: your own bin start dates.")
-        if date_mode == "custom":
-            custom_starts = st.text_input("Bin start dates (in season order)", "Oct 1, Oct 8, Oct 15, Oct 22, Nov 1", key="style_custom_starts",
-                                          help="Each bin runs from its start date to the day before the next one. Data before the first date "
-                                               "gets a 'Before…' bin; data after the last start extends the last bin.")
+        if band_view_open:
+            st.caption("Date grouping is set in the Band colors view.")
+        else:
+            date_grouping_controls()
     st.button("Edit individual band colors →", on_click=_show_band_colors, disabled=computed is None, width="stretch",
               help="Opens the band color table (with Ramp RGB to blend between two rows) next to the map.")
     up = st.file_uploader("Import palette / settings", type=["wctrp", "csv", "json"], key="style_upload",
@@ -331,10 +340,12 @@ with tab_look:
         forget_ramp_pick()
         st.rerun()
 
+date_mode = st.session_state.get("style_date_mode", "auto") if is_date_map else "auto"
+custom_starts = st.session_state.get("style_custom_starts", "") if date_mode == "custom" else ""
 style = build_style(
     default_style, ramp=explicit_ramp or None, flip=flip,
     mode=None if mode_choice == "Map default" else mode_choice.lower(), steps=steps if steps != default_style.steps else None,
-    vmin=vmin, vmax=vmax, date_mode=date_mode if is_date_map else "auto", custom_starts=custom_starts,
+    vmin=vmin, vmax=vmax, date_mode=date_mode, custom_starts=custom_starts,
     palette=st.session_state.get("palette"), bin_colors=st.session_state.get("bin_colors"),
     legend_rows=st.session_state.get("legend_rows"),
 )
@@ -404,6 +415,8 @@ if out:
     if out.legend_png:
         st.image(out.legend_png, caption="Legend (also included in the KMZ)")
     if view == "Band colors":
+        if is_date_map:
+            date_grouping_controls()
         if out.bins and style.date_mode != "auto":      # one editable color per date bin
             df = pd.DataFrame([{"Bin": lab, "R": c[0], "G": c[1], "B": c[2], "A": c[3]} for lab, c in out.bins])
             with st.form("bin_color_form"):
@@ -486,7 +499,8 @@ if out:
             except ValueError as e:
                 wc2.caption(str(e))
         else:
-            st.caption("Choose a date grouping (weekly, thirds, halves or custom) to edit the color of each date bin.")
+            st.caption("Automatic grouping uses equal color steps, so there are no separate bins to recolor. Choose Weekly, Thirds, "
+                       "Halves or Custom above to edit each bin's color.")
         if st.button("Reset colors"):
             for k in ("bin_colors", "palette"):
                 st.session_state.pop(k, None)
