@@ -1,6 +1,7 @@
 """Style + data range -> the concrete color bands, legend, and GDAL color table that get rendered."""
 from __future__ import annotations
 
+import datetime as dt
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,6 +28,7 @@ class Resolved:
     labels: list[str] | None = None                  # len n
     colors: list[Color] | None = None                # len n
     seed_rows: list[list] | None = None              # numeric maps: [[from, to, r, g, b, a], ...] to start the legend editor from
+    starts: list[str | None] | None = None           # date bins: each bin's start date as "10-7" (None for a leading "Before" bin)
 
 
 def data_range(tif: str | Path, style: Style | None = None) -> tuple[float, float, float, float]:
@@ -76,6 +78,16 @@ def date_bins(style: Style, rng, ref: tuple[int, int]):
     return calendar_bins(style.date_mode, vmin, vmax, *ref)
 
 
+def bin_starts(bins, ref: tuple[int, int]) -> list[tuple[int, int] | None]:
+    """Each bin's start (month, day), parallel to bins.labels; None for a leading 'Before ...' bin (it has no start of its own)."""
+    base = dt.date(2001, *ref)
+    out: list[tuple[int, int] | None] = []
+    for i, edge in enumerate(bins.edges[:-1]):
+        d = base + dt.timedelta(days=round(edge + 0.5))
+        out.append(None if (i == 0 and bins.labels[0].startswith("Before ")) else (d.month, d.day))
+    return out
+
+
 def bin_colors_for(style: Style, labels: list[str]) -> list[Color]:
     """Palette (imported) or ramp colors by position, then manual per-bin overrides by label."""
     n = len(labels)
@@ -92,8 +104,19 @@ def resolve(style: Style, tif: str | Path, ref: tuple[int, int] | None = None) -
     # 1) calendar bins for first/last-date maps
     if ref is not None and style.date_mode != "auto":
         bins = date_bins(style, rng, ref)
+        starts = bin_starts(bins, ref)
+        if style.dropped_bins:
+            # Deleted bins: the others keep their start dates and run to the day before the next one, so deleting leading bins
+            # leaves one "Before <first start>" bin and deleting trailing bins extends the last one ("... and later").
+            real = [s for s in starts if s is not None]
+            drop = set(style.dropped_bins)
+            keep = [s for s in real if f"{s[0]}-{s[1]}" not in drop] or real[-1:]
+            if len(keep) < len(real):
+                bins = custom_bins(keep, rng[0], rng[1], *ref)
+                starts = bin_starts(bins, ref)
         colors = bin_colors_for(style, bins.labels)
-        return Resolved(band_table(bins.edges, colors), bins.edges[0], bins.edges[-1], False, bins.edges, bins.labels, colors)
+        return Resolved(band_table(bins.edges, colors), bins.edges[0], bins.edges[-1], False, bins.edges, bins.labels, colors,
+                        starts=[None if s is None else f"{s[0]}-{s[1]}" for s in starts])
     # 2) numeric custom legend: bands [from, to) (see legend.py). Not for date maps: numeric thresholds mean nothing there.
     if style.legend_rows and ref is None:
         bands = normalize_legend(style.legend_rows)

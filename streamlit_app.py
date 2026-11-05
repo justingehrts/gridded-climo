@@ -23,7 +23,7 @@ from streamlit_folium import st_folium
 from gridded_climo.config import DEFAULT_BBOX, DEFAULT_NORMAL_PERIOD
 from gridded_climo.query import DEFAULT_THRESHOLD, GRID_RANGES, MENU, NOHRSC_START, SPARSE_BEFORE, STATION_FIRST_YEAR, STATION_MENU, RANGE_ELEMENTS, RANGE_REDUCES, SUN_ELEMENTS, TEMP_ELEMENTS, default_season, last_complete_year, Query, allow_live, unsupported_reason
 from gridded_climo.ui.preview import build_map, load_counties_geojson
-from gridded_climo.binning import MODE_LABELS, MODES
+from gridded_climo.binning import MODE_LABELS, MODES, parse_custom_starts
 from gridded_climo.registry import Style
 from gridded_climo.render.wctrp import UNIT_IDS, wctrp_bytes
 from gridded_climo.render import PaletteError, RAMPS, parse_legend_csv, parse_wctrp, ramp_label, style_from_json, style_to_json
@@ -228,7 +228,7 @@ with tab_map:
 if go:
     key = (q, tuple(bbox))
     if st.session_state.get("active") != key:   # a new map starts from clean styling
-        for k in ("bin_colors", "palette"):
+        for k in ("bin_colors", "palette", "bin_dropped"):
             st.session_state.pop(k, None)
         set_legend_rows(None)
     with st.status("Building map…", expanded=True) as status:
@@ -261,6 +261,10 @@ default_style = computed.style if computed else Style()
 is_date_map = bool(computed and computed.ref)
 
 # ---------------------------------------------------------------- sidebar: Look tab
+DEFAULT_CUSTOM_STARTS = "Oct 1, Oct 8, Oct 15, Oct 22, Nov 1"
+st.session_state.setdefault("style_custom_starts", DEFAULT_CUSTOM_STARTS)     # the text box and the style read the same key, even on the run that picks Custom
+
+
 def date_grouping_controls():
     """'Group dates into' + custom bin starts. Rendered in one place per run (the Band colors view when it is open, otherwise
     the Look tab); both read and write the same widget keys, so build_style below just reads session state."""
@@ -268,7 +272,7 @@ def date_grouping_controls():
              help="Automatic: equal color steps across the data. Weekly: 1st–6th, 7th–13th, 14th–20th, 21st–end of "
                   "month. Thirds: early / mid / late month. Halves: 1st–15th and 16th–end. Custom: your own bin start dates.")
     if st.session_state.get("style_date_mode") == "custom":
-        st.text_input("Bin start dates (in season order)", "Oct 1, Oct 8, Oct 15, Oct 22, Nov 1", key="style_custom_starts",
+        st.text_input("Bin start dates (in season order)", key="style_custom_starts",
                       help="Each bin runs from its start date to the day before the next one. Data before the first date "
                            "gets a 'Before…' bin; data after the last start extends the last bin.")
 
@@ -334,27 +338,43 @@ with tab_look:
             st.error(str(e))
     if st.button("Reset all style choices", width="stretch"):
         for k in ("style_ramp", "style_flip", "style_mode", "style_steps", "style_vmin", "style_vmax", "style_date_mode",
-                  "palette", "bin_colors", "_imported"):
+                  "style_custom_starts", "palette", "bin_colors", "bin_dropped", "_imported"):
             st.session_state.pop(k, None)
         set_legend_rows(None)
         forget_ramp_pick()
         st.rerun()
 
 date_mode = st.session_state.get("style_date_mode", "auto") if is_date_map else "auto"
-custom_starts = st.session_state.get("style_custom_starts", "") if date_mode == "custom" else ""
+custom_starts = st.session_state.get("style_custom_starts", DEFAULT_CUSTOM_STARTS) if date_mode == "custom" else ""
+if date_mode == "custom":       # unreadable bin dates must not blank the page: say so, and draw this run with Automatic grouping
+    try:
+        parse_custom_starts(custom_starts)
+    except ValueError as e:
+        st.error(str(e))
+        date_mode, custom_starts = "auto", ""
+# Deleted date bins only apply to the grouping (and custom dates) they were deleted from
+_drop = st.session_state.get("bin_dropped") or {}
+dropped_bins = _drop.get("starts") if (is_date_map and date_mode != "auto" and _drop.get("sig") == (date_mode, custom_starts)) else None
 style = build_style(
     default_style, ramp=explicit_ramp or None, flip=flip,
     mode=None if mode_choice == "Map default" else mode_choice.lower(), steps=steps if steps != default_style.steps else None,
     vmin=vmin, vmax=vmax, date_mode=date_mode, custom_starts=custom_starts,
     palette=st.session_state.get("palette"), bin_colors=st.session_state.get("bin_colors"),
-    legend_rows=st.session_state.get("legend_rows"),
+    legend_rows=st.session_state.get("legend_rows"), dropped_bins=dropped_bins,
 )
 
 out = None
 if computed:
     try:
-        out = cached_render(active[0], active[1], allow_live(), json.dumps(dataclasses.asdict(style)))
-    except ValueError as e:   # e.g. unreadable custom bin dates
+        try:
+            out = cached_render(active[0], active[1], allow_live(), json.dumps(dataclasses.asdict(style)))
+        except ValueError as e:   # e.g. custom bin dates out of order: say so, and keep the page by drawing with Automatic grouping
+            if style.date_mode == "auto":
+                raise
+            st.error(str(e))
+            auto = dataclasses.replace(style, date_mode="auto", custom_starts="", dropped_bins=None)
+            out = cached_render(active[0], active[1], allow_live(), json.dumps(dataclasses.asdict(auto)))
+    except ValueError as e:
         st.error(str(e))
     except Exception as e:
         st.error(f"{type(e).__name__}: {e}")
@@ -418,12 +438,14 @@ if out:
         if is_date_map:
             date_grouping_controls()
         if out.bins and style.date_mode != "auto":      # one editable color per date bin
+            starts = list(out.bin_starts or [None] * len(out.bins))
             df = pd.DataFrame([{"Bin": lab, "R": c[0], "G": c[1], "B": c[2], "A": c[3]} for lab, c in out.bins])
             with st.form("bin_color_form"):
-                edited = st.data_editor(df, disabled=["Bin"], hide_index=True, width="stretch", key="bin_color_editor",
+                edited = st.data_editor(df, disabled=["Bin"], hide_index=True, width="stretch", key=f"bin_color_editor_{zlib.crc32(repr([lab for lab, _ in out.bins]).encode())}", num_rows="delete",
                                         column_config={c: st.column_config.NumberColumn(c, min_value=0, max_value=255, step=1) for c in "RGBA"})
                 apply_bins = st.form_submit_button("Apply colors")
-            st.caption("A = opacity (0 = transparent). Each row is one date bin and one legend entry.")
+            st.caption("A = opacity (0 = transparent). Each row is one date bin and one legend entry. **Delete rows to merge bins**: "
+                       "removing the first rows makes a \"Before …\" bin, removing the last rows extends the final bin.")
             if apply_bins:
                 new = dict(st.session_state.get("bin_colors") or {})
                 for (lab, old), (_, row) in zip(out.bins, edited.iterrows()):
@@ -431,7 +453,16 @@ if out:
                     if cur != list(old):
                         new[lab] = cur
                 st.session_state["bin_colors"] = new
+                gone = [starts[i] for i in df.index.difference(edited.index) if i < len(starts) and starts[i]]
+                if gone:
+                    sig = (date_mode, custom_starts)
+                    prev = _drop.get("starts", []) if _drop.get("sig") == sig else []
+                    st.session_state["bin_dropped"] = {"sig": sig, "starts": prev + [g for g in gone if g not in prev]}
                 st.rerun()
+            if dropped_bins:
+                if st.button("Restore all bins", help="Bring back every date bin you deleted."):
+                    st.session_state.pop("bin_dropped", None)
+                    st.rerun()
         elif not is_date_map and (style.legend_rows or out.seed_rows):    # numeric maps: bands "from this value up to To"
             rows = style.legend_rows or out.seed_rows
             lo, hi = out.data_min, out.data_max
@@ -502,7 +533,7 @@ if out:
             st.caption("Automatic grouping uses equal color steps, so there are no separate bins to recolor. Choose Weekly, Thirds, "
                        "Halves or Custom above to edit each bin's color.")
         if st.button("Reset colors"):
-            for k in ("bin_colors", "palette"):
+            for k in ("bin_colors", "palette", "bin_dropped"):
                 st.session_state.pop(k, None)
             set_legend_rows(None)
             st.rerun()

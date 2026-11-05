@@ -173,3 +173,51 @@ def test_hide_below_keeps_first_band_color_down_to_the_cutoff():
     from gridded_climo.render.ramps import color_table
     t = color_table(Style(ramp="Blues", steps=6, hide_below=0.1), 0, 12)
     assert t[0][4] == 0 and t[1][0] == 0.1 and t[1][1:] == t[2][1:] and t[1][4] == 255
+
+
+# --- deleting date bins ------------------------------------------------------------------------------------------------
+def _date_raster(tmp_path, lo=80, hi=130):
+    import numpy as np, rasterio
+    from rasterio.transform import from_origin
+    p = tmp_path / "d.tif"
+    a = np.linspace(lo, hi, 2500, dtype="float32").reshape(50, 50)
+    with rasterio.open(p, "w", driver="GTiff", height=50, width=50, count=1, dtype="float32", crs="EPSG:4326",
+                       transform=from_origin(0, 50, 1, 1), nodata=-9999) as d:
+        d.write(a, 1)
+    return p
+
+
+def test_deleting_leading_date_bins_makes_a_before_bin(tmp_path):
+    from dataclasses import replace
+    from gridded_climo.render.style import resolve
+    tif = _date_raster(tmp_path)
+    full = resolve(Style(date_mode="weekly"), tif, (7, 1))
+    assert full.labels[:3] == ["Sep 14–20", "Sep 21–30", "Oct 1–6"] and full.starts[:3] == ["9-14", "9-21", "10-1"]
+    r = resolve(replace(Style(date_mode="weekly"), dropped_bins=full.starts[:2]), tif, (7, 1))
+    assert r.labels[0] == "Before Oct 1" and r.labels[1] == "Oct 1–6" and r.starts[0] is None and r.starts[1] == "10-1"
+    assert r.edges[0] == 79.5                                                  # the Before bin starts at the earliest data (day 80)
+
+
+def test_deleting_trailing_and_middle_date_bins(tmp_path):
+    from dataclasses import replace
+    from gridded_climo.render.style import resolve
+    tif = _date_raster(tmp_path)
+    full = resolve(Style(date_mode="weekly"), tif, (7, 1))
+    tail = resolve(replace(Style(date_mode="weekly"), dropped_bins=full.starts[-2:]), tif, (7, 1))
+    assert tail.labels[-1] == "Oct 21 and later" and len(tail.labels) == len(full.labels) - 2
+    mid = resolve(replace(Style(date_mode="weekly"), dropped_bins=[full.starts[2]]), tif, (7, 1))
+    assert "Sep 21–Oct 6" in mid.labels                                         # the bin before absorbs the deleted one
+    every = resolve(replace(Style(date_mode="weekly"), dropped_bins=full.starts), tif, (7, 1))
+    assert len(every.labels) == 2 and every.labels[-1].endswith("and later")   # never deletes everything
+
+
+def test_untouched_bins_keep_their_custom_colors_and_exports_leave_drops_out(tmp_path):
+    from dataclasses import replace
+    import json
+    from gridded_climo.render import style_to_json
+    from gridded_climo.render.style import resolve
+    tif = _date_raster(tmp_path)
+    st_ = replace(Style(date_mode="weekly"), dropped_bins=["9-14"], bin_colors={"Oct 7–13": [1, 2, 3, 255]})
+    r = resolve(st_, tif, (7, 1))
+    assert tuple(r.colors[r.labels.index("Oct 7–13")]) == (1, 2, 3, 255)
+    assert "dropped_bins" not in json.loads(style_to_json(st_))
