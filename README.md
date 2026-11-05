@@ -70,7 +70,7 @@ Pre-saved data (grid first/last dates, daily normals, per-station files) only co
   pre-saved area (its northern buffer over Lake Erie is trimmed).
 
 ### Styling
-- **Group dates into** (first/last-date maps): *Automatic* (default, equal color steps), *Weekly* (1st-6th, 7th-13th, 14th-20th, 21st-end),
+- **Group dates into** (first/last-date maps; set in the Look tab, or right above the color table in the Band colors view when that is open): *Automatic* (default, equal color steps), *Weekly* (1st-6th, 7th-13th, 14th-20th, 21st-end),
   *Thirds* (early / mid / late month), *Halves* (1st-15th, 16th-end), or *Custom* (your own bin start dates, e.g. `Oct 1, Oct 8, Oct 15, Nov 1`).
   Each bin is one color and one legend entry; bins are calendar-aligned, so "first week of October" means the same thing every month.
 - **Look** tab: color ramp (a dropdown that draws each ramp's gradient), reverse, stepped/smooth, number of steps, min/max, and import of a MAX `.wctrp` palette,

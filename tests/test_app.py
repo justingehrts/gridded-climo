@@ -404,6 +404,23 @@ def test_custom_date_bins_and_bad_input_message():
     assert any("isn't a month name" in e.value for e in at.error) and not at.exception
 
 
+def test_band_colors_view_has_the_date_grouping_control():
+    """Regression: on a date map in Automatic grouping, Band colors used to be a dead end (the grouping radio was only in Look)."""
+    at = fresh()
+    pick(at, "Precipitation", "snowdate")
+    gen(at)
+    seg(at, "View").set_value("Band colors").run()
+    assert not at.exception
+    assert any("no separate bins" in c.value for c in at.caption)                          # explains why, and where to go
+    at.radio(key="style_date_mode").set_value("weekly").run()                              # the control is right here
+    assert not at.exception and not at.error
+    assert len(at.dataframe) == 1                                                          # the per-bin color table appeared
+    assert seg(at, "View").value == "Band colors"
+    assert any("Date grouping is set in the Band colors view" in c.value for c in at.caption)   # Look tab points here, no duplicate radio
+    seg(at, "View").set_value("Map").run()
+    assert at.radio(key="style_date_mode").value == "weekly" and not at.exception          # back in Look, same setting
+
+
 def test_band_colors_button_opens_the_band_view_and_reset_works():
     at = fresh()
     _first_freeze(at)
