@@ -9,7 +9,8 @@ from ..registry import Style
 
 def build_style(base: Style, *, ramp: str | None = None, flip: bool = False, mode: str | None = None, steps: int | None = None,
                 vmin: float | None = None, vmax: float | None = None, date_mode: str = "auto", custom_starts: str = "",
-                palette: list | None = None, bin_colors: dict | None = None, legend_rows: list | None = None) -> Style:
+                palette: list | None = None, bin_colors: dict | None = None, legend_rows: list | None = None,
+                dropped_bins: list | None = None) -> Style:
     """`ramp=None` / `mode=None` keep the map's default. `flip` reverses the default ramp's direction; with an explicitly
     chosen ramp it simply means 'reversed' (the default's direction belongs to the default ramp)."""
     if date_mode not in MODES:
@@ -24,6 +25,7 @@ def build_style(base: Style, *, ramp: str | None = None, flip: bool = False, mod
         vmax=vmax if vmax is not None else base.vmax,
         date_mode=date_mode, custom_starts=custom_starts,
         palette=palette or None, bin_colors=bin_colors or None, legend_rows=legend_rows or None,
+        dropped_bins=list(dropped_bins) if dropped_bins else None,
     )
 
 

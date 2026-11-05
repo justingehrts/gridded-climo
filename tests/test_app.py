@@ -398,10 +398,26 @@ def test_custom_date_bins_and_bad_input_message():
     at.radio(key="style_date_mode").set_value("custom").run()
     at.text_input(key="style_custom_starts").set_value("Oct 1, Oct 12, Nov 1").run()
     assert not at.exception and not at.error
-    at.text_input(key="style_custom_starts").set_value("Oct 12, Oct 1").run()
-    assert any("season order" in e.value for e in at.error) and not at.exception
-    at.text_input(key="style_custom_starts").set_value("Octember 3").run()
-    assert any("isn't a month name" in e.value for e in at.error) and not at.exception
+    for bad, msg in (("Oct 12, Oct 1", "season order"), ("Octember 3", "isn't a month name"), ("", "at least one bin start")):
+        at.text_input(key="style_custom_starts").set_value(bad).run()
+        assert any(msg in e.value for e in at.error) and not at.exception
+        assert "⬇️ Download KMZ" in [b.label for b in at.get("download_button")]          # the page stays; it falls back to Automatic
+
+
+@pytest.mark.parametrize("from_band_view", [False, True])
+def test_choosing_custom_grouping_keeps_the_page(from_band_view):
+    """Regression: picking Custom used to raise 'enter at least one bin start date' and blank everything but the sidebar."""
+    at = fresh()
+    pick(at, "Precipitation", "snowdate")
+    gen(at)
+    if from_band_view:
+        seg(at, "View").set_value("Band colors").run()
+    at.radio(key="style_date_mode").set_value("custom").run()
+    assert not at.exception and not at.error
+    assert at.text_input(key="style_custom_starts").value == "Oct 1, Oct 8, Oct 15, Oct 22, Nov 1"
+    assert "⬇️ Download KMZ" in [b.label for b in at.get("download_button")]
+    if from_band_view:
+        assert len(at.dataframe) == 1
 
 
 def test_band_colors_view_has_the_date_grouping_control():
@@ -419,6 +435,37 @@ def test_band_colors_view_has_the_date_grouping_control():
     assert any("Date grouping is set in the Band colors view" in c.value for c in at.caption)   # Look tab points here, no duplicate radio
     seg(at, "View").set_value("Map").run()
     assert at.radio(key="style_date_mode").value == "weekly" and not at.exception          # back in Look, same setting
+
+
+def test_deleting_date_bins_and_restoring_them():
+    at = fresh()
+    pick(at, "Precipitation", "snowdate")
+    gen(at)
+    seg(at, "View").set_value("Band colors").run()
+    at.radio(key="style_date_mode").set_value("weekly").run()
+    full = [r["Bin"] for r in at.dataframe[0].value.to_dict("records")]
+    # what the table's Delete button + Apply colors store: the start dates of the deleted rows
+    at.session_state["bin_dropped"] = {"sig": ("weekly", ""), "starts": _first_starts(at, 2)}
+    at.run()
+    assert not at.exception and not at.error
+    now = [r["Bin"] for r in at.dataframe[0].value.to_dict("records")]
+    assert now[0].startswith("Before ") and len(now) == len(full) - 1
+    next(b for b in at.button if b.label == "Restore all bins").click().run()
+    assert [r["Bin"] for r in at.dataframe[0].value.to_dict("records")] == full
+    at.session_state["bin_dropped"] = {"sig": ("weekly", ""), "starts": _first_starts(at, 2)}
+    at.radio(key="style_date_mode").set_value("thirds").run()                       # a different grouping ignores old deletions
+    assert not at.exception and not any(r["Bin"].startswith("Before ") for r in at.dataframe[0].value.to_dict("records"))
+
+
+def _first_starts(at, n):
+    """Start dates ("11-7") of the first n bins in the table, from the rendered Output."""
+    import re
+    months = {m: i for i, m in enumerate(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1)}
+    out = []
+    for r in at.dataframe[0].value.to_dict("records")[:n]:
+        m = re.match(r"([A-Z][a-z]{2}) (\d+)", r["Bin"])
+        out.append(f"{months[m[1]]}-{int(m[2])}")
+    return out
 
 
 def test_band_colors_button_opens_the_band_view_and_reset_works():

@@ -73,6 +73,8 @@ Pre-saved data (grid first/last dates, daily normals, per-station files) only co
 - **Group dates into** (first/last-date maps; set in the Look tab, or right above the color table in the Band colors view when that is open): *Automatic* (default, equal color steps), *Weekly* (1st-6th, 7th-13th, 14th-20th, 21st-end),
   *Thirds* (early / mid / late month), *Halves* (1st-15th, 16th-end), or *Custom* (your own bin start dates, e.g. `Oct 1, Oct 8, Oct 15, Nov 1`).
   Each bin is one color and one legend entry; bins are calendar-aligned, so "first week of October" means the same thing every month.
+  **Delete rows** in the Band colors table to merge bins (select rows, press Delete, then *Apply colors*): the remaining bins keep their start
+  dates, deleting the first rows makes one "Before <date>" bin, deleting the last rows extends the final bin ("<date> and later"), and *Restore all bins* undoes it.
 - **Look** tab: color ramp (a dropdown that draws each ramp's gradient), reverse, stepped/smooth, number of steps, min/max, and import of a MAX `.wctrp` palette,
   a CSV legend (`From,To,R,G,B,Alpha`, or the older `Value,R,G,B,Alpha`), or a JSON settings export. For date maps an imported palette supplies colors only (assigned by
   position across the bins); for numeric maps its values become the color-band thresholds.

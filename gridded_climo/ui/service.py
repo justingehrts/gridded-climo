@@ -45,6 +45,7 @@ class Output:
     data_min: float | None = None
     data_max: float | None = None
     seed_rows: list | None = None   # numeric maps: starting rows for the custom-legend editor
+    bin_starts: list | None = None  # date maps: each bin's start date as "10-7" (None for a leading "Before" bin)
 
 
 def label_formatter(kind: str | None, ref: tuple[int, int] | None):
@@ -86,7 +87,7 @@ def render_computed(c: Computed, style: Style | None = None) -> Output:
     lo, hi = (float(finite.min()), float(finite.max())) if finite.size else (None, None)
     bins = list(zip(r.labels, r.colors)) if r is not None and r.labels else None
     return Output(ov.png, ov.legend_png, (ov.south, ov.west, ov.north, ov.east), kmz, c.name, c.note, c.filename, c.points,
-                  bins, lo, hi, getattr(r, "seed_rows", None))
+                  bins, lo, hi, getattr(r, "seed_rows", None), getattr(r, "starts", None))
 
 
 def generate(q: Query, bbox, cache_dir, data_dir=DATA_DIR, allow_live: bool = True, log=print, style: Style | None = None) -> Output:

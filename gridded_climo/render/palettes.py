@@ -85,7 +85,9 @@ def sample_colors(rows: list[Row], n: int) -> list[list[int]]:
 
 def style_to_json(style: Style, name: str | None = None) -> str:
     """Settings as JSON. `name` (optional) is stored as a top-level label; loading ignores it."""
-    return json.dumps({**({"name": name} if name else {}), **asdict(style)}, indent=2)
+    d = asdict(style)
+    d.pop("dropped_bins", None)         # deleted date bins depend on one map's data, so they aren't part of a reusable look
+    return json.dumps({**({"name": name} if name else {}), **d}, indent=2)
 
 
 def style_from_json(text: str | bytes) -> Style:
