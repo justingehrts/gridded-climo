@@ -221,3 +221,13 @@ def test_untouched_bins_keep_their_custom_colors_and_exports_leave_drops_out(tmp
     r = resolve(st_, tif, (7, 1))
     assert tuple(r.colors[r.labels.index("Oct 7–13")]) == (1, 2, 3, 255)
     assert "dropped_bins" not in json.loads(style_to_json(st_))
+
+
+def test_bundled_nws_snowfall_preset():
+    from gridded_climo.presets import list_presets, load_preset
+    from gridded_climo.render.legend import normalize_legend
+    assert "NWS snowfall" in list_presets()
+    bands = normalize_legend(load_preset("NWS snowfall").legend_rows)
+    assert len(bands) == 15
+    assert bands[0][:2] == [0.1, 1.0] and bands[-1][0] == 72.0 and bands[-1][1] is None
+    assert bands[0][2:5] == [0xbf, 0xd7, 0xe7] and bands[-1][2:5] == [0x7b, 0x51, 0xa3]
