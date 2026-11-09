@@ -29,7 +29,7 @@ MAP_TYPES = [
     MapType("rdep", "precipitation", "Rain", "Vs normal", "Precipitation minus normal for chosen dates.", "BrBG"),
     MapType("snowdate", "precipitation", "Snow", "Snowfall dates", "First or last day with at least X inches of snow.", "RdYlBu_r"),
     MapType("snownormal", "precipitation", "Snow", "Normal snowfall", "1991–2020 normal for a month or season.", "Blues"),
-    MapType("snowstorm", "precipitation", "Snow", "Storm total", "NOHRSC snowfall analysis between two times.", "Blues"),
+    MapType("snowstorm", "precipitation", "Snow", "Storm total", "Snowfall between two times: NOHRSC analysis, or stations + reports (any date).", "Blues"),
     MapType("snowdep", "precipitation", "Snow", "Snowfall vs normal", "Observed snowfall minus normal for chosen dates.", "RdBu"),
     MapType("sun", "sun", "", "Sunrise, sunset & day length", "On one date, or the change between two dates.", "YlOrBr"),
 ]
@@ -53,7 +53,7 @@ def swatch_css(ramp: str, n: int = 8) -> str:
     return f"linear-gradient(90deg, {stops})"
 
 
-def source_note(type_id: str, method: str | None, presaved: bool) -> str:
+def source_note(type_id: str, method: str | None, presaved: bool, source: str | None = None) -> str:
     """One line for the summary card: where the data comes from and roughly how long it takes."""
     if type_id in ("tdates", "snowdate"):
         if method == "grid" and type_id == "tdates":
@@ -64,6 +64,8 @@ def source_note(type_id: str, method: str | None, presaved: bool) -> str:
     if type_id == "snownormal":
         return "NCEI 1991–2020 station normals · " + ("pre-saved · instant" if presaved else "fetched live (~5–10 s)")
     if type_id == "snowstorm":
+        if source == "stations":
+            return "ACIS stations + NWS storm reports · fetched live (~10–30 s)"
         return "NOHRSC analysis · fetched live (~10 s)"
     if type_id == "snowdep":
         return "Stations vs 1991–2020 normals · fetched live (~20–60 s)"

@@ -261,8 +261,40 @@ def form_snownormal(ctx: Ctx) -> FormResult:
     return r
 
 
+def ymd_input(label: str, default: dt.date, lo: dt.date, hi: dt.date, key: str) -> dt.date:
+    """Year / Month / Day dropdowns (the calendar popup only reaches back a couple of decades, and old storms need old dates)."""
+    st.markdown(f"<small>{label}</small>", unsafe_allow_html=True)
+    cy, cm, cd = st.columns([1.1, 1.4, 0.9])
+    ky, km, kd = f"{key}_y", f"{key}_m", f"{key}_d"
+    year = cy.selectbox(f"{label} year", range(hi.year, lo.year - 1, -1), index=hi.year - default.year, key=ky, label_visibility="collapsed")
+    month = cm.selectbox(f"{label} month", range(1, 13), index=default.month - 1, format_func=lambda m: MONTHS[m - 1], key=km,
+                         label_visibility="collapsed")
+    n = calendar.monthrange(year, month)[1]
+    if st.session_state.get(kd, 1) > n:
+        st.session_state[kd] = n
+    day = cd.selectbox(f"{label} day", range(1, n + 1), index=min(default.day, n) - 1, key=kd, label_visibility="collapsed")
+    return min(max(dt.date(year, month, day), lo), hi)
+
+
 def form_snowstorm(ctx: Ctx) -> FormResult:
     r = FormResult()
+    src = st.segmented_control("Data", ["NOHRSC analysis", "Stations + reports"], default="NOHRSC analysis", required=True,
+                               key="f_storm_src", width="stretch",
+                               help="NOHRSC is a gridded analysis available from Oct 2008 (hourly resolution). Stations + reports sums ACIS "
+                                    "station snowfall over whole days and blends in NWS storm reports, so it works for any date.")
+    if src == "Stations + reports":
+        lo = dt.date(1900, 1, 1)
+        sd = ymd_input("Start date", ctx.today - dt.timedelta(days=3), lo, ctx.today, "f_storm_sd1")
+        ed = ymd_input("End date", ctx.today - dt.timedelta(days=1), lo, ctx.today, "f_storm_sd2")
+        r.q.update(when="range_specific", element="snow", start=sd, end=ed, extra={
+            "source": "stations",
+            "reports": st.checkbox("Blend in NWS storm reports", value=True, key="f_storm_sreports",
+                                   help="Local storm reports (IEM archive, roughly 2000s onward; windows over 31 days use stations only). "
+                                        "Reports within 10 km of a station are ignored in favor of the station.")})
+        st.caption("Station snowfall is a whole observation day (usually ending in the morning), so the window is whole days, not hours.")
+        with st.expander("Advanced"):
+            smoothing(r, key="f_storm_smooth")
+        return r
     tz = st.radio("Enter times as", ["Eastern (auto EST/EDT)", "UTC"], horizontal=True, key="f_storm_tz")
     zone = ZoneInfo("America/New_York") if tz.startswith("Eastern") else ZoneInfo("UTC")
     c1, c2 = st.columns(2)
@@ -275,7 +307,7 @@ def form_snowstorm(ctx: Ctx) -> FormResult:
                extra={"reports": st.checkbox("Overlay NWS snow reports (IEM)", value=True, key="f_storm_reports",
                                              help="Observed snowfall from NWS local storm reports, shown as dots on the map.")})
     st.caption(f"UTC window: **{r.q['start']:%b %-d %HZ} → {r.q['end']:%b %-d %HZ}**. NOHRSC analyses are 00Z/12Z (season totals) or "
-               "6-hourly; times snap to the nearest available.")
+               "6-hourly; times snap to the nearest available. For storms before Oct 2008, choose Stations + reports.")
     return r
 
 
