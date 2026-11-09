@@ -261,6 +261,21 @@ def form_snownormal(ctx: Ctx) -> FormResult:
     return r
 
 
+def ymd_input(label: str, default: dt.date, lo: dt.date, hi: dt.date, key: str) -> dt.date:
+    """Year / Month / Day dropdowns (the calendar popup only reaches back a couple of decades, and old storms need old dates)."""
+    st.markdown(f"<small>{label}</small>", unsafe_allow_html=True)
+    cy, cm, cd = st.columns([1.1, 1.4, 0.9])
+    ky, km, kd = f"{key}_y", f"{key}_m", f"{key}_d"
+    year = cy.selectbox(f"{label} year", range(hi.year, lo.year - 1, -1), index=hi.year - default.year, key=ky, label_visibility="collapsed")
+    month = cm.selectbox(f"{label} month", range(1, 13), index=default.month - 1, format_func=lambda m: MONTHS[m - 1], key=km,
+                         label_visibility="collapsed")
+    n = calendar.monthrange(year, month)[1]
+    if st.session_state.get(kd, 1) > n:
+        st.session_state[kd] = n
+    day = cd.selectbox(f"{label} day", range(1, n + 1), index=min(default.day, n) - 1, key=kd, label_visibility="collapsed")
+    return min(max(dt.date(year, month, day), lo), hi)
+
+
 def form_snowstorm(ctx: Ctx) -> FormResult:
     r = FormResult()
     src = st.segmented_control("Data", ["NOHRSC analysis", "Stations + reports"], default="NOHRSC analysis", required=True,
@@ -268,9 +283,9 @@ def form_snowstorm(ctx: Ctx) -> FormResult:
                                help="NOHRSC is a gridded analysis available from Oct 2008 (hourly resolution). Stations + reports sums ACIS "
                                     "station snowfall over whole days and blends in NWS storm reports, so it works for any date.")
     if src == "Stations + reports":
-        c1, c2 = st.columns(2)
-        sd = c1.date_input("Start date", ctx.today - dt.timedelta(days=3), min_value=dt.date(1900, 1, 1), max_value=ctx.today, key="f_storm_sd1")
-        ed = c2.date_input("End date", ctx.today - dt.timedelta(days=1), min_value=dt.date(1900, 1, 1), max_value=ctx.today, key="f_storm_sd2")
+        lo = dt.date(1900, 1, 1)
+        sd = ymd_input("Start date", ctx.today - dt.timedelta(days=3), lo, ctx.today, "f_storm_sd1")
+        ed = ymd_input("End date", ctx.today - dt.timedelta(days=1), lo, ctx.today, "f_storm_sd2")
         r.q.update(when="range_specific", element="snow", start=sd, end=ed, extra={
             "source": "stations",
             "reports": st.checkbox("Blend in NWS storm reports", value=True, key="f_storm_sreports",

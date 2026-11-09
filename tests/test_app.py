@@ -216,9 +216,10 @@ def test_storm_total_from_stations_works_before_nohrsc(monkeypatch):
     pick(at, "Precipitation", "snowstorm")
     seg(at, "Data").set_value("Stations + reports").run()
     assert not at.exception
-    d1 = next(d for d in at.date_input if d.label == "Start date")
-    d1.set_value(dt.date(2007, 2, 12)).run()
-    next(d for d in at.date_input if d.label == "End date").set_value(dt.date(2007, 2, 14)).run()
+    assert min(int(o) for o in next(x for x in at.selectbox if x.label == "Start date year").options) == 1900
+    for pre, (y, m, d) in (("Start date", (2007, 2, 12)), ("End date", (2007, 2, 14))):
+        for part, v in (("year", y), ("month", m), ("day", d)):
+            next(x for x in at.selectbox if x.label == f"{pre} {part}").set_value(v).run()
     assert not any(s.label == "Start hour" for s in at.selectbox)
     assert "Storm Total Snowfall (Stations + Reports)" in gen(at)[0]
 
