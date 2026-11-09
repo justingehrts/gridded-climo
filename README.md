@@ -132,3 +132,6 @@ Whole months and the 1991–2020 period only, since those are what the official 
 normal for the same days (ACIS daily normals, so any date range works; CMH Jan–Feb 2025 = 14.1" vs 17.1" normal, −3.0"). Station days
 end around 7 AM, so the inputs are dates rather than NOHRSC hours, and any year with station data works. Stations missing more than
 10% of the days are left out; the rest are interpolated like the other station maps. Fetched live (~20–60 s for the Ohio region, depending on ACIS load).
+
+### Storm total without NOHRSC (stations + reports)
+Precipitation → Snow → **Storm total** has a **Data** switch. *NOHRSC analysis* (hour-level, Oct 2008 onward) is the default; *Stations + reports* sums ACIS station snowfall over whole calendar days for **any date** (back to 1900) and blends in NWS local storm reports (IEM archive; reports within 10 km of a station are ignored in favor of the station, and windows over 31 days use stations only). Station snow days end in the morning, so this is not an exact hour window.

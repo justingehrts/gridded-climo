@@ -114,3 +114,29 @@ def fetch_snow_departure(client, bbox, start, end, max_missing_frac: float = 0.1
     complete = end < dt.date.today() - dt.timedelta(days=5)
     cache = getattr(client, "cache", None)
     return cache.get_or_compute("acis_snow_departure_v2", params, fetch) if (cache and complete) else fetch()
+
+
+def parse_total(out: dict, n_days: int, max_missing_frac: float) -> dict:
+    keep = []
+    for r in out.get("data", []):
+        m = r.get("meta") or {}
+        if not m.get("ll") or not r.get("smry"):
+            continue
+        obs, miss = _sum_cell(r["smry"][0])
+        if np.isfinite(obs) and miss <= max_missing_frac * n_days:
+            keep.append((m["ll"][0], m["ll"][1], m.get("name", ""), obs, miss))
+    cols = list(zip(*keep)) if keep else [[]] * 5
+    return {"lon": np.array(cols[0], "float32"), "lat": np.array(cols[1], "float32"), "name": np.array(cols[2], dtype=str),
+            "obs": np.array(cols[3], "float32"), "missing": np.array(cols[4], "int32")}
+
+
+def fetch_snow_total(client, bbox, start, end, max_missing_frac: float = 0.10) -> dict:
+    """Observed snowfall summed over [start, end] at every station (ACIS daily data, any year)."""
+    import datetime as dt
+    params = {"bbox": ",".join(f"{v:g}" for v in bbox), "sdate": start.isoformat(), "edate": end.isoformat(),
+              "elems": [{"name": "snow", "smry": {"reduce": "sum", "add": "mcnt"}, "smry_only": 1}], "meta": ["name", "ll"]}
+    n_days = (end - start).days + 1
+    fetch = lambda: parse_total(client.post("MultiStnData", params), n_days, max_missing_frac)
+    complete = end < dt.date.today() - dt.timedelta(days=5)
+    cache = getattr(client, "cache", None)
+    return cache.get_or_compute("acis_snow_total_v1", params, fetch) if (cache and complete) else fetch()

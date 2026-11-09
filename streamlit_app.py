@@ -218,7 +218,7 @@ with tab_map:
     with st.container(key="gen_dock"):
         with st.container(border=True, gap="small"):
             st.markdown(f"<small>Will make</small><br>**{will_make}**", unsafe_allow_html=True)
-            st.caption(f"{area_name.replace(' (pre-saved)', '')} · {source_note(type_id, res.q.get('method'), presaved_bbox(tuple(bbox)) is not None)}")
+            st.caption(f"{area_name.replace(' (pre-saved)', '')} · {source_note(type_id, res.q.get('method'), presaved_bbox(tuple(bbox)) is not None, res.q.get('extra', {}).get('source'))}")
             if reason:
                 st.info(reason, icon="ℹ️")
         go = st.button("Generate map", type="primary", disabled=bool(reason), width="stretch")

@@ -70,6 +70,20 @@ def run_metric(metric: Metric, st: Settings, start=None, end=None, method: str =
             note = (f"NCEI 1991-2020 snowfall normals at {len(points['value'])} stations, interpolated (IDW + {info['smooth_km']:g} km "
                     f"smoothing, up to {info['reach_km']:.0f} km from a station); "
                     + ("pre-saved data" if info["data_source"] == "shipped" else "fetched live from ACIS"))
+        elif metric.name == "storm_total_snow_stations":
+            from .products.snow_storm import snow_station_total_map
+            from .sun import tidy_style
+            grid, info = snow_station_total_map(st.bbox, s, e, client, reports, smooth_km)
+            name += f" ({s} to {e}, stations + reports)"
+            points = info["points"]
+            label_fmt = lambda v: f'{round(v, 2):g}"'
+            metric = replace(metric, style=tidy_style(metric.style, grid.data, symmetric=False, floor0=True,
+                                                      nice=(0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50)))
+            note = (f"ACIS station snowfall summed over calendar days ({info['n_stations']} stations; station days end in the morning, "
+                    f"so this is not an exact hour window)"
+                    + (f" plus {info['n_reports']} NWS storm reports not near a station" if reports and not info["lsr_note"] else "")
+                    + f", interpolated (IDW + {info['smooth_km']:g} km smoothing, up to {info['reach_km']:.0f} km from a point)"
+                    + (f"; {info['lsr_note']}" if info["lsr_note"] else "") + "; fetched live")
         elif metric.normal == "departure" and metric.element == "snow":
             from .products.snow_normals import snow_departure_map
             from .sun import tidy_style

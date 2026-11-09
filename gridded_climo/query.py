@@ -164,10 +164,18 @@ def unsupported_reason(q: Query, bbox=None) -> str | None:
             if (q.end - q.start).days > 366:
                 return "Choose a range of one year or less."
             return None
+        if q.extra.get("source") == "stations":
+            if not (q.start and q.end):
+                return "Choose a start and end date."
+            if q.end < q.start:
+                return "The end date is before the start date."
+            if (q.end - q.start).days > 366:
+                return "Choose a range of one year or less."
+            return None
         if not (q.start and q.end):
             return "Choose a start and end time."
         if isinstance(q.start, dt.datetime) and q.start < NOHRSC_START:
-            return "NOHRSC snowfall analyses begin Oct 2008."
+            return "NOHRSC snowfall analyses begin Oct 2008; choose Stations + reports for earlier storms."
         return None
     if q.element not in ("mint", "maxt", "pcpn") + DERIVED_ELEMENTS:
         return f"unsupported element '{q.element}'"
@@ -261,6 +269,8 @@ def describe(q: Query) -> str:
             return f"Average {window_label(q.start.month, q.end.month)} Snowfall"
         if q.departure:
             return "Snowfall Departure from Normal"
+        if q.extra.get("source") == "stations":
+            return "Storm Total Snowfall (Stations + Reports)"
         return "Snowfall Total"
     unit = "in" if q.element == "pcpn" else "°F"
     if q.value is not None and q.op:
@@ -294,6 +304,9 @@ def metric_from_query(q: Query) -> Metric:
     if q.element == "snow" and q.departure:
         return Metric(name="snow_departure", kind="period", source="acis_stn", element="snow", title=title, reduce="sum",
                       normal="departure", style=style).validate()
+    if q.element == "snow" and q.extra.get("source") == "stations":
+        return Metric(name="storm_total_snow_stations", kind="period", source="acis_stn", element="snow", title=title, reduce="sum",
+                      style=style).validate()
     if q.element == "snow":
         return Metric(name="storm_total_snow", kind="storm", source="nohrsc", element="snow", title=title, style=style).validate()
     normal = "average" if q.when == "range_normal" else ("departure" if q.departure else None)

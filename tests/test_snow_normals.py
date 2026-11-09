@@ -105,3 +105,33 @@ def test_departure_map_from_fake_client():
     grid, info = snow_departure_map((-84, 39.5, -82, 41), dt.date(2025, 1, 1), dt.date(2025, 2, 28), FakeACIS(), smooth_km=0)
     assert len(info["points"]["value"]) == 2 and np.nanmin(grid.data) == pytest.approx(-3.0, abs=0.01)
     assert '14.1" vs 17.1" normal' in info["points"]["name"][0]
+
+
+def test_parse_total_filters_missing_days():
+    from gridded_climo.snow_normals import parse_total
+    out = {"data": [{"meta": {"name": "A", "ll": [-83, 40]}, "smry": [[6.5, 0]]},
+                    {"meta": {"name": "B", "ll": [-84, 41]}, "smry": [["M", 0]]},
+                    {"meta": {"name": "C", "ll": [-82, 40]}, "smry": [[3.0, 9]]},
+                    {"meta": {"name": "no ll"}, "smry": [[1.0, 0]]}]}
+    z = parse_total(out, 3, 0.10)
+    assert list(z["name"]) == ["A"] and z["obs"].tolist() == [6.5]
+
+
+def test_blend_drops_reports_near_a_station():
+    from gridded_climo.products.snow_storm import blend
+    st = {"lon": np.array([-83.0]), "lat": np.array([40.0]), "name": np.array(["A"]), "obs": np.array([5.0])}
+    rep = {"lon": [-83.01, -82.0], "lat": [40.0, 40.0], "value": [6.0, 7.0], "name": ["near", "far"]}
+    p = blend(st, rep)
+    assert p["n_stations"] == 1 and p["n_reports"] == 1 and p["value"].tolist() == [5.0, 7.0]
+    assert "report" in p["name"][1] and "station" in p["name"][0]
+    assert blend(st, None)["n_reports"] == 0
+
+
+def test_stations_storm_total_is_allowed_before_nohrsc():
+    base = dict(when="range_specific", element="snow", reduce="sum", normal_period=(1991, 2020))
+    old = dt.date(2007, 2, 12), dt.date(2007, 2, 14)
+    assert unsupported_reason(Query(**base, start=old[0], end=old[1], extra={"source": "stations"})) is None
+    assert "Stations + reports" in unsupported_reason(Query(**base, start=dt.datetime(2007, 2, 12), end=dt.datetime(2007, 2, 14)))
+    q = Query(**base, start=old[0], end=old[1], extra={"source": "stations"})
+    assert describe(q) == "Storm Total Snowfall (Stations + Reports)" and metric_from_query(q).name == "storm_total_snow_stations"
+    assert unsupported_reason(Query(**base, start=old[1], end=old[0], extra={"source": "stations"}))

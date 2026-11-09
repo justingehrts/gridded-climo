@@ -204,6 +204,25 @@ def test_snow_departure_uses_station_dates(monkeypatch):
     assert "Snowfall Departure from Normal" in gen(at)[0]
 
 
+def test_storm_total_from_stations_works_before_nohrsc(monkeypatch):
+    import numpy as np
+    from gridded_climo import snow_normals
+    fake = {"lon": np.array([-83.0, -82.5, -82.0, -84.0], "float32"), "lat": np.array([40.0, 39.5, 41.0, 39.0], "float32"),
+            "name": np.array(["A", "B", "C", "D"]), "obs": np.array([5, 9, 20, 1], "float32"), "missing": np.zeros(4, "int32")}
+    monkeypatch.setattr(snow_normals, "fetch_snow_total", lambda *a, **k: fake)
+    from gridded_climo import iem
+    monkeypatch.setattr(iem, "fetch_snow_reports", lambda *a, **k: {"lon": [-82.9], "lat": [41.5], "value": [7.0], "name": ["X"]})
+    at = fresh()
+    pick(at, "Precipitation", "snowstorm")
+    seg(at, "Data").set_value("Stations + reports").run()
+    assert not at.exception
+    d1 = next(d for d in at.date_input if d.label == "Start date")
+    d1.set_value(dt.date(2007, 2, 12)).run()
+    next(d for d in at.date_input if d.label == "End date").set_value(dt.date(2007, 2, 14)).run()
+    assert not any(s.label == "Start hour" for s in at.selectbox)
+    assert "Storm Total Snowfall (Stations + Reports)" in gen(at)[0]
+
+
 @live
 def test_storm_total_live():
     at = fresh()

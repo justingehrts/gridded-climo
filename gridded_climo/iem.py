@@ -14,9 +14,12 @@ REGION_WFOS = ("ILN", "CLE", "PBZ", "RLX", "IWX", "IND", "LMK", "DTX", "PAH", "J
 
 
 def fetch_snow_reports(start_utc: dt.datetime, end_utc: dt.datetime, bbox, wfos=REGION_WFOS, timeout: int = 40) -> dict:
-    """-> dict(lon[], lat[], value[] inches, name[]) of SNOW reports inside bbox (west, south, east, north)."""
-    r = requests.get(IEM_LSR_URL, params={"sts": f"{start_utc:%Y-%m-%dT%H:%MZ}", "ets": f"{end_utc:%Y-%m-%dT%H:%MZ}",
-                                          "wfos": ",".join(wfos)}, timeout=timeout)
+    """-> dict(lon[], lat[], value[] inches, name[]) of SNOW reports inside bbox (west, south, east, north).
+    wfos=None asks for every office and filters by bbox only (the WFO filter returns nothing for older archive years)."""
+    params = {"sts": f"{start_utc:%Y-%m-%dT%H:%MZ}", "ets": f"{end_utc:%Y-%m-%dT%H:%MZ}"}
+    if wfos:
+        params["wfos"] = ",".join(wfos)
+    r = requests.get(IEM_LSR_URL, params=params, timeout=timeout)
     r.raise_for_status()
     w, s, e, n = bbox
     out = {"lon": [], "lat": [], "value": [], "name": []}
