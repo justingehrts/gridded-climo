@@ -14,3 +14,10 @@ def test_dots_are_clickable_and_above_the_reference_layers():
 
 def test_no_points_still_builds():
     assert "obs_pane" in build_map(PNG, (39.0, -84.0, 41.0, -82.0)).get_root().render()
+
+
+def test_panes_stack_below_leaflet_tooltips():
+    import re
+    html = build_map(PNG, (39.0, -84.0, 41.0, -82.0)).get_root().render()
+    z = sorted(int(v) for v in re.findall(r"pane_\w+\.style\.zIndex = (\d+)", html))
+    assert z == [450, 600]          # reference layers above the data overlay (400), dots at marker level, both below tooltips (650)

@@ -29,8 +29,8 @@ def build_map(png: bytes, bounds: tuple[float, float, float, float], counties=No
         image="data:image/png;base64," + base64.b64encode(png).decode(), bounds=[[south, west], [north, east]],
         opacity=0.85, name="Data",
     ).add_to(m)
-    folium.map.CustomPane("reference_pane", z_index=650).add_to(m)  # above the overlay pane
-    folium.map.CustomPane("obs_pane", z_index=700).add_to(m)        # observation dots above the reference layers, so they get the clicks
+    folium.map.CustomPane("reference_pane", z_index=450).add_to(m)  # above the data overlay (400), below markers (600) and tooltips (650)
+    folium.map.CustomPane("obs_pane", z_index=600).add_to(m)        # observation dots above the reference layers, so they get the clicks
     base = "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/{}/MapServer/tile/{{z}}/{{y}}/{{x}}"
     for label, svc in (("Highways", "World_Transportation"), ("States & Cities", "World_Boundaries_and_Places")):
         folium.TileLayer(tiles=base.format(svc), attr=ESRI_ATTR, name=label, overlay=True, show=True, pane="reference_pane").add_to(m)
