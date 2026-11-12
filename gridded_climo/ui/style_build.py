@@ -10,7 +10,7 @@ from ..registry import Style
 def build_style(base: Style, *, ramp: str | None = None, flip: bool = False, mode: str | None = None, steps: int | None = None,
                 vmin: float | None = None, vmax: float | None = None, date_mode: str = "auto", custom_starts: str = "",
                 palette: list | None = None, bin_colors: dict | None = None, legend_rows: list | None = None,
-                dropped_bins: list | None = None) -> Style:
+                dropped_bins: list | None = None, smooth_edges: bool = True, mask_water: bool = True) -> Style:
     """`ramp=None` / `mode=None` keep the map's default. `flip` reverses the default ramp's direction; with an explicitly
     chosen ramp it simply means 'reversed' (the default's direction belongs to the default ramp)."""
     if date_mode not in MODES:
@@ -26,6 +26,7 @@ def build_style(base: Style, *, ramp: str | None = None, flip: bool = False, mod
         date_mode=date_mode, custom_starts=custom_starts,
         palette=palette or None, bin_colors=bin_colors or None, legend_rows=legend_rows or None,
         dropped_bins=list(dropped_bins) if dropped_bins else None,
+        smooth_edges=bool(smooth_edges), mask_water=bool(mask_water),
     )
 
 
@@ -51,6 +52,9 @@ def pending_from_json(raw: str | bytes, known_ramps) -> dict:
         out["style_date_mode"] = d["date_mode"]
     if d.get("custom_starts"):
         out["style_custom_starts"] = d["custom_starts"]
+    for k in ("smooth_edges", "mask_water"):
+        if isinstance(d.get(k), bool):
+            out[f"style_{k}"] = d[k]
     for k in ("palette", "bin_colors", "legend_rows"):
         if d.get(k):
             out[k] = d[k]

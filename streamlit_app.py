@@ -305,6 +305,10 @@ with tab_look:
         st.rerun()
     flip = st.checkbox("Reverse colors", key="style_flip")
     mode_choice = st.radio("Shading", ["Map default", "Stepped", "Smooth"], horizontal=True, key="style_mode")
+    smooth_edges = st.checkbox("Smooth band edges", value=True, key="style_smooth_edges",
+                               help="Draw from a finer, interpolated grid so band edges are smooth curves instead of blocky cell steps.")
+    mask_water = st.checkbox("Hide color over large water", value=True, key="style_mask_water",
+                             help="Leave the Great Lakes and the oceans uncolored, as if stenciled out (small lakes stay colored).")
     steps = st.slider("Number of steps (automatic grouping)", 3, 20, int(default_style.steps), key="style_steps")
     if not is_date_map:
         c1, c2 = st.columns(2)
@@ -338,7 +342,7 @@ with tab_look:
             st.error(str(e))
     if st.button("Reset all style choices", width="stretch"):
         for k in ("style_ramp", "style_flip", "style_mode", "style_steps", "style_vmin", "style_vmax", "style_date_mode",
-                  "style_custom_starts", "palette", "bin_colors", "bin_dropped", "_imported"):
+                  "style_custom_starts", "style_smooth_edges", "style_mask_water", "palette", "bin_colors", "bin_dropped", "_imported"):
             st.session_state.pop(k, None)
         set_legend_rows(None)
         forget_ramp_pick()
@@ -361,6 +365,7 @@ style = build_style(
     vmin=vmin, vmax=vmax, date_mode=date_mode, custom_starts=custom_starts,
     palette=st.session_state.get("palette"), bin_colors=st.session_state.get("bin_colors"),
     legend_rows=st.session_state.get("legend_rows"), dropped_bins=dropped_bins,
+    smooth_edges=smooth_edges, mask_water=mask_water,
 )
 
 out = None
