@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import html
 import json
 import urllib.request
 
@@ -29,17 +30,19 @@ def build_map(png: bytes, bounds: tuple[float, float, float, float], counties=No
         opacity=0.85, name="Data",
     ).add_to(m)
     folium.map.CustomPane("reference_pane", z_index=650).add_to(m)  # above the overlay pane
+    folium.map.CustomPane("obs_pane", z_index=700).add_to(m)        # observation dots above the reference layers, so they get the clicks
     base = "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/{}/MapServer/tile/{{z}}/{{y}}/{{x}}"
     for label, svc in (("Highways", "World_Transportation"), ("States & Cities", "World_Boundaries_and_Places")):
         folium.TileLayer(tiles=base.format(svc), attr=ESRI_ATTR, name=label, overlay=True, show=True, pane="reference_pane").add_to(m)
     if counties:
         folium.GeoJson(counties, name="Counties", style_function=lambda f: {"color": "#555555", "weight": 0.75, "fillOpacity": 0},
-                       pane="reference_pane").add_to(m)
+                       pane="reference_pane", interactive=False).add_to(m)   # outlines must never swallow clicks meant for the dots
     if points:
         fg = folium.FeatureGroup(name="Stations", show=True)
         for lo, la, lab, nm in zip(points["lon"], points["lat"], points["label"], points["name"]):
-            folium.CircleMarker([la, lo], radius=3, color="#111", weight=1, fill=True, fill_opacity=0.9,
-                                tooltip=f"{nm}: {lab}").add_to(fg)
+            folium.CircleMarker([la, lo], radius=4, color="#111", weight=1, fill=True, fill_opacity=0.9, pane="obs_pane",
+                                tooltip=f"{nm}: {lab}",
+                                popup=folium.Popup(f"<b>{html.escape(str(nm))}</b><br>{html.escape(str(lab))}", max_width=260)).add_to(fg)
         fg.add_to(m)
     folium.LayerControl(collapsed=True).add_to(m)
     m.fit_bounds([[south, west], [north, east]])
