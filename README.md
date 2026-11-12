@@ -135,3 +135,6 @@ end around 7 AM, so the inputs are dates rather than NOHRSC hours, and any year 
 
 ### Storm total without NOHRSC (stations + reports)
 Precipitation → Snow → **Storm total** has a **Data** switch. *NOHRSC analysis* (hour-level, Oct 2008 onward) is the default; *Stations + reports* sums ACIS station snowfall over whole calendar days for **any date** (back to 1900) and blends in NWS local storm reports (IEM archive; reports within 10 km of a station are ignored in favor of the station, and windows over 31 days use stations only). Station snow days end in the morning, so this is not an exact hour window.
+
+### Smooth edges and the water stencil
+Maps are drawn from a finer, interpolated copy of the grid (Look → **Smooth band edges**) so band edges are smooth curves instead of blocky ~2 km steps, and oceans and the Great Lakes are left uncolored (Look → **Hide color over large water**; small lakes stay colored). Both are on by default, saved with presets, and apply to the KMZ too. The water stencil is a shipped 0.01° raster (`data/mask/water.npz`, built from GSHHG shorelines with `python -m gridded_climo.mask_build`).

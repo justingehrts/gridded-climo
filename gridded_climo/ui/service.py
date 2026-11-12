@@ -78,7 +78,11 @@ def render_computed(c: Computed, style: Style | None = None) -> Output:
     if not style.units_label:
         style = Style(**{**style.__dict__, "units_label": c.style.units_label})
     with tempfile.TemporaryDirectory(prefix="gridded_climo_ui_") as td:
-        tif = c.grid.to_geotiff(Path(td) / "data.tif")
+        grid = c.grid.refined() if style.smooth_edges else c.grid
+        if style.mask_water:
+            from ..landmask import mask_grid
+            grid = mask_grid(grid)
+        tif = grid.to_geotiff(Path(td) / "data.tif")
         ov = render_overlay(tif, style, c.name, legend_title=c.name if style.units_label else None,
                             label_fmt=label_formatter(c.label_kind, c.ref), ref=c.ref)
         kmz = overlay_to_kmz(ov, Path(td) / "out.kmz").read_bytes()

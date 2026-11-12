@@ -38,6 +38,21 @@ class Grid:
     def with_data(self, data: np.ndarray) -> "Grid":
         return Grid(np.asarray(data, dtype="float32"), self.west, self.north, self.dx, self.dy)
 
+    def refined(self, max_pixels: int = 3_000_000, max_factor: int = 4) -> "Grid":
+        """Finer grid (NaN-aware bilinear, an integer factor) so band edges classified from it are smooth curves, not cell stair-steps.
+        Voids stay voids; the factor drops (to 1 = unchanged) so the result stays under max_pixels."""
+        from scipy.ndimage import zoom
+        h, w = self.data.shape
+        f = int(min(max_factor, np.floor(np.sqrt(max_pixels / max(h * w, 1)))))
+        if f < 2:
+            return self
+        ok = np.isfinite(self.data)
+        val = zoom(np.where(ok, self.data, 0.0).astype("float64"), f, order=1, mode="nearest", grid_mode=True)
+        wgt = zoom(ok.astype("float64"), f, order=1, mode="nearest", grid_mode=True)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            out = np.where(wgt > 0.5, val / wgt, np.nan)
+        return Grid(out.astype("float32"), self.west, self.north, self.dx / f, self.dy / f)
+
     def to_geotiff(self, path: str | Path) -> Path:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)

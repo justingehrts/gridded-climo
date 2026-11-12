@@ -565,3 +565,13 @@ def test_snapshot_json_handles_dates():
     snap = {"f_d1": dt.date(2025, 1, 1), "f_t": dt.datetime(2025, 1, 1, 7), "f_y": (1991, 2020), "area": "Ohio"}
     back = forms.from_jsonable(json.loads(json.dumps(forms.to_jsonable(snap))))
     assert back["f_d1"] == dt.date(2025, 1, 1) and back["f_t"] == dt.datetime(2025, 1, 1, 7) and back["area"] == "Ohio"
+
+
+def test_smooth_edges_and_water_mask_can_be_turned_off():
+    at = fresh()
+    _first_freeze(at)
+    assert at.checkbox(key="style_smooth_edges").value and at.checkbox(key="style_mask_water").value
+    at.checkbox(key="style_smooth_edges").uncheck().run()
+    at.checkbox(key="style_mask_water").uncheck().run()
+    assert not at.exception and not at.error
+    assert "⬇️ Download KMZ" in [b.label for b in at.get("download_button")]

@@ -40,6 +40,8 @@ class Style:
     dropped_bins: list | None = None  # date bins the user deleted, as bin start dates "10-7"; the rest keep their starts (see render/style.py)
     legend_rows: list | None = None  # numeric custom legend: [[from, to, r,g,b,a], ...], see render/legend.py (old [value,r,g,b,a] rows also load)
     units_label: str = ""
+    smooth_edges: bool = True   # render from a finer, interpolated grid so band edges are smooth curves instead of cell stair-steps
+    mask_water: bool = True     # leave oceans and large lakes (the Great Lakes) uncolored
 
 
 @dataclass
