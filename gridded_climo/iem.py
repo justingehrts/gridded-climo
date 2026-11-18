@@ -9,8 +9,9 @@ import datetime as dt
 import requests
 
 IEM_LSR_URL = "https://mesonet.agron.iastate.edu/geojson/lsr.php"
-# WFOs whose county warning areas cover the default Ohio-centered region
-REGION_WFOS = ("ILN", "CLE", "PBZ", "RLX", "IWX", "IND", "LMK", "DTX", "PAH", "JKL", "CTP", "BUF", "GRR", "ILX")
+# WFOs whose county warning areas cover the default region (Chicago to Philadelphia, Lexington to Lansing)
+REGION_WFOS = ("ILN", "CLE", "PBZ", "RLX", "IWX", "IND", "LMK", "DTX", "PAH", "JKL", "CTP", "BUF", "GRR", "ILX",
+               "LOT", "APX", "PHI", "BGM", "LWX", "OKX", "MKX")
 
 
 def fetch_snow_reports(start_utc: dt.datetime, end_utc: dt.datetime, bbox, wfos=REGION_WFOS, timeout: int = 40) -> dict:

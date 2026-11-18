@@ -7,6 +7,7 @@ reduces do work. So threshold-crossing dates are computed client-side from daily
 from __future__ import annotations
 
 import datetime as dt
+import time
 from typing import Sequence
 
 import numpy as np
@@ -49,9 +50,16 @@ class ACISClient:
         self.session.mount("https://", HTTPAdapter(max_retries=retry))
 
     def post(self, endpoint: str, params: dict) -> dict:
-        r = self.session.post(f"{self.base_url}/{endpoint}", json=params, timeout=self.timeout)
-        r.raise_for_status()
-        out = r.json()
+        for attempt in range(6):   # the adapter retries bad statuses; a response cut off mid-body needs its own retry
+            try:
+                r = self.session.post(f"{self.base_url}/{endpoint}", json=params, timeout=self.timeout)
+                r.raise_for_status()
+                out = r.json()
+                break
+            except (requests.exceptions.ChunkedEncodingError, requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+                if attempt == 5:
+                    raise
+                time.sleep(5 * 2 ** attempt)
         if isinstance(out, dict) and "error" in out:
             raise ACISError(f"{endpoint} {out['error']}  (request: {params})")
         return out

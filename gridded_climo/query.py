@@ -84,12 +84,12 @@ class Query:
     extra: dict = field(default_factory=dict)
 
 
-OUTSIDE_PRESAVED = "pre-saved for the Ohio-centered region only"
+OUTSIDE_PRESAVED = "pre-saved for the Columbus-centered region only"
 
 
 def unsupported_reason(q: Query, bbox=None) -> str | None:
     """None if runnable, else a short user-facing explanation (UI disables / CLI errors). `bbox` is the map area
-    (default: the pre-saved Ohio-centered region); data that is only pre-saved for that region is limited to it."""
+    (default: the pre-saved Columbus-centered region); data that is only pre-saved for that region is limited to it."""
     bbox = tuple(bbox) if bbox else PRESAVED_REGION
     if q.when not in WHENS:
         return f"unknown 'when': {q.when}"
