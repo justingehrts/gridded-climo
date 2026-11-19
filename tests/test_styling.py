@@ -223,11 +223,19 @@ def test_untouched_bins_keep_their_custom_colors_and_exports_leave_drops_out(tmp
     assert "dropped_bins" not in json.loads(style_to_json(st_))
 
 
-def test_bundled_nws_snowfall_preset():
-    from gridded_climo.presets import list_presets, load_preset
+def test_nws_snowfall_ramp_brings_its_fixed_bands():
+    from gridded_climo.registry import Style
     from gridded_climo.render.legend import normalize_legend
-    assert "NWS snowfall" in list_presets()
-    bands = normalize_legend(load_preset("NWS snowfall").legend_rows)
+    from gridded_climo.render.ramps import RAMPS, ramp_label
+    from gridded_climo.ui.style_build import build_style
+    assert RAMPS["NWS Snowfall"] == "nws_snowfall" and ramp_label("NWS Snowfall") == "NWS Snowfall"
+    s = build_style(Style(), ramp="NWS Snowfall")
+    bands = normalize_legend(s.legend_rows)
     assert len(bands) == 15
     assert bands[0][:2] == [0.1, 1.0] and bands[-1][0] == 72.0 and bands[-1][1] is None
     assert bands[0][2:5] == [0xbf, 0xd7, 0xe7] and bands[-1][2:5] == [0x7b, 0x51, 0xa3]
+    mine = [[0, 1, 1, 2, 3, 255]]
+    assert build_style(Style(), ramp="NWS Snowfall", legend_rows=mine).legend_rows == mine     # hand-edited bands win
+    assert build_style(Style(), ramp="Magma").legend_rows is None
+
+

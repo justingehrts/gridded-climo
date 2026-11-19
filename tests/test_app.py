@@ -529,19 +529,6 @@ def test_regenerating_a_map_in_the_same_units_keeps_custom_band_colors():
     assert at.session_state["legend_rows"] == rows
 
 
-def test_apply_example_preset_sets_only_what_it_contains():
-    at = fresh()
-    _first_freeze(at)
-    steps_before = at.slider(key="style_steps").value
-    at.selectbox(key="style_preset").select("Example: weekly bins, Spectral").run()
-    next(b for b in at.button if b.label == "Apply preset").click().run()
-    assert not at.exception and not at.error
-    assert at.radio(key="style_date_mode").value == "weekly" and at.session_state["style_ramp"] == "Spectral"
-    assert at.checkbox(key="style_flip").value is True and at.slider(key="style_steps").value == steps_before
-    labels = [b.label for b in at.get("download_button")]
-    assert "⬇️ Download KMZ" in labels and "Download preset file" in labels and not any("PNG" in l for l in labels)
-
-
 # ------------------------------------------------------------------------------------------------ recent / saved maps
 def test_recent_maps_restore_settings():
     at = fresh()

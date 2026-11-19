@@ -5,6 +5,7 @@ from dataclasses import replace
 
 from ..binning import MODES
 from ..registry import Style
+from ..render.ramps import NWS_SNOWFALL_ROWS, RAMPS
 
 
 def build_style(base: Style, *, ramp: str | None = None, flip: bool = False, mode: str | None = None, steps: int | None = None,
@@ -15,6 +16,8 @@ def build_style(base: Style, *, ramp: str | None = None, flip: bool = False, mod
     chosen ramp it simply means 'reversed' (the default's direction belongs to the default ramp)."""
     if date_mode not in MODES:
         raise ValueError(f"unknown date grouping '{date_mode}'")
+    if ramp and RAMPS.get(ramp) == "nws_snowfall" and not legend_rows:     # this ramp is a fixed set of bands, not a gradient
+        legend_rows = [list(r) for r in NWS_SNOWFALL_ROWS]
     return replace(
         base,
         ramp=ramp or base.ramp,

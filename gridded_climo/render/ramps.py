@@ -6,6 +6,14 @@ import numpy as np
 
 from ..registry import Style
 
+NWS_SNOWFALL_LABEL = "NWS Snowfall"
+# The NWS snowfall color table: [from, to, r, g, b, a] in inches. Unlike the other ramps its bands are fixed (uneven, 0.1" to 72"+),
+# so choosing this ramp also applies these bands (see ui/style_build.py) instead of equal steps over the data range.
+NWS_SNOWFALL_ROWS = [[0.1, 1, 191, 215, 231, 255], [1, 2, 114, 174, 213, 255], [2, 3, 61, 130, 188, 255], [3, 4, 23, 81, 152, 255], [4, 6, 16, 37, 146, 255], [6, 8, 254, 255, 154, 255], [8, 12, 251, 196, 32, 255], [12, 18, 249, 134, 16, 255], [18, 24, 213, 14, 0, 255], [24, 30, 153, 0, 0, 255], [30, 36, 102, 0, 0, 255], [36, 48, 52, 0, 0, 255], [48, 60, 205, 204, 254, 255], [60, 72, 159, 140, 214, 255], [72, None, 123, 81, 163, 255]]
+for _name, _cmap in (("nws_snowfall", mpl.colors.ListedColormap([tuple(c / 255 for c in r[2:5]) for r in NWS_SNOWFALL_ROWS], name="nws_snowfall")),):
+    mpl.colormaps.register(_cmap, name=_name, force=True)
+    mpl.colormaps.register(_cmap.reversed(), name=_name + "_r", force=True)
+
 # Grouped the way matplotlib's own colormap reference groups them: Diverging ramps have a neutral midpoint (right for data
 # that crosses a baseline, e.g. departures), Sequential ramps only increase, Miscellaneous is everything else.
 RAMP_CATEGORIES = {
@@ -13,6 +21,7 @@ RAMP_CATEGORIES = {
     "Perceptually Uniform Sequential": {"Viridis": "viridis", "Plasma": "plasma", "Inferno": "inferno", "Magma": "magma", "Cividis": "cividis"},
     "Sequential": {"Blues": "Blues", "Greens": "Greens", "Purples": "Purples", "YlOrRd": "YlOrRd", "YlGnBu": "YlGnBu"},
     "Miscellaneous": {"NWS Spectral": "nipy_spectral", "Terrain": "terrain", "Jet": "jet"},
+    "Fixed bands": {NWS_SNOWFALL_LABEL: "nws_snowfall"},
 }
 # label -> matplotlib name, for every ramp. "coolwarm" is kept as a second name for Cool-Warm because metrics.yaml and saved
 # presets use it.

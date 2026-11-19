@@ -35,7 +35,7 @@ from gridded_climo.cache import Cache
 from gridded_climo.config import ACIS_BASE_URL
 from gridded_climo.por import PorError, parse_start, station_por
 from gridded_climo.precomputed import shipped_years
-from gridded_climo.presets import list_presets, preset_slug
+from gridded_climo.presets import preset_slug
 from gridded_climo.regions import CONUS_BOUNDS, buffer_deg, buffered_bbox, presaved_bbox, state_names, states
 from gridded_climo.ui.style_build import build_style, pending_from_json
 from gridded_climo.ui import forms
@@ -284,14 +284,6 @@ def date_grouping_controls():
 band_view_open = bool(computed) and st.session_state.get("main_view") == "Band colors"
 with tab_look:
     st.caption("Changes apply to the current map right away.")
-    presets = list_presets()
-    chosen = st.selectbox("Preset", ["(none)"] + list(presets), key="style_preset")
-    if st.button("Apply preset", disabled=chosen == "(none)", width="stretch",
-                 help="Load this saved look. Only the settings the preset contains are changed."):
-        st.session_state["_pending"] = pending_from_json(presets[chosen].read_bytes(), RAMPS)
-        st.rerun()
-    if not presets:
-        st.caption("No presets yet. Save one from the Export tab and add the file to the repo's `presets/` folder.")
     # The dropdown shows the ramp exactly as it will be applied, so it reads the other style widgets' current values
     # (Streamlit has already updated them for this run, even though they are created below).
     explicit_ramp = st.session_state.get("style_ramp")
@@ -406,7 +398,7 @@ with tab_export:
             slug = None
         st.download_button("Download preset file", style_to_json(style, pname or None), file_name=f"{slug or 'preset'}.json",
                            mime="application/json", disabled=not slug, key="preset_dl")
-        st.caption(f"To make it appear in everyone's Preset list, save the file as `presets/{slug or 'name'}.json` in the repo and commit it. "
+        st.caption("Load it again with Look → Import palette / settings. "
                    "Presets store the look only (ramp, grouping, colors), never the data or the threshold.")
     with st.expander("Save or load a whole map"):
         saved = {"kind": "gridded-climo-map", "version": 1, "title": will_make,

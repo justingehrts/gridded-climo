@@ -20,7 +20,10 @@ def ramp_gradient_css(cmap_name, mode, steps, reverse):
     """CSS linear-gradient() previewing a ramp the way this app applies it: a smooth blend, or (Stepped) `steps` flat
     bands colored at their centers, exactly like render/style.py's `_ramp_colors`."""
     cmap = mpl.colormaps[f"{cmap_name}_r" if reverse else cmap_name]
-    if mode == "Stepped":
+    if cmap_name == "nws_snowfall":      # fixed bands: draw each of its own colors, whatever the shading or step count
+        n = cmap.N
+        stops = [f"{mpl.colors.to_hex(cmap(i))} {i * 100 / n:.4g}% {(i + 1) * 100 / n:.4g}%" for i in range(n)]
+    elif mode == "Stepped":
         n = max(2, int(steps))
         stops = [
             f"{mpl.colors.to_hex(cmap((i + 0.5) / n))} {i * 100 / n:.4g}% {(i + 1) * 100 / n:.4g}%"
