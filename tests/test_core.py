@@ -48,7 +48,7 @@ def test_reduce_daily_all_nan_stays_nan():
 
 def test_request_builder():
     r = build_grid_request("mint", DEFAULT_BBOX, "2020-07-01", "2020-09-30")
-    assert r == {"bbox": "-87.5,37,-78.5,42.5", "sdate": "2020-07-01", "edate": "2020-09-30", "grid": "1",
+    assert r == {"bbox": "-88,37,-74.75,43", "sdate": "2020-07-01", "edate": "2020-09-30", "grid": "1",
                  "elems": [{"name": "mint"}], "meta": ["ll"]}
     with pytest.raises(ACISError):
         build_grid_request("snow", DEFAULT_BBOX, "2020-01-01", "2020-01-02")  # not on Grid 1

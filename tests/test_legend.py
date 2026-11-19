@@ -103,7 +103,7 @@ def test_ramp_catalog_keeps_every_name_the_metrics_and_presets_use():
     assert used and used <= set(RAMPS)
     assert ramp_label("coolwarm") == "Cool-Warm" and ramp_label("viridis") == "Viridis" and ramp_label("Spectral") == "Spectral"
     labels = [lab for group in RAMP_CATEGORIES.values() for lab in group]
-    assert len(labels) == len(set(labels)) == 17 and all(lab in RAMPS for lab in labels)
+    assert len(labels) == len(set(labels)) == 18 and all(lab in RAMPS for lab in labels)
 
 
 # --- .wctrp export -------------------------------------------------------------------------------------------------

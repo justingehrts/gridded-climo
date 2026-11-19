@@ -52,7 +52,7 @@ in the chosen area reports that variable (looked up from ACIS, kept for a day). 
 earliest years rest on very few. For the Grid method, POR means 1991, where the saved grid data begins. Years before the area's record are
 rejected with the real start year. The command line takes `--normal-period por-2020`.
 
-For the Ohio-centered region the saved station files reach back to the period of record (1866 for temperatures, 1857 for snow), so POR and any
+For the Columbus-centered region the saved station files reach back to the period of record (1866 for temperatures, 1857 for snow), so POR and any
 start year are instant at the pre-saved thresholds. Anything not saved (another threshold, or another area) is fetched live from ACIS, which is
 slow for long spans: roughly 30 s for 30 years, a minute or so back to 1900, and several minutes back to the 1860s.
 To extend saved files yourself: `gridded-climo precompute --stations mint,maxt,snow --elements "" --normals "" --extend-to por` (fetches only the missing early seasons).
@@ -62,12 +62,12 @@ The **Area** dropdown lists the Columbus-centered default, every state in the lo
 buffer so neighbors and surroundings show: 10% of its longer side, between 0.75° and 2° (Ohio gets 0.75°, about 80 km). State outlines come
 from ACIS and live in `gridded_climo/states.json`. The CLI takes `--state TX` for the same thing.
 
-Pre-saved data (grid first/last dates, daily normals, per-station files) only covers the Ohio-centered region, so for areas outside it:
+Pre-saved data (grid first/last dates, daily normals, per-station files) only covers the Columbus-centered region (Chicago to Philadelphia, Lexington KY to Lansing MI), so for areas outside it:
 - **Stations** work anywhere in the lower 48 (any threshold, any years): fetched live from ACIS, roughly 10-60 seconds depending on the area.
 - **Date ranges** are fetched live too, capped by area x days so a big state can't exhaust a hosted app (about 100 days for Texas, 400+ for Ohio).
 - **Storm-total snowfall** works anywhere (NOHRSC covers the lower 48).
-- **Grid first/last dates and departure/normal-period maps** need the pre-saved files, so they are Ohio-region only. Ohio itself is cropped to the
-  pre-saved area (its northern buffer over Lake Erie is trimmed).
+- **Grid first/last dates and departure/normal-period maps** need the pre-saved files, so they are limited to that region. Ohio and its buffer now fall
+  entirely inside the pre-saved area; larger areas are cropped to it.
 
 ### Styling
 - **Group dates into** (first/last-date maps; set in the Look tab, or right above the color table in the Band colors view when that is open): *Automatic* (default, equal color steps), *Weekly* (1st-6th, 7th-13th, 14th-20th, 21st-end),
@@ -121,7 +121,7 @@ area in the US and nearby works instantly.
 
 **Precipitation → Normal snowfall** maps NCEI's official 1991–2020 monthly snowfall normals (what NWS publishes;
 Columbus November = 1.2") summed over the chosen months: any single month, Dec–Feb, Oct–Apr, the Jul–Jun season, or any month range.
-Station normals come from ACIS in one request and are interpolated like the other station maps. The Ohio-centered region ships
+Station normals come from ACIS in one request and are interpolated like the other station maps. The Columbus-centered region ships
 them (`data/normals/snow_monthly_1991-2020.npz`, rebuilt with `gridded-climo precompute --snow-normals`); other areas fetch live (~5–10 s).
 Whole months and the 1991–2020 period only, since those are what the official normals cover.
 
@@ -130,7 +130,7 @@ Whole months and the 1991–2020 period only, since those are what the official 
 **Precipitation → Snowfall vs normal** maps observed station snowfall minus the NCEI 1991–2020
 normal for the same days (ACIS daily normals, so any date range works; CMH Jan–Feb 2025 = 14.1" vs 17.1" normal, −3.0"). Station days
 end around 7 AM, so the inputs are dates rather than NOHRSC hours, and any year with station data works. Stations missing more than
-10% of the days are left out; the rest are interpolated like the other station maps. Fetched live (~20–60 s for the Ohio region, depending on ACIS load).
+10% of the days are left out; the rest are interpolated like the other station maps. Fetched live (~20–60 s for the default region, depending on ACIS load).
 
 ### Storm total without NOHRSC (stations + reports)
 Precipitation → Snow → **Storm total** has a **Data** switch. *NOHRSC analysis* (hour-level, Oct 2008 onward) is the default; *Stations + reports* sums ACIS station snowfall over whole calendar days for **any date** (back to 1900) and blends in NWS local storm reports (IEM archive; reports within 10 km of a station are ignored in favor of the station, and windows over 31 days use stations only). Station snow days end in the morning, so this is not an exact hour window.

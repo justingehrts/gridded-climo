@@ -124,7 +124,7 @@ def test_region_rules_in_validation():
     stn = Query(when="first", element="mint", op="le", value=32, method="station")
     assert unsupported_reason(grid) is None and unsupported_reason(grid, oh) is None            # default region and Ohio: pre-saved
     for bb in (tx, ind):
-        assert "pre-saved for the Ohio-centered region only" in unsupported_reason(grid, bb)
+        assert "pre-saved for the Columbus-centered region only" in unsupported_reason(grid, bb)
         assert unsupported_reason(stn, bb) is None                                                # stations work anywhere
     dep = Query(when="range_specific", element="maxt", reduce="mean", departure=True, start=dt.date(2025, 7, 1), end=dt.date(2025, 7, 31))
     avg = Query(when="range_normal", element="maxt", reduce="mean", start=dt.date(2001, 12, 1), end=dt.date(2001, 12, 31))

@@ -38,9 +38,11 @@ def test_buffer_rule_and_clamping():
 def test_presaved_coverage_rules():
     assert presaved_bbox(DEFAULT_BBOX) == DEFAULT_BBOX
     oh = buffered_bbox("OH")
-    assert coverage_fraction(oh) == pytest.approx(0.96, abs=0.01)
-    cropped = presaved_bbox(oh)
-    assert cropped is not None and cropped[3] == DEFAULT_BBOX[3] and cropped[0] == oh[0]     # only the northern sliver is cropped
+    assert coverage_fraction(oh) == pytest.approx(1.0, abs=0.01)                   # Ohio plus buffer now sits inside the pre-saved area
+    assert presaved_bbox(oh) == oh
+    wide = (-88.0, 37.0, -75.0, 43.5)                                               # hangs over the edges, so it gets cropped
+    cropped = presaved_bbox(wide)
+    assert cropped is not None and cropped[3] == DEFAULT_BBOX[3] and cropped[0] == DEFAULT_BBOX[0]
     assert presaved_bbox(buffered_bbox("IN")) is None and presaved_bbox(buffered_bbox("TX")) is None   # 72% / 0%
     assert intersection((0, 0, 1, 1), (2, 2, 3, 3)) is None and coverage_fraction((0, 0, 1, 1), (2, 2, 3, 3)) == 0
 

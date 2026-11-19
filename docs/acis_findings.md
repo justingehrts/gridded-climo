@@ -9,7 +9,7 @@
 | Nested `reduce:{reduce:..., add:"date"}` | `bad args` on both endpoints |
 | Elements on grid 1 | `mint`, `maxt`, `pcpn`. `snow`, `snwd` -> `vX` error on grids 1, 2, 3, 21; grids 4, 22 invalid |
 | `"normal":"departure"` / `"1"` | Accepted but returned raw values in every form tried (daily interval) -> not relied on |
-| Bulk pull | bbox [-87.5,37,-78.5,42.5] is ~132x216 cells (1/24 deg); 10 days of `mint` = 1.5 MB JSON, 1.3 s |
+| Bulk pull | bbox [-87.5,37,-78.5,42.5] (the former default; now -88,37,-74.75,43) is ~132x216 cells (1/24 deg); 10 days of `mint` = 1.5 MB JSON, 1.3 s |
 | Point-vs-cell | Grid cell at CMH: first <=32F 2019-10-13 / 2020-10-17; CMH station 2019-11-01 / 2020-10-31 (grid is interpolated from colder rural stations; ACIS's own point query agrees with our cell indexing) |
 
 **Architecture consequence (grids):** first/last threshold dates are computed client-side (numpy) from daily grids, cached as int16 (x100) npz per calendar quarter.

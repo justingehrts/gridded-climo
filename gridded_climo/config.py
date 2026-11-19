@@ -5,8 +5,8 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# (west, south, east, north) -- centered on Columbus, OH
-DEFAULT_BBOX = (-87.5, 37.0, -78.5, 42.5)
+# (west, south, east, north) -- Columbus, OH area: Chicago to Philadelphia, Lexington KY to Lansing MI
+DEFAULT_BBOX = (-88.0, 37.0, -74.75, 43.0)
 DEFAULT_NORMAL_PERIOD = (1991, 2020)
 ACIS_BASE_URL = "https://data.rcc-acis.org"
 NOHRSC_BASE_URL = "https://www.nohrsc.noaa.gov/snowfall/data"

@@ -17,7 +17,7 @@ BUFFER_FRAC, BUFFER_MIN, BUFFER_MAX = 0.10, 0.75, 2.0
 CONUS_BOUNDS: BBox = (-125.5, 24.0, -66.0, 50.0)     # ACIS Grid 1 / NOHRSC extent, lower 48
 PRESAVED_REGION: BBox = DEFAULT_BBOX
 MIN_PRESAVED_COVER = 0.9      # a request mostly inside the pre-saved region is cropped to it; below this it's treated as outside
-LIVE_VALUE_BUDGET = 12_000_000   # cells x days we're willing to pull live from ACIS per map (a full year over the default region is ~10M)
+LIVE_VALUE_BUDGET = 17_000_000   # cells x days we're willing to pull live from ACIS per map (a full year over the default region is ~16.8M)
 CELLS_PER_SQ_DEG = 24 * 24       # ACIS Grid 1 is 1/24 degree
 
 

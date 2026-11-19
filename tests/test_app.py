@@ -355,7 +355,7 @@ def test_por_in_the_start_year_field(monkeypatch):
     start.set_value("por").run()
     text = " ".join(c.value for c in at.caption)
     assert "Using 1872" in text and "Period of record for low temperature here starts in 1872 (1 station" in text
-    assert calls == [((-87.5, 37.0, -78.5, 42.5), "mint")]
+    assert calls == [((-88.0, 37.0, -74.75, 43.0), "mint")]
     assert not gen_button(at).disabled and any("Before ~1895" in w.value for w in at.warning)
     at.text_input(key="f_y0").set_value("POR").run()
     assert len(calls) == 1
