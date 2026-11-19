@@ -33,7 +33,7 @@ The sidebar has three tabs:
 - **Look**: preset, color ramp, reverse, shading, steps, min/max, date grouping (date maps), import, reset. Changes apply right away.
 - **Export**: Download KMZ, save the look as a preset, and **save or load a whole map** (area, map type, every setting and the look).
 
-The main panel starts with a gallery of every map type. After Generate it shows the map with **Map / Image / Band colors** views.
+The main panel starts with a gallery of every map type. After Generate it shows the map with **Map / Band colors** views.
 Cold & warm dates can use **stations** (each station's own date, interpolated; the default) or the **grid** (ACIS Grid 1, scanned
 cell by cell), under Advanced; snowfall is stations-only.
 
@@ -78,7 +78,7 @@ Pre-saved data (grid first/last dates, daily normals, per-station files) only co
 - **Look** tab: color ramp (a dropdown that draws each ramp's gradient), reverse, stepped/smooth, number of steps, min/max, and import of a MAX `.wctrp` palette,
   a CSV legend (`From,To,R,G,B,Alpha`, or the older `Value,R,G,B,Alpha`), or a JSON settings export. For date maps an imported palette supplies colors only (assigned by
   position across the bins); for numeric maps its values become the color-band thresholds.
-- **Band colors** view (next to Map / Image): edit R/G/B/A for each date bin, or, on numeric maps, a MAX-style color table: one row per band
+- **Band colors** view (next to Map): edit R/G/B/A for each date bin, or, on numeric maps, a MAX-style color table: one row per band
   (From, To, color swatch with a color picker, Red/Green/Blue, Transparency), each color applying from its From up to its To. Leave the first
   From blank for no lower limit and the last To blank for no upper limit; values in no band are transparent. Select two rows and **Ramp RGB** (or
   **Ramp RGB + Transparency**) to blend the rows between them, or **Generate bands** from a preset ramp. **Download as .wctrp** writes the table as a MAX palette (gaps become transparent bands, no upper limit is written as 999).

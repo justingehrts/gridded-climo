@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import calendar
 import datetime as dt
-import io
 import os
 import tempfile
 import zlib
@@ -17,7 +16,6 @@ import matplotlib as mpl
 import numpy as np
 import pandas as pd
 import streamlit as st
-from PIL import Image
 from streamlit_folium import st_folium
 
 from gridded_climo.config import DEFAULT_BBOX, DEFAULT_NORMAL_PERIOD
@@ -427,15 +425,9 @@ if out:
     st.subheader(out.name)
     if out.note:
         st.caption(out.note)
-    view = st.segmented_control("View", ["Map", "Image", "Band colors"], required=True, key="main_view", label_visibility="collapsed")
+    view = st.segmented_control("View", ["Map", "Band colors"], required=True, key="main_view", label_visibility="collapsed")
     if view == "Map":
         st_folium(build_map(out.png, out.bounds, counties(), out.points), use_container_width=True, height=560, returned_objects=[])
-    elif view == "Image":  # dependency-free preview: works even if the map CDN / tile servers are unreachable
-        overlay = Image.open(io.BytesIO(out.png)).convert("RGBA")
-        canvas = Image.new("RGBA", overlay.size, (225, 225, 225, 255))
-        canvas.alpha_composite(overlay)
-        st.image(canvas.resize((overlay.width * 3, overlay.height * 3), Image.NEAREST),
-                 caption="Rendered overlay on neutral gray (transparent areas = no data)", width="stretch")
     if out.legend_png:
         st.image(out.legend_png, caption="Legend (also included in the KMZ)")
     if view == "Band colors":
