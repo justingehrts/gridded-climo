@@ -315,7 +315,7 @@ def test_other_states_explain_what_isnt_available():
     at.selectbox(key="area").select("Texas").run()
     assert any("Outside the pre-saved region" in c.value for c in at.caption)
     method(at, "Grid (ACIS Grid 1)")
-    assert any("Ohio-centered region only" in i.value for i in at.info) and gen_button(at).disabled
+    assert any("Columbus-centered region only" in i.value for i in at.info) and gen_button(at).disabled
     method(at, "Stations (interpolated)")
     assert not any("Ohio-centered" in i.value for i in at.info) and not gen_button(at).disabled
 
@@ -514,6 +514,19 @@ def test_ramp_mode_range_controls_apply_to_a_numeric_map():
     at.radio(key="style_mode").set_value("Stepped").run()
     seg(at, "View").set_value("Band colors").run()
     assert not at.exception and not at.error
+
+
+def test_regenerating_a_map_in_the_same_units_keeps_custom_band_colors():
+    at = fresh()
+    pick(at, "Precipitation", "rnormal")
+    gen(at)
+    rows = [[0, 1, 255, 255, 255], [1, 3, 0, 0, 255]]
+    at.session_state["legend_rows"] = rows
+    at.run()
+    at.number_input(key="f_nd2").set_value(27).run()      # a different map (another end day), same units
+    gen(at)
+    assert not at.exception and not at.error
+    assert at.session_state["legend_rows"] == rows
 
 
 def test_apply_example_preset_sets_only_what_it_contains():

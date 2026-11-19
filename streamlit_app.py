@@ -227,14 +227,18 @@ with tab_map:
 # ---------------------------------------------------------------- generate
 if go:
     key = (q, tuple(bbox))
-    if st.session_state.get("active") != key:   # a new map starts from clean styling
-        for k in ("bin_colors", "palette", "bin_dropped"):
-            st.session_state.pop(k, None)
-        set_legend_rows(None)
+    prev = st.session_state.get("active")
     with st.status("Building map…", expanded=True) as status:
         try:
             st.write("Fetching / reading data…")
-            cached_compute(q, tuple(bbox), allow_live())
+            fresh = cached_compute(q, tuple(bbox), allow_live())
+            if prev != key:   # a new map starts from clean styling, except custom band colors on a map in the same units (e.g. a preset)
+                for k in ("bin_colors", "palette", "bin_dropped"):
+                    st.session_state.pop(k, None)
+                same_units = bool(prev) and not fresh.ref and not fresh.style.symmetric and not (old := cached_compute(prev[0], prev[1], allow_live())).ref \
+                    and not old.style.symmetric and old.style.units_label == fresh.style.units_label
+                if not same_units:
+                    set_legend_rows(None)
             st.session_state["active"] = key
             st.session_state["main_view"] = "Map"
             title = describe(q)
@@ -302,6 +306,9 @@ with tab_look:
     )
     if picked:        # rerun so the dropdown (already drawn this run) and the rest of the page see the new ramp
         st.session_state["style_ramp"] = picked
+        for k in ("bin_colors", "palette"):    # hand-set or preset band colors would hide the new ramp, so picking a ramp replaces them
+            st.session_state.pop(k, None)
+        set_legend_rows(None)
         st.rerun()
     flip = st.checkbox("Reverse colors", key="style_flip")
     mode_choice = st.radio("Shading", ["Map default", "Stepped", "Smooth"], horizontal=True, key="style_mode")
